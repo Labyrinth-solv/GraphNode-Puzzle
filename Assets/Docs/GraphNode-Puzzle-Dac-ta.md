@@ -21,7 +21,7 @@ Mỗi màn là một vòng kéo điểm và xem thanh khớp; không có nút C�
 
 1. **Vào màn:** hình mẫu hiện thành bóng mờ trên vải và thẻ nhỏ phía trên. Graph ở trạng thái xáo trộn, thanh khớp khoảng 30–60%.
 2. **Kéo điểm:** viền ngoài (đường cắt) cập nhật trực tiếp, thanh khớp tăng giảm theo.
-3. **Đạt ngưỡng:** ngay khi thanh đạt ngưỡng, kể cả lúc đang kéo, thao tác bị khóa, các điểm mờ đi và điểm sáng chạy kiểm tra: nó phải đi qua mọi điểm và mọi ghim, rồi mới chuyển sang bước 4. Bảng thắng chỉ hiện sau cảnh cắt và ghép. Chưa đạt thì tiếp tục kéo; có nút Gợi ý và Đặt lại.
+3. **Đạt ngưỡng:** khi người chơi thả tay mà độ khớp đạt ngưỡng thì thao tác bị khóa, các điểm mờ đi và điểm sáng chạy kiểm tra: nó phải đi qua mọi điểm và mọi ghim, rồi mới chuyển sang bước 4. Bảng thắng chỉ hiện sau cảnh cắt và ghép. Chưa đạt thì tiếp tục kéo; có nút Gợi ý và Đặt lại.
 4. **Auto-snap:** khóa thao tác, đường cắt biến về đúng đường viền hình mẫu.
 5. **Cắt:** kéo chạy dọc viền, miếng vải nhấc lên, đổ màu hoặc hoa văn.
 6. **Ghép vào sản phẩm:** mảnh vải bay vào sản phẩm đang may dở. Đủ mảnh thì chạy màn lộ diện sản phẩm.
@@ -71,7 +71,12 @@ Vùng bên trong viền ngoài được tô hồng nhạt khi kéo, để ngư�
 - **Ngưỡng thắng:** mặc định 92%, chỉnh được theo từng level.
 - **Hiển thị:** thanh không hiện thẳng phần trăm thô. Đoạn từ 50% đến ngưỡng được giãn ra cả thanh, nên mỗi lần kéo đều thấy thanh nhúc nhích rõ. Thanh trượt mượt về giá trị mới, đổi màu theo mốc và rung nhẹ khi qua 70%, 85%.
 - **Tần suất tính:** khi đang kéo, 2–3 khung hình một lần.
-- **Khi nào thắng:** ngay khi thanh đạt ngưỡng, kể cả lúc đang kéo. Thao tác khóa ngay, node đang giữ được nhả khỏi ngón tay, rồi chạy vòng kiểm tra điểm và ghim, sau đó mới chạy chuỗi hoàn thành và hiện bảng thắng. Để tránh thắng do lướt qua ngưỡng một thoáng, có thể yêu cầu điểm giữ trên ngưỡng khoảng 0,1 giây.
+- **Khi nào thắng (đã chốt):** chỉ kiểm tra khi người chơi thả tay. Lúc đang kéo, thanh có thể chạm ngưỡng nhưng màn không khóa và chưa chạy hoạt ảnh; người chơi còn chỉnh tiếp được. Lúc thả tay, độ khớp tính theo vị trí node cuối cùng: đạt ngưỡng thì khóa thao tác, chạy vòng kiểm tra điểm và ghim, rồi mới chạy chuỗi hoàn thành và hiện bảng thắng; chưa đạt thì chơi tiếp.
+  - **Lý do:** thắng giữa lúc ngón tay còn đang di chuyển làm người chơi bị giật tay khỏi node, cảm giác hụt; thả tay là hành động có chủ ý nên trải nghiệm tốt hơn.
+  - **Bỏ điều kiện giữ 0,1 giây:** thả tay đã là mốc rõ ràng, không còn chuyện thắng vì lướt qua ngưỡng một khung hình.
+  - **Tín hiệu sẵn sàng:** khi đang kéo mà độ khớp đạt ngưỡng, nên có tín hiệu để người chơi biết thả tay là thắng. Cách thể hiện do người dùng chốt khi làm giao diện.
+  - **Hủy kéo không phải thả tay:** mất focus hủy thao tác kéo và không kiểm tra thắng; lần thả tay kế tiếp mới kiểm tra.
+  - **Rủi ro cần đo trên máy:** lúc nhấc ngón tay, vị trí chạm có thể trượt nhẹ làm độ khớp tụt ngay dưới ngưỡng. Nếu gặp, lấy vị trí của lần di chuyển cuối trước khi nhấc tay.
 
 ### Auto-snap và chuỗi hoàn thành
 
@@ -110,7 +115,7 @@ Nét phấn đứt của viền ngoài đổi màu liên tục quanh hình, trô
 Sau khi viền khớp hình, các điểm mờ đi và điểm sáng phải đi qua mọi điểm (thường và đặc biệt) cùng mọi ghim thì màn mới thắng, và bảng thắng chỉ hiện sau chuỗi hoàn thành. Màn không có ghim vẫn chạy vòng kiểm tra qua các điểm. Ghim là các điểm cố định trên viền hình mẫu.
 
 - **Hai loại ghim:** ghim tròn rỗng, đi qua lúc nào cũng được; ghim có số (tam giác 1, vuông 2, ngũ giác 3, lục giác 4) phải đi qua theo thứ tự. Ghim số n chỉ sáng khi ghim số n−1 đã sáng; đi qua sai thứ tự thì ghim nhấp đỏ ngắn và không sáng.
-- **Khi nào kiểm tra:** độ khớp đạt ngưỡng (giữ 0,1 giây) thì thao tác bị khóa, các điểm và cạnh mờ còn khoảng 30%, điểm sáng chạy một vòng từ node đầu của vòng với tốc độ 1,3 lần bình thường. Mỗi điểm mà điểm sáng đã đi qua sáng viền vàng; thanh khớp hiện "Kiểm tra n/N" (tổng điểm và ghim). Vì một vòng đi qua mọi node, chỉ ghim mới có thể làm kiểm tra thất bại. Ghim nào được đi qua đúng thì chuyển vàng, có tiếng "ting" và rung nhẹ. Điểm và ghim sáng hết thì chuyển sang snap, cắt và ghép; bảng thắng hiện sau cùng, khi chuỗi hoàn thành kết thúc.
+- **Khi nào kiểm tra:** người chơi thả tay khi độ khớp đạt ngưỡng thì thao tác bị khóa, các điểm và cạnh mờ còn khoảng 30%, điểm sáng chạy một vòng từ node đầu của vòng với tốc độ 1,3 lần bình thường. Mỗi điểm mà điểm sáng đã đi qua sáng viền vàng; thanh khớp hiện "Kiểm tra n/N" (tổng điểm và ghim). Vì một vòng đi qua mọi node, chỉ ghim mới có thể làm kiểm tra thất bại. Ghim nào được đi qua đúng thì chuyển vàng, có tiếng "ting" và rung nhẹ. Điểm và ghim sáng hết thì chuyển sang snap, cắt và ghép; bảng thắng hiện sau cùng, khi chuỗi hoàn thành kết thúc.
 - **Tăng tốc ngắn:** mỗi lần điểm sáng đi qua một ghim, nó tăng tốc tới khoảng 2,4 lần rồi giảm dần trong khoảng 0,6 giây, đuôi sáng dài ra. Lúc đang chơi, ghim chỉ nhấp sáng khi điểm sáng qua, không tính điểm, để người chơi tự thấy viền đã đi qua ghim hay chưa.
 - **Dung sai:** khoảng cách từ ghim tới đoạn đường điểm sáng đi trong một khung hình dưới 16 đơn vị. Vì khớp 92% cho phép lệch vài px, cần theo dõi xem dung sai này có khắt trên màn hình nhỏ không.
 - **Thất bại:** điểm sáng chạy hết một vòng mà còn ghim chưa sáng thì màn trở lại chơi bình thường. Ghim còn trống nhấp đỏ, kèm lời nhắn (sai thứ tự, hay chưa đi qua đủ ghim). Màn chỉ tự kiểm tra lại sau khi người chơi kéo một node rồi thả.
@@ -144,11 +149,11 @@ Level là dữ liệu, không phải scene: một scene gameplay dùng chung t�
 | hintOrder | danh sách id node | Thứ tự node được gợi ý di chuyển |
 | tags | danh sách | Cơ chế dùng trong màn, để mở rộng sau |
 
-File JSON là bản gốc của level: Level Editor đọc và ghi thẳng JSON, game nạp JSON lúc chạy, test và CI kiểm tra đúng file đó. Không có bản ScriptableObject song song cho level. Thứ cần tham chiếu asset (khách, món đồ, vải, cấu hình) vẫn là ScriptableObject, level chỉ trỏ tới chúng bằng id.
+File JSON là bản gốc của level: Level Editor đọc và ghi thẳng JSON, game nạp JSON lúc chạy, test và CI kiểm tra đúng file đó. Không có bản ScriptableObject song song cho level. Thứ cần tham chiếu asset (khách, sản phẩm, vải, cấu hình) vẫn là ScriptableObject, level chỉ trỏ tới chúng bằng id.
 
 ### Tiến trình: chương, sản phẩm, màn
 
-- Mỗi **sản phẩm** gồm 4–6 mảnh, tức 4–6 màn.
+- Mỗi **sản phẩm** gồm 1 đến n mảnh, mỗi mảnh một màn. Prototype dự kiến 4–6 mảnh; số mảnh mỗi sản phẩm và tỉ lệ sản phẩm một mảnh trong chương do thiết kế level quyết, cần chốt.
 - Mỗi **chương** gồm 3–4 sản phẩm, khoảng 20 màn, và giới thiệu một ý tưởng mới.
 - Prototype: chương 1 (điểm thẳng, điểm cong) và đầu chương 2 (node bị khóa, cạnh bên trong, cạnh cắt chéo).
 
@@ -178,6 +183,8 @@ Các nút vặn độ khó: số node (3 đến 10), tỷ lệ điểm cong, s�
 - **Tối ưu lời giải:** nút tự dịch node từng chút để điểm khớp cao nhất. Thử nghiệm trước đó: trái tim 8 node đạt khoảng 97%.
 - **Xáo trộn:** tạo vị trí ban đầu ngẫu nhiên có ràng buộc: điểm khớp ban đầu 30–60%, các node không chồng lên nhau.
 - **Kiểm tra hàng loạt:** mọi level có lời giải vượt ngưỡng, vị trí ban đầu chưa vượt ngưỡng.
+- **Đề xuất ngưỡng thắng:** công cụ đo độ khó của hình rồi gợi ý `winThreshold` cho người thiết kế level. Cách đo: xê dịch ngẫu nhiên mọi node không khóa quanh lời giải một khoảng nhỏ (ví dụ 0,02 như bảng độ nhạy), lặp vài trăm lần, ghi phân bố điểm khớp; tính thêm tỉ số chu vi²/diện tích của hình mẫu để cảnh báo hình mảnh. Công cụ chỉ gợi ý; người thiết kế xem, chốt và ghi vào file level, rồi chạy kiểm tra hàng loạt. Số lần lặp, khoảng xê dịch và cách quy từ phân bố ra ngưỡng: cần chốt.
+  - **Đã chốt:** ngưỡng là dữ liệu cố định của từng level. Game không tự đổi ngưỡng lúc chạy và không chỉnh theo từng người chơi.
 
 ### Level chiều sâu (cho Level Editor)
 
@@ -192,7 +199,7 @@ Một số level sẽ có hình ảnh "đi vào trong": tranh có chiều sâu, 
 
 ## Meta loop: tiệm may
 
-Người chơi là thợ may: mỗi khách đặt một món đồ, mỗi mảnh của món đồ là một màn. Bản đầu chỉ làm vòng nhận đơn tối thiểu trên màn Home; các lớp còn lại là mở rộng tương lai, chưa bắt buộc khi code.
+Người chơi là thợ may: mỗi khách đặt một sản phẩm (quần áo, tranh vải, gối…), mỗi mảnh của sản phẩm là một màn. Bản đầu chỉ làm vòng nhận đơn tối thiểu trên màn Home; các lớp còn lại là mở rộng tương lai, chưa bắt buộc khi code.
 
 ### Màn Home: khách ở quầy (bản đầu)
 
@@ -211,12 +218,46 @@ Người chơi là thợ may: mỗi khách đặt một món đồ, mỗi mảnh
 | Nút bắt đầu | Nằm trên mặt quầy, khoảng 90–98%, rộng gần hết màn |
 
 - **Bong bóng suy nghĩ thay cho lời nhắn:** trên đầu khách là một đám khói suy nghĩ, bên trong là hình mảnh vải thật của màn kế tiếp. Cách vẽ chi tiết do người dùng chốt khi làm giao diện. Bản đầu không có chữ thoại.
-- **Thẻ đơn:** tên món đồ, mảnh hiện tại trên tổng số mảnh, các ô tiến độ. Vị trí trên màn Home chưa có trong wireframe, chốt khi làm giao diện.
+- **Thẻ đơn:** tên sản phẩm, mảnh hiện tại trên tổng số mảnh, các ô tiến độ. Vị trí trên màn Home chưa có trong wireframe, chốt khi làm giao diện.
 - **Bắt đầu màn:** chạm vào khách, vào bong bóng hoặc nút bắt đầu. Chuyển cảnh bong bóng phóng to thành bóng mờ hình mẫu trên tấm vải là tùy chọn, không bắt buộc ở bản đầu: có thể chỉ chuyển scene thường, kiến trúc đã chừa chỗ để thêm sau.
-- **Sau màn:** quay về Home, thẻ đơn cập nhật mảnh vừa cắt (hiệu ứng mảnh bay vào thẻ là tùy chọn). Đủ mảnh thì khách mặc thử (biểu cảm vui), rồi khách kế tiếp bước vào.
+- **Sau màn:** quay về Home, thẻ đơn cập nhật mảnh vừa cắt (hiệu ứng mảnh bay vào thẻ là tùy chọn). Đủ mảnh thì khách nhận sản phẩm: hiệu ứng vui vẻ, hạnh phúc rồi ra về, khách kế tiếp bước vào (đã chốt; mặc thử lên người khách là mở rộng tùy chọn). Khi có tính năng đặt mảnh và hoàn thiện sản phẩm (mục dưới), đủ mảnh thì vào bước đó trước rồi khách mới nhận sản phẩm.
 - **Hình mẫu và món đồ:** hình mảnh áo (thân, tay, cổ) và hình trừu tượng như cá, tim, lá, sao. Hình trừu tượng là hình đắp hoặc hình thêu trên món đồ, để mọi hình đều có lý do trong câu chuyện may.
-- **Dữ liệu:** `CustomerDefinition` (tên, chân dung, vài biểu cảm) và `OrderDefinition` (khách, món đồ, danh sách level theo thứ tự mảnh). Level không biết khách; khách chỉ là lớp bọc bên ngoài.
+- **Dữ liệu:** `CustomerDefinition` (tên, chân dung, vài biểu cảm) và `OrderDefinition` (khách, sản phẩm, danh sách level theo thứ tự mảnh). Level không biết khách; khách chỉ là lớp bọc bên ngoài.
 - **Rủi ro cần theo dõi:** hình trong bong bóng nhỏ hơn nhiều so với khung vải, nên hình nhiều node (như sao 7 cánh) cần kích thước và nét đủ dày để đọc được trên điện thoại. Khách che một phần bong bóng hoặc ngược lại thì phải xếp lớp rõ ràng.
+
+### Đặt mảnh và hoàn thiện sản phẩm (nâng cấp sau bản đầu, đã chốt hướng)
+
+Sản phẩm là thứ khách đặt: quần áo, tranh vải, gối, túi… Mỗi sản phẩm gồm 1 đến n mảnh vải người chơi cắt, có thể có thêm một vải nền. Khi đã cắt đủ mảnh, người chơi đặt mảnh lên khung của sản phẩm rồi chạm một lần để hoàn thiện. Đây là phần thưởng sau phần giải đố: không có thua, thời lượng ngắn.
+
+- **Vị trí trong vòng chơi:** các màn của sản phẩm (đủ mảnh) → đặt mảnh lên khung → chạm hoàn thiện → khách nhận sản phẩm, vui vẻ rồi ra về → khách kế tiếp.
+- **Bước đặt mảnh luôn có, kể cả sản phẩm một mảnh (đã chốt):** mọi sản phẩm dùng chung một nghi thức, người chơi học một lần. Mục đích chỉ là kéo mảnh vào đúng chỗ để tạo cảm giác thỏa mãn, nên bước này giữ đơn giản:
+  - Người chơi không xoay mảnh (đã chốt). Góc xoay của mảnh trên khung do người thiết kế level đặt cho từng ô; mảnh xuất hiện đã xoay sẵn đúng góc đó, người chơi chỉ kéo vào chỗ.
+  - Không cho chọn màu (đã chốt): màu hoàn thiện do người thiết kế level đặt trong đơn.
+  - Sản phẩm nào cũng có khung, hiện ô viền mờ cho từng mảnh. Người chơi kéo mảnh vào, đặt gần đúng thì mảnh tự hút vào ô (cách A, đã chốt).
+  - Sản phẩm nhiều mảnh: các mảnh ghép với nhau trên khung, cách ghép phụ thuộc từng sản phẩm và từng mảnh. Đủ mảnh thì chạy hoạt ảnh đường chỉ khâu dọc các mép giáp nhau. Sản phẩm một mảnh: chỉ khâu chạy quanh mép mảnh.
+  - Hình mảnh là `targetShape` của level đã cắt (auto-snap đã đưa đường cắt về đúng viền mẫu), co giãn đúng tỉ lệ ô. Một ngón; vùng chạm của mảnh không nhỏ hơn 44 pt dù mảnh nhỏ.
+  - Với sản phẩm một mảnh, bước này chạy sau mỗi màn, nên phải rất ngắn: vùng hút rộng, kéo một lần là vào chỗ.
+- **Vải nền (tùy chọn theo thiết kế sản phẩm, đã chốt):**
+  - Hình nền: vuông, vuông bo góc, tròn. Lưu dạng kiểu liệt kê; bán kính bo góc đặt trong ScriptableObject cấu hình. Cần hình khác về sau thì thêm một kiểu mới, không sửa sản phẩm cũ.
+  - Hiện ngay từ bước đặt mảnh, ở mức nhạt, làm nền để đặt mảnh lên.
+  - Sản phẩm không có vải nền thì khung chỉ là nét phác thảo của sản phẩm, mảnh đặt thẳng vào đó.
+  - Vải nền và mảnh có thể khác chất liệu (ví dụ nỉ cho nền, lông xù cho mảnh); mỗi chất liệu là một `FabricDefinition`.
+- **Đổ màu hai giai đoạn (đã chốt):**
+  - Sau mỗi màn: mảnh tự đổ màu ở mức nhạt (thay cho bước "Đổ màu" đầy đủ trong chuỗi hoàn thành khi đã có tính năng này). Người chơi vẫn thấy mảnh vừa cắt là vải gì.
+  - Chạm hoàn thiện: cả mảnh lẫn vải nền lên màu đầy đủ, màu chạy loang qua các đường nối, chỉ khâu sáng lên. Chỉ làm màu đậm và đẹp hơn, không đổi sang màu khác.
+- **Decor bất ngờ (đã chốt):**
+  - Decor (mắt, má, mũi, nút, nơ, ren, hình thêu, sao, mây…) chỉ xuất hiện lúc chạm hoàn thiện, lần lượt từng món kèm tiếng nhỏ; chạm thêm thì tua nhanh.
+  - Decor gắn lên toàn bức: trên mảnh hoặc trên vải nền. Vì mảnh cuối luôn đúng `targetShape`, decor đặt theo tọa độ thiết kế luôn nằm đúng chỗ.
+  - Trước đó thẻ đơn chỉ hiện bản phác thảo sản phẩm: nét vẽ, tô một màu đơn giản, không có decor.
+  - Decor biến một bóng hình đơn giản thành nhân vật (đầu gấu, đầu mèo…), nên hình cắt ở level có thể giữ đơn giản; cá tính nằm ở decor.
+  - Gọi là "decor sản phẩm" để không lẫn với trang trí quầy khi nâng cấp tiệm.
+- **Dữ liệu:**
+  - `ProductDefinition` (gộp khái niệm món đồ vào sản phẩm): khung; vải nền tùy chọn (kiểu hình, kích thước, `fabricId`); danh sách ô mảnh theo `slotIndex` (vị trí, tỉ lệ, góc xoay, tọa độ chuẩn hóa 0–1 trên khung); điểm gắn decor trên toàn bức; bản phác thảo cho thẻ đơn; phần mặc lên người (sprite trang phục, mặt nạ đổ vải), chỉ cần khi làm mở rộng mặc thử.
+  - `OrderDefinition`: khách, sản phẩm, decor nào gắn vào điểm nào, màu hoàn thiện. Cùng một sản phẩm, mỗi khách có thể có một bộ decor khác.
+  - `DecorDefinition`: id, sprite, âm thanh, có cho đổi màu không. Thư viện decor dùng lại cho nhiều đơn.
+  - Level giữ `productId` và `slotIndex` như hiện tại.
+- **Telemetry:** thời gian đặt mảnh, số lần thả sai ô, thời gian từ lúc đặt xong tới lúc chạm hoàn thiện, tỉ lệ bỏ qua (nếu cho bỏ qua).
+- **Rủi ro:** bước đặt mảnh chạy sau mỗi màn khi sản phẩm chỉ có một mảnh, có thể làm chậm nhịp; tỉ lệ sản phẩm một mảnh trong chương do thiết kế level cân. Lặp lại qua nhiều đơn có thể nhàm; giảm bằng khung, vải nền và decor khác nhau, cho tua nhanh.
 
 ### Mở rộng trong tương lai (chưa làm ở bản đầu)
 
@@ -225,6 +266,7 @@ Người chơi là thợ may: mỗi khách đặt một món đồ, mỗi mảnh
 - **Vải và hoa văn mở khóa dần:** kẻ caro, chấm bi, lụa, thổ cẩm… là phần thưởng chính, dùng lại cảnh đổ màu. Có thể thêm bước chọn vải trước khi may, đúng sở thích khách thì được tiền boa.
 - **Nâng cấp tiệm theo mốc cố định (đã chốt kiểu):** tiệm đẹp dần qua các bước định sẵn (máy may mới, kệ vải, quầy, đèn…), mở bằng tiền công. Không cho người chơi tự bày trí. Lợi ích: art làm theo từng bước, dễ cân bằng, ít UI.
 - **Tiền công, tiền boa, sao:** đơn vị dùng cho các mở rộng trên. Chỉ thưởng thêm, không bao giờ phạt vì chậm hay vì dùng gợi ý.
+- **Mặc thử lên người khách:** với sản phẩm là đồ mặc, khách mặc thử ngay tại quầy trước khi ra về. Cần thêm phần mặc lên người trong `ProductDefinition` (sprite trang phục, mặt nạ đổ vải) cùng khung với chân dung khách.
 
 ### Ghi chú để thuyết trình (chưa làm)
 
@@ -447,7 +489,7 @@ Vì vậy ngưỡng 92% chỉ dễ chịu với hình đủ to. Với hình nh�
 
 ### Khác với đặc tả ban đầu
 
-- **Ngưỡng thắng:** mặc định 92%; bản thử chỉ còn hai lựa chọn 92% và 95%. Giữ điều kiện điểm phải trên ngưỡng liên tục 0,1 giây.
+- **Ngưỡng thắng:** mặc định 92%; bản thử chỉ còn hai lựa chọn 92% và 95%. Bản thử thắng ngay khi điểm trên ngưỡng liên tục 0,1 giây, kể cả lúc đang kéo; bản chính thức đổi thành chỉ kiểm tra khi thả tay (xem mục Thanh khớp).
 - **Snap:** đang đưa node về vị trí lời giải lưu sẵn, chưa biến đường cắt về viền mẫu như đề xuất.
 - **Tính điểm:** mặt nạ 200×200 thay cho Clipper2, tính mỗi khung hình (khoảng 0,7 ms) thay vì 2–3 khung một lần. Chưa có điều kiện độ lệch viền tối đa, nên một mũi nhọn nhỏ bị cụt vẫn có thể thắng.
 - **Tiếp tuyến điểm cong:** lấy từ hai láng giềng trên vòng ngoài (Catmull-Rom). Điểm cong có nhiều hơn hai cạnh thì cạnh thêm dùng chiều gần nhất với hướng đi, chưa chốt được quy tắc cuối cùng.
@@ -467,13 +509,15 @@ Các điểm dưới đây cần chốt trước khi viết code, vì chúng ả
 - [ ] Có cho phép nhánh treo, tức cạnh không nằm trên vòng kín nào? Đề xuất: chưa cho trong prototype.
 - [x] Đã chốt: ngưỡng thắng mặc định 92%, có thêm 95% để thử. Hình nhỏ hoặc nhiều node cần ngưỡng riêng theo level.
 - [ ] Chấm theo cả vị trí trên vải, hay chỉ theo hình dạng (game tự căn miếng vải cho khớp rồi mới so)?
-- [ ] Phiên bản Unity và render pipeline (đề xuất URP 2D).
+- [x] Đã chốt: Unity 2022.3 LTS, URP với Renderer 2D.
 - [ ] Điểm chạy dọc viền và nốt nhạc: giữ hay bỏ sau khi thử với người chơi? Theo dõi xem có gây mệt ở màn nhiều node không.
 - [x] Đã chốt: dùng kéo tương đối, chưa thêm node tay nắm bên ngoài. Xem lại nếu người thử vẫn nói bị che hoặc chọn nhầm node ở màn nhiều node.
 - [ ] Thêm điều kiện độ lệch viền tối đa vào cách tính thắng để không thắng khi cụt mũi nhọn.
 - [ ] Nút đảo chiều điểm sáng: miễn phí, giới hạn 1 lần mỗi màn, hay tính như một lần Gợi ý? Luật thứ tự ghim chỉ còn gài buộc khi có từ 4 ghim số.
 - [ ] Vùng cấm: chỉ nằm ngoài hình mẫu, hay làm cơ chế khoét lỗ để có vùng cấm nằm bên trong?
 - [ ] Level chiều sâu: bao nhiêu level dùng, chọn parallax 2D hay camera nghiêng cho từng level, và kích thước tối thiểu của điểm sáng khi đi vào xa?
+- [x] Đã chốt: bước đặt mảnh không cho chọn màu (màu do người thiết kế level đặt); người chơi không xoay mảnh, góc xoay của từng ô do người thiết kế level đặt và mảnh xuất hiện đã xoay sẵn. Khách chỉ nhận sản phẩm, vui vẻ rồi ra về; mặc thử lên người khách là mở rộng tùy chọn.
+- [ ] Đặt mảnh và hoàn thiện sản phẩm: có cho bỏ qua không? Khoảng cách tự hút, bán kính bo góc vải nền và thời lượng chuỗi hoàn thiện đặt trong ScriptableObject, số cụ thể cần chốt.
 
 **Mở rộng sau prototype:** điểm liên kết, điểm trên ray, cạnh cứng, cạnh co giãn, gấp vải đối xứng, vải họa tiết, khoét lỗ, nhiều mảnh trên một tấm vải, meta tiệm may và khách hàng. Trường `tags` trong dữ liệu level và các giao diện ở phần kiến trúc đã chừa sẵn chỗ cho những cơ chế này.
 

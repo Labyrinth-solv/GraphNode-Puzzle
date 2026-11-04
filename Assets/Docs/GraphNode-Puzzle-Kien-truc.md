@@ -37,7 +37,7 @@ Trạng thái: kế hoạch, chưa có mã. Thư mục `Assets/Scripts` đang tr
 | JSON | Newtonsoft Json (`com.unity.nuget.newtonsoft-json` 3.2.2) | Đã có | Phụ thuộc trực tiếp của project, không còn dựa vào gói MCP. `JsonUtility` không làm được dictionary và kiểu đa hình mà save và level cần |
 | Tiêm phụ thuộc | Nối thủ công qua hàm khởi tạo (pure DI) ở M0 tới M3; xem lại VContainer trước khi làm meta mở rộng | **Đề xuất, cần chốt** | Không thêm gói. Mọi lớp nhận phụ thuộc qua hàm khởi tạo, mỗi scene một lớp nối trong `App`. Khi phần nối dài và khó theo dõi thì chuyển sang VContainer, chỉ sửa phần nối |
 | Hình học | Tự viết trong Core | Không thêm gói | Đồ thị nhỏ (tới 14 node); giữ đúng cách tính của bản thử (mặt nạ 200×200) để số liệu đối chiếu khớp. Clipper2 để dành nếu cần phép đa giác chính xác (vùng cấm, khoét lỗ) |
-| Nội dung | Level: file JSON là bản gốc. Định nghĩa có asset (khách, món đồ, vải, cấu hình): ScriptableObject | Không thêm gói | JSON dễ xem khác biệt trong git, dễ gộp, kiểm tra được trong test thuần C#, sau này tải từ xa được. Level không cần tham chiếu asset trực tiếp, chỉ dùng id |
+| Nội dung | Level: file JSON là bản gốc. Định nghĩa có asset (khách, sản phẩm, vải, cấu hình): ScriptableObject | Không thêm gói | JSON dễ xem khác biệt trong git, dễ gộp, kiểm tra được trong test thuần C#, sau này tải từ xa được. Level không cần tham chiếu asset trực tiếp, chỉ dùng id |
 | Addressables | Không dùng ở bản đầu | Để sau | Thêm khi cần cập nhật level từ xa hoặc khi meta có nhiều art |
 | Ngôn ngữ | `ILocalizer` và bảng chuỗi riêng | Để sau mới thay | Có thể đổi sang gói Unity Localization mà không sửa nơi gọi |
 | Telemetry, crash, remote config | Interface trong Foundation | Chốt nhà cung cấp sau | Firebase hoặc Unity Gaming Services; code chơi không gọi thẳng SDK |
@@ -104,7 +104,7 @@ flowchart TD
 ### 3.2 Gameplay và Meta nói chuyện thế nào
 
 - **Vào màn:** Meta gửi `LevelRequest` gồm `levelId`, `fabricId` (tùy chọn, đè lên vải mặc định của level khi người chơi tự chọn vải) và danh sách `modifiers` chung (ví dụ thêm lượt gợi ý). Gameplay chỉ hiểu modifier qua interface, không biết nó đến từ cửa hàng hay phần thưởng.
-- **Ra màn:** Gameplay phát `LevelResult` lên message bus, gồm: `levelId`, `fabricId` thực dùng, kết quả (thắng hay bỏ), số liệu chơi (thời gian, số lần kéo, gợi ý, đặt lại, đảo chiều, lần kiểm tra thất bại). Hình mảnh vải không cần gửi kèm: Meta lấy từ `targetShape` của `levelId`. Meta nghe để cho mảnh bay vào thẻ đơn, mở màn tiếp, ghép món đồ, tính thưởng. Telemetry nghe để gửi sự kiện.
+- **Ra màn:** Gameplay phát `LevelResult` lên message bus, gồm: `levelId`, `fabricId` thực dùng, kết quả (thắng hay bỏ), số liệu chơi (thời gian, số lần kéo, gợi ý, đặt lại, đảo chiều, lần kiểm tra thất bại). Hình mảnh vải không cần gửi kèm: Meta lấy từ `targetShape` của `levelId`. Meta nghe để cho mảnh bay vào thẻ đơn, mở màn tiếp, đặt mảnh vào sản phẩm, tính thưởng. Telemetry nghe để gửi sự kiện.
 - **Chuyển cảnh:** cả hai phía gọi `ISceneTransition` (mục 5.11), không tự nạp scene.
 - **Lưu:** mỗi module có mục lưu riêng. Thêm module meta là thêm mục lưu, không đụng mục cũ.
 
@@ -168,7 +168,7 @@ Assets/
 │   │   └── Hud/                  Thanh khớp, Gợi ý, Đặt lại, Đảo chiều, bảng kết quả màn
 │   ├── Meta/                     GraphNode.Meta
 │   │   ├── Progression/          Mở màn, lưu tiến trình (bản đầu)
-│   │   ├── Orders/               Khách, đơn nhiều mảnh, bong bóng suy nghĩ, mặc thử (bản đầu)
+│   │   ├── Orders/               Khách, đơn nhiều mảnh, bong bóng suy nghĩ, khách nhận đồ (bản đầu)
 │   │   └── (sau này) Stories/  Lookbook/  Fabrics/  ShopUpgrades/  Currency/
 │   ├── App/                      GraphNode.App
 │   │   ├── Bootstrap/
@@ -184,16 +184,17 @@ Assets/
 ├── Content/
 │   ├── Levels/Chapter01/         File JSON level (bản gốc)
 │   ├── Chapters/
-│   ├── Products/
+│   ├── Products/                 ProductDefinition: khung, vải nền, ô mảnh, điểm gắn decor, phần mặc lên người (mở rộng)
+│   ├── Decors/                   DecorDefinition
 │   ├── Customers/                CustomerDefinition
 │   ├── Orders/                   OrderDefinition
-│   ├── Garments/                 GarmentDefinition: sprite món đồ và mặt nạ đổ vải
 │   ├── Fabrics/                  FabricDefinition
 │   └── Configs/                  Asset cấu hình cân bằng
 ├── Art/
 │   ├── Sprites/  Atlases/  Fonts/  Materials/  Shaders/  VFX/  Depth/
 │   ├── Characters/               Chân dung khách theo lớp và biểu cảm
-│   ├── Garments/                 Sprite món đồ và mặt nạ
+│   ├── Products/                 Sprite sản phẩm, bản phác thảo, mặt nạ đổ vải
+│   ├── Decors/                   Sprite decor sản phẩm
 │   ├── Fabrics/                  Texture hoa văn vải
 ├── Audio/
 │   ├── Music/  Sfx/  Notes/  Mixers/
@@ -229,7 +230,7 @@ stateDiagram-v2
 stateDiagram-v2
     [*] --> Intro
     Intro --> Play
-    Play --> Verify: khớp đạt ngưỡng 0,1 giây
+    Play --> Verify: thả tay khi khớp đạt ngưỡng
     Verify --> Play: hết một vòng còn ghim chưa sáng
     Verify --> Snap: mọi điểm và ghim đã sáng
     Snap --> Cut
@@ -245,7 +246,7 @@ stateDiagram-v2
   1. Input cập nhật vị trí node đang kéo (qua ràng buộc).
   2. Nếu đồ thị đổi: Core tính lại mặt nạ, điểm khớp, trạng thái vùng cấm.
   3. Core bước điểm sáng theo `dt` (tốc độ, chiều chạy, tăng tốc).
-  4. Core xét luật thắng.
+  4. Chỉ ở khung hình có sự kiện thả tay: Core xét luật thắng trên vị trí node cuối cùng. Đang kéo thì không xét.
   5. Hiển thị đọc trạng thái và vẽ.
 - **Kết quả:** khi vào pha Kết quả, phiên phát `LevelResult` lên message bus rồi mới mở bảng thắng.
 
@@ -291,9 +292,9 @@ Yêu cầu: API không cấp phát khi đang chơi (bộ đệm dựng một l�
 - Level Editor đọc và ghi thẳng JSON. Không có bản ScriptableObject song song, nên không có hai nguồn lệch nhau. `LevelCatalog` (một ScriptableObject) chỉ là danh mục id trỏ tới các file, do công cụ trong Editor sinh lại tự động.
 - JSON có `schemaVersion`; khi đổi cấu trúc thì viết bước chuyển đổi, không sửa tay file cũ.
 - Dữ liệu nhiều loại (loại ghim, điều kiện thắng, hình dạng cạnh) ghi trường `kind` và đọc bằng bộ chuyển đổi tự viết. Không dùng chế độ tự ghi tên kiểu của Newtonsoft (`TypeNameHandling`): kém an toàn và dễ hỏng khi IL2CPP cắt code.
-- Level trỏ tới vải, sản phẩm bằng id; định nghĩa có asset (khách, món đồ, vải, cấu hình cân bằng) vẫn là ScriptableObject.
+- Level trỏ tới vải, sản phẩm bằng id; định nghĩa có asset (khách, sản phẩm, vải, cấu hình cân bằng) vẫn là ScriptableObject.
 - `LevelValidator` (trong Core) dùng chung cho Editor, CI và test.
-- Dữ liệu tiệm may (trong Data, dùng bởi Meta và Visuals): `CustomerDefinition` (tên, các lớp chân dung, biểu cảm), `OrderDefinition` (khách, món đồ, danh sách level theo thứ tự mảnh), `GarmentDefinition` (sprite món đồ, mặt nạ vùng đổ vải, vị trí hình đắp), `FabricDefinition` (texture hoa văn, màu, điều kiện mở khóa).
+- Dữ liệu tiệm may (trong Data, dùng bởi Meta và Visuals): `CustomerDefinition` (tên, các lớp chân dung, biểu cảm), `OrderDefinition` (khách, sản phẩm, danh sách level theo thứ tự mảnh, decor theo điểm gắn, màu hoàn thiện), `ProductDefinition` (khung, vải nền tùy chọn, ô mảnh, điểm gắn decor, bản phác thảo, phần mặc lên người cho mở rộng mặc thử), `DecorDefinition`, `FabricDefinition` (texture hoa văn, màu, điều kiện mở khóa).
 - `targetShape` của level là nguồn duy nhất cho hình mẫu ở mọi nơi: bóng mờ trong màn, bong bóng suy nghĩ, thẻ đơn, lookbook. Level Editor ghi nó ra từ lời giải.
 
 ### 5.8 Lưu trữ
@@ -326,9 +327,9 @@ Yêu cầu: API không cấp phát khi đang chơi (bộ đệm dựng một l�
 ### 5.12 Hiển thị dùng chung (`GraphNode.Visuals`)
 
 - **`ShapePreview`:** vẽ `targetShape` thành nét đứt có tô nhạt, kích thước tùy chỗ dùng. Có kích thước tối thiểu và độ dày nét theo số node, để hình nhiều node vẫn đọc được trong bong bóng.
-- **`FabricMaterial`:** một shader đổ hoa văn và màu vải theo mặt nạ, dùng cho cảnh đổ màu trong màn, món đồ trên người khách, lookbook.
-- **`CharacterView`:** nhân vật gồm các lớp (thân, tóc, biểu cảm, trang phục). Trang phục lấy từ `GarmentDefinition`, đổ vải bằng `FabricMaterial`. Dùng cho khách ở quầy, cảnh mặc thử, lookbook.
-- **Quy trình art cho mỗi món đồ:** một sprite món đồ, một mặt nạ vùng đổ vải, vị trí đặt hình đắp; cùng kích thước khung với chân dung khách để chồng lớp đúng.
+- **`FabricMaterial`:** một shader đổ hoa văn và màu vải theo mặt nạ, dùng cho cảnh đổ màu trong màn, mảnh và vải nền khi hoàn thiện sản phẩm, sản phẩm trên người khách, lookbook.
+- **`CharacterView`:** nhân vật gồm các lớp (thân, tóc, biểu cảm, trang phục). Trang phục lấy từ phần mặc lên người của `ProductDefinition`, đổ vải bằng `FabricMaterial`. Dùng cho khách ở quầy, cảnh khách nhận đồ; sau này cho mặc thử và lookbook.
+- **Quy trình art cho mỗi sản phẩm:** bản phác thảo cho thẻ đơn; khi làm mở rộng mặc thử thì thêm một sprite trang phục, một mặt nạ vùng đổ vải, vị trí đặt hình đắp; cùng kích thước khung với chân dung khách để chồng lớp đúng.
 
 ---
 
@@ -336,10 +337,10 @@ Yêu cầu: API không cấp phát khi đang chơi (bộ đệm dựng một l�
 
 ### Có từ bản đầu
 
-- Assembly `GraphNode.Meta` với `Progression` (mở màn, lưu tiến trình) và `Orders` (khách ở quầy, đơn nhiều mảnh, bong bóng suy nghĩ, cảnh mặc thử).
+- Assembly `GraphNode.Meta` với `Progression` (mở màn, lưu tiến trình) và `Orders` (khách ở quầy, đơn nhiều mảnh, bong bóng suy nghĩ, cảnh khách nhận đồ: vui vẻ rồi ra về).
 - Dữ liệu `CustomerDefinition`, `OrderDefinition`. Level không biết khách: Meta chọn level kế tiếp từ đơn rồi gửi `LevelRequest`.
 - Bong bóng suy nghĩ dùng `ShapePreview` (Visuals) vẽ `targetShape` của level kế tiếp, không cần art riêng cho từng màn và Meta không phải đụng Core.
-- Cảnh mặc thử dùng `CharacterView` và `FabricMaterial` (Visuals).
+- Cảnh khách nhận đồ dùng `CharacterView` (biểu cảm vui) và hiển thị sản phẩm đã hoàn thiện. Mặc thử lên người khách là mở rộng tùy chọn, dùng thêm phần mặc lên người của `ProductDefinition` và `FabricMaterial`.
 - Mọi lần đổi scene đi qua `ISceneTransition` (bản đầu có thể chỉ là mờ dần; hiệu ứng bong bóng vào màn và mảnh vải về thẻ đơn là tùy chọn).
 - Hợp đồng `LevelRequest`, `LevelResult`, message bus; lưu theo mục; khung điều hướng màn hình.
 - Điểm móc `IRewardPolicy` (bản đầu không thưởng gì) và `modifiers` trong `LevelRequest`.
@@ -353,6 +354,14 @@ Yêu cầu: API không cấp phát khi đang chơi (bộ đệm dựng một l�
 5. Nếu cần ảnh hưởng màn chơi (ví dụ vải đã chọn đổi màu đổ) thì truyền qua `LevelRequest` dưới dạng dữ liệu chung.
 
 Không bước nào sửa `Core` hay `Gameplay`. Thứ tự thêm đề xuất khớp đặc tả: khách có câu chuyện, lookbook, vải, nâng cấp tiệm theo mốc cố định.
+
+### Đặt mảnh và hoàn thiện sản phẩm (nâng cấp sau bản đầu)
+
+- Assembly riêng `GraphNode.Meta.Sewing`, theo cách tách ở mục "Khi Meta lớn lên". Không tham chiếu `Orders` hay `Gameplay`.
+- Nhận thông điệp sản phẩm đã đủ mảnh từ `Orders`, hoàn thiện xong thì phát thông điệp sản phẩm hoàn thiện; `Orders` nghe để chuyển sang cảnh khách nhận sản phẩm. Bước này chạy cho mọi sản phẩm, kể cả sản phẩm một mảnh.
+- Phép kiểm tra "mảnh đủ gần ô thì hút vào" là hình học thuần, đặt trong `Core` kèm test EditMode. Khoảng cách tính theo bề rộng khung, lấy từ ScriptableObject cấu hình.
+- Dùng `Visuals`: `ShapePreview` vẽ mảnh từ `targetShape`; vải nền dựng mesh theo kiểu hình (vuông, vuông bo góc, tròn); `FabricMaterial` có một tham số mức hoàn thiện dùng cho cả mảnh và vải nền: sau mỗi màn đẩy lên mức nhạt, lần chạm hoàn thiện đẩy lên tối đa. Decor là sprite trong SpriteAtlas, hiện lần lượt bằng `IPresentationStep`.
+- Dữ liệu: `ProductDefinition` (khung, vải nền tùy chọn, ô mảnh gồm vị trí, tỉ lệ và góc xoay do người thiết kế đặt, điểm gắn decor, bản phác thảo, phần mặc lên người cho mở rộng mặc thử), lựa chọn decor và màu hoàn thiện trong `OrderDefinition`, `DecorDefinition`. Thêm mục lưu nếu cần nhớ trạng thái đặt mảnh dở.
 
 ### Khi Meta lớn lên
 
@@ -381,9 +390,9 @@ Tiền công, nâng cấp tiệm, lookbook, vải, câu chuyện khách, sự ki
 | M1 Lõi | Chuyển lõi bản thử sang `GraphNode.Core`; test EditMode với số liệu đối chiếu (100% cho đáp án, bảng độ nhạy, thứ tự ghim, đối xứng gương và đảo chiều) | Test xanh; đo thời gian tính trên Editor và một máy Android phổ biến |
 | M2 Màn chơi tối thiểu | Một level đọc từ JSON, kéo tương đối, vùng tô và viền (thử hai cách vẽ, chọn một), thanh khớp, thắng | Chơi hết màn 1 trên thiết bị thật, giữ 60 fps khi kéo node |
 | M3 Luật đầy đủ | Điểm sáng, ghim, vòng kiểm tra, đảo chiều, chuỗi trình diễn, bảng kết quả | 4 màn của bản thử chơi được, khớp luật lõi của bản thử (không đối chiếu hình ảnh hay giao diện) |
-| M4 Nội dung và tiệm may | Level Editor, kiểm tra hàng loạt trong CI, khoảng 20 màn, tiến trình và save; màn Home khách ở quầy, bong bóng, thẻ đơn, chuyển cảnh cơ bản, mặc thử | Kiểm tra hàng loạt xanh; lưu và tải lại đúng; chơi trọn một đơn từ Home |
+| M4 Nội dung và tiệm may | Level Editor, kiểm tra hàng loạt trong CI, khoảng 20 màn, tiến trình và save; màn Home khách ở quầy, bong bóng, thẻ đơn, chuyển cảnh cơ bản, khách nhận đồ | Kiểm tra hàng loạt xanh; lưu và tải lại đúng; chơi trọn một đơn từ Home |
 | M5 Hoàn thiện | Âm thanh, nốt nhạc, rung, telemetry, giảm chuyển động, hiệu năng, QA trên máy thật | Đạt định nghĩa hoàn thành trong đặc tả |
-| Sau đó | Meta mở rộng: khách có câu chuyện, lookbook, vải, nâng cấp tiệm | Theo mục mở rộng trong đặc tả |
+| Sau đó | Đặt mảnh và hoàn thiện sản phẩm (vải nền, decor bất ngờ); meta mở rộng: khách có câu chuyện, lookbook, vải, nâng cấp tiệm | Theo mục tương ứng trong đặc tả |
 
 ---
 
