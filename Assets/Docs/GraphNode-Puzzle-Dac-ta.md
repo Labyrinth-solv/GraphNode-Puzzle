@@ -21,7 +21,7 @@ Mỗi màn là một vòng kéo điểm và xem thanh khớp; không có nút C�
 
 1. **Vào màn:** hình mẫu hiện thành bóng mờ trên vải và thẻ nhỏ phía trên. Graph ở trạng thái xáo trộn, thanh khớp khoảng 30–60%.
 2. **Kéo điểm:** viền ngoài (đường cắt) cập nhật trực tiếp, thanh khớp tăng giảm theo.
-3. **Đạt ngưỡng:** khi người chơi thả tay mà độ khớp đạt ngưỡng thì thao tác bị khóa, các điểm mờ đi và điểm sáng chạy kiểm tra: nó phải đi qua mọi điểm và mọi ghim, rồi mới chuyển sang bước 4. Bảng thắng chỉ hiện sau cảnh cắt và ghép. Chưa đạt thì tiếp tục kéo, không giới hạn số lần kéo; có nút Gợi ý (dùng booster) và Đặt lại.
+3. **Đạt ngưỡng:** khi người chơi thả tay mà độ khớp đạt ngưỡng thì thao tác bị khóa và chuyển ngay sang bước 4, không có bước chờ điểm sáng chạy kiểm tra. Bảng thắng chỉ hiện sau cảnh cắt và ghép. Chưa đạt thì tiếp tục kéo, không giới hạn số lần kéo; có nút Gợi ý (dùng booster) và Đặt lại.
 4. **Auto-snap:** khóa thao tác, đường cắt biến về đúng đường viền hình mẫu.
 5. **Cắt:** kéo chạy dọc viền, miếng vải nhấc lên, đổ màu hoặc hoa văn.
 6. **Ghép vào sản phẩm:** mảnh vải bay vào sản phẩm đang may dở. Đủ mảnh thì chạy màn lộ diện sản phẩm.
@@ -94,8 +94,21 @@ Vùng bên trong viền ngoài được tô hồng nhạt khi kéo, để ngư�
 - **Điều kiện phụ (chưa làm, cần chốt):** độ lệch viền lớn nhất không quá ngưỡng, để không thắng khi còn cụt mất mũi nhọn hay cuống lá. Đơn vị và cách tính chưa có; tới khi chốt, trường `maxDeviation` để trống và lõi bỏ qua.
 - **Ngưỡng thắng:** mặc định 92%, chỉnh được theo từng level.
 - **Hiển thị:** thanh không hiện thẳng phần trăm thô. Đoạn từ 50% đến ngưỡng được giãn ra cả thanh, nên mỗi lần kéo đều thấy thanh nhúc nhích rõ. Thanh trượt mượt về giá trị mới, đổi màu theo mốc và rung nhẹ khi qua 70%, 85%.
+  - **Vị trí trên thanh:** `vị trí = (độ khớp − 50%) / (ngưỡng − 50%)`, kẹp trong 0 tới 1. Mốc màu tính theo độ khớp thật rồi quy ra vị trí bằng cùng công thức, nên level có ngưỡng khác thì vạch mốc nằm chỗ khác (ngưỡng 92%: vạch 70% ở khoảng 48% chiều dài thanh, vạch 85% ở khoảng 83%). Thanh vẽ hai vạch mốc mờ ở hai vị trí này.
+  - **Màu theo đoạn (đã chốt):**
+
+    | Độ khớp thật | Màu thanh | Mã màu |
+    | --- | --- | --- |
+    | Dưới 70% | Hồng | #E2557A |
+    | Từ 70% tới dưới 85% | Nhấn | #C7385F |
+    | Từ 85% trở lên (gần xong) | Xanh lá sáng | #3DBE7A (tạm, người dùng chốt khi làm giao diện) |
+
+    Ba mã màu trên theo bảng màu cũ; khi chốt art sẽ đổi theo mục Bảng màu (mục Đồ họa và cảm giác), giữ nguyên ý: đoạn gần xong là màu xanh sáng.
+
+  - **Chữ trạng thái** theo vị trí trên thanh (giá trị bản thử): dưới 20% "Còn xa"; 20% tới dưới 50% "Đang gần hơn"; 50% tới dưới 83% "Gần khớp rồi"; từ 83% "Sắp xong!". Chữ đi qua bảng chuỗi.
+  - **Thông số:** các mốc 70%, 85% và mốc chữ trạng thái đặt trong ScriptableObject cấu hình, số trên là mặc định lấy từ bản thử; mã màu đặt trong cấu hình giao diện.
 - **Tần suất tính:** khi đang kéo, chỉ để cập nhật thanh và vùng tô, có thể giãn ra 2–3 khung hình một lần nếu đo thấy cần (bản thử tính mỗi khung, khoảng 0,7 ms). Lúc thả tay luôn tính lại ngay trên vị trí node cuối cùng, không dùng kết quả của khung trước.
-- **Khi nào thắng (đã chốt):** chỉ kiểm tra khi người chơi thả tay. Lúc đang kéo, thanh có thể chạm ngưỡng nhưng màn không khóa và chưa chạy hoạt ảnh; người chơi còn chỉnh tiếp được. Lúc thả tay, độ khớp tính theo vị trí node cuối cùng: đạt ngưỡng thì khóa thao tác, chạy vòng kiểm tra điểm và ghim, rồi mới chạy chuỗi hoàn thành và hiện bảng thắng; chưa đạt thì chơi tiếp.
+- **Khi nào thắng (đã chốt):** chỉ kiểm tra khi người chơi thả tay. Lúc đang kéo, thanh có thể chạm ngưỡng nhưng màn không khóa và chưa chạy hoạt ảnh; người chơi còn chỉnh tiếp được. Lúc thả tay, độ khớp tính theo vị trí node cuối cùng: đạt ngưỡng thì khóa thao tác, snap và chạy chuỗi hoàn thành ngay rồi hiện bảng thắng; chưa đạt thì chơi tiếp.
   - **Lý do:** thắng giữa lúc ngón tay còn đang di chuyển làm người chơi bị giật tay khỏi node, cảm giác hụt; thả tay là hành động có chủ ý nên trải nghiệm tốt hơn.
   - **Bỏ điều kiện giữ 0,1 giây:** thả tay đã là mốc rõ ràng, không còn chuyện thắng vì lướt qua ngưỡng một khung hình.
   - **Tín hiệu sẵn sàng:** khi đang kéo mà độ khớp đạt ngưỡng, nên có tín hiệu để người chơi biết thả tay là thắng. Cách thể hiện do người dùng chốt khi làm giao diện.
@@ -104,7 +117,7 @@ Vùng bên trong viền ngoài được tô hồng nhạt khi kéo, để ngư�
 
 ### Auto-snap và chuỗi hoàn thành
 
-Khi thắng, đường cắt biến hình về đúng đường viền hình mẫu: mỗi điểm mẫu trên đường cắt trượt tới điểm gần nhất trên viền hình mẫu. Các node và cạnh bên trong mờ dần. Cách này đúng với mọi lời giải người chơi tìm ra, không phụ thuộc một lời giải lưu sẵn.
+Khi thắng, mỗi node không khóa trượt tới **điểm gần nhất trên viền hình mẫu** tính từ chỗ người chơi đặt nó, không về vị trí lời giải lưu sẵn (đã chốt 2026-11-04). Node khóa đứng yên. Nhờ vậy bố cục người chơi tự xếp được giữ, chỉ được "hút" gọn vào viền; cách này đúng với mọi lời giải, không phụ thuộc một lời giải lưu sẵn. Cảnh cắt sau đó chạy dọc viền hình mẫu. Các node và cạnh bên trong mờ dần.
 
 | Bước | Thời lượng | Diễn ra |
 | --- | --- | --- |
@@ -118,7 +131,7 @@ Tổng khoảng 3 giây; chạm màn hình để tua nhanh.
 
 ### Điểm chạy dọc viền và nốt nhạc
 
-Một điểm vàng có đuôi sáng chạy theo vòng node của level (trường `ring`, gồm cạnh vòng, không đi theo viền ngoài hay cạnh trong), vừa để bắt mắt, vừa cho người chơi thấy node nào đang nằm trên viền ngoài.
+Một điểm sáng có đuôi chạy theo vòng node của level (trường `ring`, gồm cạnh vòng, không đi theo viền ngoài hay cạnh trong), vừa để bắt mắt, vừa cho người chơi thấy node nào đang nằm trên viền ngoài. Điểm sáng chỉ để trang trí và phát nốt nhạc, không còn quyết định thắng thua (đã bỏ vòng kiểm tra). Bản web thử vẽ điểm sáng thành hình cây kéo, mỗi lần qua một node trên viền phát một tiếng "pop" trong theo thang ngũ cung.
 
 - **Chuyển động:** tốc độ không đổi 250 px mỗi giây (khung vải 368 px), kể cả khi người chơi đang kéo. Điểm gắn với một cạnh và một vị trí tỷ lệ trên cạnh đó, nên khi node bị kéo làm cạnh dài ra hay co lại, điểm đi theo cạnh liên tục. Cách đầu tiên tính theo tỷ lệ cả vòng làm điểm nhảy giật mỗi khi chu vi đổi, đã bỏ.
 - **Nốt nhạc:** khi điểm tới một node nằm trên viền ngoài thì phát một nốt thang ngũ cung (đô, rê, mi, sol, la). Mỗi node một nốt cố định. Node nảy to 1,3 lần và có vòng sóng vàng lan ra trong 0,45 giây. Node nằm lọt trong vùng tô thì im lặng. Node được coi là trên viền nếu trong ô 7×7 của mặt nạ quanh nó có một ô nằm ngoài vùng.
@@ -134,15 +147,12 @@ Nét phấn đứt của viền ngoài đổi màu liên tục quanh hình, trô
 - **Theo độ khớp:** từ khoảng 35% thanh khớp trở lên, các màu hòa dần về màu vàng phần thưởng; đầy thanh thì cả viền thành một màu vàng. Người chơi nhìn màu viền cũng biết đang gần hay xa.
 - **Chi phí:** rất nhỏ, chỉ đổi cách vẽ nét đứt, không đổi cách tính điểm.
 
-### Vòng kiểm tra điểm và ghim
+### Ghim (gác lại; nếu dùng thì kiểm tra tức thì)
 
-Sau khi viền khớp hình, các điểm mờ đi và điểm sáng phải đi qua mọi điểm (thường và đặc biệt) cùng mọi ghim thì màn mới thắng, và bảng thắng chỉ hiện sau chuỗi hoàn thành. Màn không có ghim vẫn chạy vòng kiểm tra qua các điểm. Ghim là các điểm cố định trên viền hình mẫu.
+**Đã bỏ vòng kiểm tra bằng điểm sáng (2026-11-04):** thả tay mà độ khớp đạt ngưỡng thì snap và chạy chuỗi hoàn thành ngay, không chờ điểm sáng chạy qua đủ các node. Lý do: khi chơi thử, bước chờ này thừa, làm chậm khoảnh khắc thắng. Bản đầu chưa dùng ghim. Ghim là các điểm cố định trên viền hình mẫu; nếu dùng lại, ghim được kiểm tra tức thì lúc thả tay bằng hình học, không cần điểm sáng chạy.
 
-- **Hai loại ghim:** ghim tròn rỗng, đi qua lúc nào cũng được; ghim có số (tam giác 1, vuông 2, ngũ giác 3, lục giác 4) phải đi qua theo thứ tự. Ghim số n chỉ sáng khi ghim số n−1 đã sáng; đi qua sai thứ tự thì ghim nhấp đỏ ngắn và không sáng.
-- **Khi nào kiểm tra:** người chơi thả tay khi độ khớp đạt ngưỡng thì thao tác bị khóa, các điểm và cạnh mờ còn khoảng 30%, điểm sáng chạy một vòng từ node đầu của vòng với tốc độ 1,3 lần bình thường. Mỗi điểm mà điểm sáng đã đi qua sáng viền vàng; thanh khớp hiện "Kiểm tra n/N" (tổng điểm và ghim). Vì một vòng đi qua mọi node, chỉ ghim mới có thể làm kiểm tra thất bại. Ghim nào được đi qua đúng thì chuyển vàng, có tiếng "ting" và rung nhẹ. Điểm và ghim sáng hết thì chuyển sang snap, cắt và ghép; bảng thắng hiện sau cùng, khi chuỗi hoàn thành kết thúc.
-- **Tăng tốc ngắn:** mỗi lần điểm sáng đi qua một ghim, nó tăng tốc tới khoảng 2,4 lần rồi giảm dần trong khoảng 0,6 giây, đuôi sáng dài ra. Lúc đang chơi, ghim chỉ nhấp sáng khi điểm sáng qua, không tính điểm, để người chơi tự thấy viền đã đi qua ghim hay chưa.
-- **Dung sai:** khoảng cách từ ghim tới đoạn đường điểm sáng đi trong một khung hình dưới 16 đơn vị. Vì khớp 92% cho phép lệch vài px, cần theo dõi xem dung sai này có khắt trên màn hình nhỏ không.
-- **Thất bại:** điểm sáng chạy hết một vòng mà còn ghim chưa sáng thì màn trở lại chơi bình thường. Ghim còn trống nhấp đỏ, kèm lời nhắn (sai thứ tự, hay chưa đi qua đủ ghim). Màn chỉ tự kiểm tra lại sau khi người chơi kéo một node rồi thả.
+- **Hai loại ghim:** ghim tròn rỗng (đạt khi viền đi qua); ghim có số (tam giác 1, vuông 2, ngũ giác 3, lục giác 4) phải được viền đi qua theo đúng thứ tự.
+- **Cách kiểm tra (đề xuất, cần chốt khi dùng ghim):** lúc thả tay, ghim đạt khi khoảng cách từ ghim tới viền ngoài hiện tại không quá dung sai 4,3% bề rộng vải; ghim số đạt khi các ghim số nằm trên viền theo đúng thứ tự dọc viền, theo chiều vòng. Đạt ngưỡng khớp mà còn ghim chưa đạt thì ghim đó nhấp đỏ, có lời nhắn ngắn, màn chơi tiếp; lần thả tay sau kiểm tra lại.
 - **Vị trí ghim:** đặt giữa cạnh, không đặt đúng chỗ node, để không bị node che. Dữ liệu level thêm danh sách `markers`, mỗi ghim gồm:
   - `edge`: chỉ số trên vòng của node đứng đầu cạnh vòng chứa ghim (cạnh từ `ring[edge]` tới node kế tiếp trên vòng);
   - `t`: tỉ lệ theo chiều dài cung dọc cạnh đó, từ 0 tới 1;
@@ -151,7 +161,9 @@ Sau khi viền khớp hình, các điểm mờ đi và điểm sáng phải đi 
 - **Số thứ tự ghim số không lưu trong dữ liệu:** xếp các ghim `order` theo khoảng cách dọc vòng lời giải tính từ `ring[0]`, theo chiều vòng; ghim gần nhất là số 1. Muốn đổi thứ tự thì đổi vị trí ghim.
 - **Thử nghiệm:** cá 2 ghim tròn; nhà 3 ghim số; lá và tim mỗi màn 1 ghim tròn và 3 ghim số.
 
-### Nút đảo chiều điểm sáng (đề xuất, chưa làm)
+### Nút đảo chiều điểm sáng (đề xuất, chưa làm, gác lại cùng ghim)
+
+Chỉ cần khi có ghim số; vì bản đầu đã bỏ vòng kiểm tra và chưa dùng ghim, mục này gác lại.
 
 Vấn đề: chiều chạy của điểm sáng là chiều vòng node, người chơi không nhìn thấy. Với hình đối xứng (tim, nhà), người chơi có thể giải ra bản đối xứng gương, khớp gần 100% nhưng ghim số bị đi ngược, và phải làm lại cả bố cục.
 
@@ -174,7 +186,7 @@ Level là dữ liệu, không phải scene: một scene gameplay dùng chung t�
 | nodes | id, startPos, solutionPos, type, locked | Vị trí ban đầu, một lời giải mẫu, loại thẳng hoặc cong, có bị khóa không |
 | ring | danh sách id node có thứ tự | Vòng node: mỗi cặp liền kề, kể cả cuối với đầu, là một cạnh vòng. Phải chứa mọi node, mỗi node đúng một lần |
 | innerEdges | cặp id node | Cạnh trong, nối thêm ngoài vòng; có thể rỗng |
-| markers | edge, t, kind | Ghim trên viền mẫu (mục Vòng kiểm tra điểm và ghim); có thể rỗng |
+| markers | edge, t, kind | Ghim trên viền mẫu (mục Ghim); có thể rỗng, bản đầu chưa dùng |
 | winThreshold | float | Ngưỡng khớp để thắng, mặc định 0,92 |
 | maxDeviation | float, tùy chọn | Độ lệch viền tối đa. Chưa có luật, để trống tới khi chốt |
 | fabricId | string | Họa tiết vải của màn |
@@ -324,19 +336,34 @@ Sản phẩm là thứ khách đặt: quần áo, tranh vải, gối, túi… M�
 
 ## Đồ họa và cảm giác
 
-Phong cách 2D phẳng, ấm áp, chủ đề may vá, giữ như bản minh họa quảng cáo: viền đậm, màu tươi nhưng dịu, chữ tròn.
+### Hướng đồ họa (đã chốt hướng, 2026-11-04)
 
-### Bảng màu
+2D phẳng, ấm cúng, tối giản; chủ đề may vá phủ lên trên.
 
-| Tên | Mã màu | Dùng cho |
+- **Nền ngôn ngữ đồ họa:** tham khảo I Love Hue và Two Dots: hình phẳng, nhiều khoảng thở, màu pastel dịu, nét mảnh hoặc vừa, sạch, bo tròn, nhịp điệu yên tĩnh.
+- **Cảm giác:** ấm cúng, gọn gàng, có chút "làm bằng tay" như A Little to the Left.
+- **Chủ đề:** may vá: vải có thớ, chỉ, mũi khâu nét đứt, cúc áo, nhãn vải, thước dây, băng keo, giấy cắt. Dùng vừa phải làm điểm nhấn, không phủ kín giao diện.
+- **Giới hạn:** chỉ lấy tinh thần của các game trên, không chép asset, icon, nhân vật hay bố cục của họ. Art chính thức do người dùng làm.
+- **Thay cho hướng cũ:** hướng "viền đậm, màu tươi" theo bản minh họa quảng cáo không còn là chuẩn.
+- **Mẫu thử:** bảng "Thử phong cách icon" trên canvas thiết kế phôi (4 phương án icon cài đặt và chip số màn). Phương án cụ thể chưa chốt.
+
+### Bảng màu (tạm, chốt khi làm art)
+
+Bảng dưới là hướng màu cho phong cách mới; mã màu là giá trị tạm, người dùng chốt khi làm art. Code đọc màu theo **vai trò** (cột Tên) từ cấu hình giao diện, nên đổi mã không sửa code.
+
+| Tên (vai trò) | Mã màu tạm | Dùng cho |
 | --- | --- | --- |
-| Nền | #FFF1E8 | Nền màn hình |
-| Mực | #3A2340 | Viền, chữ, đường cắt |
-| Nhấn | #C7385F | Nút chính, thanh khớp |
-| Hồng | #E2557A | Điểm cong, miếng vải sau khi đổ màu |
-| Vải | #F9D3CF | Tấm vải mặc định |
-| Chỉ | #B8576E | Đường khâu viền vải, bóng mờ hình mẫu |
-| Vàng | #FFC94D | Phần thưởng, hiệu ứng hoàn thành |
+| Nền | #F6EFE3 (kem) | Nền màn hình |
+| Giấy | #FBF7EF | Thẻ, bảng, nền nút |
+| Mực | #4A3B35 (nâu đậm) | Viền, chữ, đường cắt |
+| Hồng phấn | #E3A6A1 | Điểm cong, điểm nhấn |
+| Xanh xô thơm | #A9C1A0 | Điểm nhấn phụ |
+| Mù tạt | #E9C46A | Phần thưởng, hiệu ứng hoàn thành |
+| Xanh xám | #9DB8C9 | Điểm nhấn lạnh |
+| Vải | chốt theo `FabricDefinition` | Tấm vải mặc định |
+| Thanh khớp: còn xa / gần khớp / gần xong | chốt khi làm art | Ba đoạn màu của thanh khớp (mục Thanh khớp). Giữ đoạn gần xong là màu xanh sáng, dễ nhận ra; ba màu phải khác nhau cả độ sáng, không chỉ khác sắc |
+
+Bảng màu cũ của bản minh họa (#FFF1E8, #3A2340, #C7385F, #E2557A, #F9D3CF, #B8576E, #FFC94D, #3DBE7A) không còn là chuẩn; các mã màu cụ thể ghi ở mục khác (như bảng màu của thanh khớp) là giá trị tạm theo bảng cũ, sẽ đổi theo bảng này khi chốt art.
 
 Font: Baloo 2, hỗ trợ đầy đủ tiếng Việt.
 
@@ -476,7 +503,7 @@ Mọi khoảng cách và tốc độ trong bản chính thức tính theo bề r
 
 ### Telemetry
 
-Để đo các chỉ số ở mục Tổng quan, cần ghi các sự kiện: `level_start`, `level_complete` (thời gian, số lần kéo, gợi ý, đặt lại, đảo chiều), `verify_fail` (lý do: thiếu ghim hay sai thứ tự), `level_abandon`. Không thu dữ liệu cá nhân; có công tắc đồng ý theo quy định. Ghi qua `IAnalytics`, chọn nhà cung cấp sau.
+Để đo các chỉ số ở mục Tổng quan, cần ghi các sự kiện: `level_start`, `level_complete` (thời gian, số lần kéo, gợi ý, đặt lại, đảo chiều), `verify_fail` (chỉ khi dùng ghim: thả tay đạt ngưỡng nhưng thiếu ghim hay sai thứ tự), `level_abandon`. Không thu dữ liệu cá nhân; có công tắc đồng ý theo quy định. Ghi qua `IAnalytics`, chọn nhà cung cấp sau.
 
 ### Kiểm thử
 
@@ -576,8 +603,9 @@ Vì vậy ngưỡng 92% chỉ dễ chịu với hình đủ to. Với hình nh�
 
 Các điểm dưới đây cần chốt trước khi viết code, vì chúng ảnh hưởng tới cấu trúc dữ liệu và thuật toán.
 
-- [x] Đã chốt: khi thanh đạt ngưỡng thì khóa thao tác và chạy vòng kiểm tra: điểm sáng đi qua mọi điểm và mọi ghim thì thắng, chạy animation rồi mới hiện bảng thắng (màn không có ghim vẫn kiểm tra qua các điểm).
-- [ ] Snap bằng cách biến đường cắt về viền hình mẫu (đề xuất hiện tại), hay đưa node về vị trí lời giải lưu sẵn? Bản thử web đang dùng cách sau, cần thử thêm cách đầu.
+- [x] Đã chốt (sửa 2026-11-04): thả tay mà độ khớp đạt ngưỡng thì khóa thao tác, snap và chạy chuỗi hoàn thành ngay; đã bỏ vòng kiểm tra bằng điểm sáng vì thừa. Ghim gác lại; nếu dùng thì kiểm tra tức thì lúc thả tay (mục Ghim).
+- [x] Đã chốt (2026-11-04): giữ ngưỡng thắng mặc định 92%; level nào khó đạt thì tự hạ bằng `winThreshold` riêng. Số đo làm căn cứ: Đo trên 2 mảnh nấm của bản web thử (400 lần mỗi mức, mỗi node không khóa lệch đúng khoảng r khỏi lời giải): lệch 6 pt (0,02 bề rộng vải) thì chỉ 56% (mũ) và 94% (thân) số lần đạt 92%; lệch 10 pt (0,03, cỡ sai số của ngón tay) thì 2% và 25% đạt 92%, nhưng 95% và 100% đạt 85%. Tức là ở 92%, người chơi phải đặt mọi node trong khoảng 2 mm quanh lời giải. Bản web thử đặt `winThreshold` 0,85 riêng cho 2 mảnh nấm. Công cụ "Đề xuất ngưỡng thắng" trong Level Editor nên dùng cách đo này để gợi ý ngưỡng cho từng level.
+- [x] Đã chốt (2026-11-04): snap đưa mỗi node không khóa tới điểm gần nhất trên viền hình mẫu, không về vị trí lời giải lưu sẵn (mục Auto-snap và chuỗi hoàn thành). Bản web thử cây nấm và cây kem đã làm theo cách này.
 - [x] Đã chốt: game không có nhánh treo, kể cả về sau. Đồ thị luôn là một vòng kín qua mọi node, không có node thừa ra để đánh lạc hướng; cạnh trong (nối hai node đã có trên vòng) vẫn dùng như cũ. Lý do: điểm sáng và vòng kiểm tra chạy theo `ring`; nhánh treo nhô ra ngoài còn làm điểm khớp nhiễu vì ô nằm dưới nét vẽ được tính là bên trong. Trình kiểm tra level báo lỗi nếu `ring` thiếu node hoặc lặp node, hoặc cạnh trong trỏ tới node không có trên vòng.
 - [x] Đã chốt: giữ đúng luật tiếp tuyến của bản thử (mục Luật tiếp tuyến của điểm cong). Lý do: test lõi khớp số liệu đối chiếu, cảm giác kéo đã được thử, luật nằm sau `IEdgeShape` nên đổi sau chỉ cần thêm một lớp. Theo dõi khi thử chơi: cạnh trong giữa hai node cong cũng cong; nếu gây khó hiểu thì cân nhắc cạnh trong luôn thẳng, sau M1.
 - [x] Đã chốt: gợi ý là booster, mỗi lần dùng tiêu một booster; số booster do Meta giữ và lưu, đưa vào màn qua `LevelRequest`, số đã dùng báo về qua `LevelResult`. Lượt kéo không giới hạn và không liên quan tới thắng thua. Mặc định chỉ node xa vị trí lời giải nhất; `hintOrder` là trường tùy chọn, chỉ điền cho màn muốn dạy thứ tự kéo.
@@ -602,7 +630,7 @@ Các điểm dưới đây cần chốt trước khi viết code, vì chúng ả
 
 - **Tác dụng:** ép viền ôm quanh chướng ngại vật, thêm một lớp giải đố cùng với node khóa và ghim: không chỉ khớp hình mà còn phải né đúng chỗ.
 - **Cách tính:** giữ mặt nạ vùng cấm trên cùng lưới 200×200 với mặt nạ vùng tô. Diện tích chồng = số ô vùng tô nằm trong vùng cấm. Điều kiện thắng thêm: diện tích chồng không quá khoảng 0,5% diện tích hình mẫu (để chịu sai số vẽ). Tính cùng lượt với điểm khớp, chi phí rất nhỏ.
-- **Thứ tự kiểm tra:** đạt ngưỡng khớp, rồi kiểm vùng cấm, rồi mới chạy vòng kiểm tra ghim. Nếu còn chồng vùng cấm thì không chạy vòng kiểm tra.
+- **Thứ tự kiểm tra:** lúc thả tay: đạt ngưỡng khớp, rồi kiểm vùng cấm, rồi kiểm ghim (nếu có). Còn chồng vùng cấm thì chưa thắng.
 - **Phản hồi:** phần vùng tô chồng lên vùng cấm nhấp nháy đỏ, vùng cấm rung nhẹ và máy rung khi bị phủ lần đầu. Khi đạt ngưỡng khớp mà còn chồng, thanh khớp hiện "Chạm vùng cấm". Ngoài màu đỏ, vẽ thêm họa tiết gạch chéo để người khó phân biệt màu vẫn nhìn ra.
 - **Ràng buộc để ý:** vì mọi thứ nằm trong viền ngoài đều bị tô, vùng cấm nằm lọt hẳn trong viền sẽ luôn vi phạm. Vùng cấm vì vậy phải nằm bên ngoài hình mẫu. Muốn vùng cấm là một lỗ bên trong thì cần cơ chế khoét lỗ (đã có trong danh sách mở rộng ở trên).
 - **Dữ liệu và công cụ level:** thêm trường `forbiddenZones`, danh sách đa giác chuẩn hóa 0–1. Level Editor có công cụ vẽ đa giác; kiểm tra hàng loạt báo lỗi nếu lời giải mẫu chồng vùng cấm. Giao diện `IWinCondition` đã chừa sẵn chỗ cho điều kiện này.

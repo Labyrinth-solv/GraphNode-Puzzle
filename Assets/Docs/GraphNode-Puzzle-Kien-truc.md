@@ -134,7 +134,7 @@ Assets/
 │   │   ├── Scoring/              Điểm khớp, độ lệch viền
 │   │   ├── Rules/                IWinCondition: ngưỡng khớp, vùng cấm
 │   │   ├── Runner/               Mô phỏng điểm sáng: chiều dài cung, chiều chạy, tăng tốc
-│   │   ├── Verification/         Vòng kiểm tra điểm và ghim, thứ tự ghim
+│   │   ├── Pins/                 Kiểm tra ghim tức thì lúc thả tay (khi level có ghim)
 │   │   └── Levels/               Mô hình level lúc chạy, trình kiểm tra level
 │   ├── Foundation/               GraphNode.Foundation
 │   │   ├── Contracts/            LevelRequest, LevelResult, các thông điệp
@@ -234,9 +234,7 @@ stateDiagram-v2
 stateDiagram-v2
     [*] --> Intro
     Intro --> Play
-    Play --> Verify: thả tay khi khớp đạt ngưỡng
-    Verify --> Play: hết một vòng còn ghim chưa sáng
-    Verify --> Snap: mọi điểm và ghim đã sáng
+    Play --> Snap: thả tay khi khớp đạt ngưỡng (và ghim đạt, nếu level có ghim)
     Snap --> Cut
     Cut --> Lift
     Lift --> Dye
@@ -263,11 +261,11 @@ stateDiagram-v2
 | `MatchScorer` | Giao chia hợp giữa mặt nạ người chơi và mặt nạ dựng từ đồ thị ở vị trí lời giải; sau này thêm độ lệch viền | Hàm `iou` |
 | `SolutionOutline` | Viền lời giải dựng một lần lúc vào màn (24 đoạn mỗi cạnh): sinh `targetShape`, vị trí ghim, số thứ tự ghim số, đường cho cảnh cắt | Hàm `ringPolyline`, `buildGeo` |
 | `RunnerSimulator` | Điểm sáng gắn với cạnh và vị trí tỉ lệ trên cạnh, tốc độ không đổi, hai chiều, tăng tốc khi qua ghim | `runnerStep` |
-| `VerificationTracker` | Đánh dấu điểm và ghim đã sáng, gọi `IPinRule` của từng ghim, thất bại sau một vòng | `onPass`, `checkVerifyDone` |
+| `PinChecker` | Chỉ khi level có ghim: lúc thả tay kiểm tra tức thì từng ghim bằng `IPinRule` (khoảng cách tới viền ngoài, thứ tự dọc viền). Thay cho vòng kiểm tra bằng điểm sáng đã bỏ | Ghim tròn, ghim số |
 | `IPinRule` | Luật của một loại ghim: "đi qua là sáng", "theo thứ tự"; thêm loại mới (theo nhịp…) bằng một lớp mới | Ghim tròn, ghim số |
 | `IRunnerRule` | Quyết định tốc độ, chiều, tăng tốc của điểm sáng; thêm hai điểm sáng hay nhảy cổng bằng lớp mới | Tốc độ, đảo chiều, tăng tốc |
 | `IHintProvider` | Chọn node cần gợi ý (mặc định node xa lời giải nhất, hoặc theo `hintOrder`). Không giữ số booster: số đó đi vào qua `LevelRequest` | Nút Gợi ý |
-| `WinConditions` | Chuỗi điều kiện: ngưỡng khớp, vùng cấm, rồi vòng kiểm tra | Luật thắng |
+| `WinConditions` | Chuỗi điều kiện xét lúc thả tay: ngưỡng khớp, vùng cấm, rồi ghim (nếu có) | Luật thắng |
 | `LevelValidator` | Kiểm tra level cho Editor, CI và test | Mục "Kiểm tra hàng loạt" của đặc tả |
 
 Yêu cầu: API không cấp phát khi đang chơi (bộ đệm dựng một lần lúc vào màn); mọi hàm nhận `dt` và trạng thái, không đọc thời gian hệ thống, để test và phát lại được.
@@ -434,7 +432,7 @@ Tiền công, nâng cấp tiệm, lookbook, vải, câu chuyện khách, sự ki
 | M0 Khung project | Thư mục, asmdef, ba scene, Boot và luồng scene, dịch vụ rỗng, CI dựng được bản trống | Project mở không lỗi, CI xanh |
 | M1 Lõi | Chuyển lõi bản thử sang `GraphNode.Core`; test EditMode với số liệu đối chiếu (100% cho đáp án, bảng độ nhạy, thứ tự ghim, đối xứng gương và đảo chiều) | Test xanh; đo thời gian tính trên Editor và một máy Android phổ biến |
 | M2 Màn chơi tối thiểu | Một level đọc từ JSON, kéo tương đối, vùng tô và viền (thử hai cách vẽ, chọn một), thanh khớp, thắng | Chơi hết màn 1 trên thiết bị thật, giữ 60 fps khi kéo node |
-| M3 Luật đầy đủ | Điểm sáng, ghim, vòng kiểm tra, đảo chiều, chuỗi trình diễn, bảng kết quả | 4 màn của bản thử chơi được, khớp luật lõi của bản thử (không đối chiếu hình ảnh hay giao diện) |
+| M3 Luật đầy đủ | Điểm sáng (trang trí, nốt nhạc), chuỗi trình diễn, bảng kết quả; ghim và đảo chiều chỉ khi chốt dùng ghim | 4 màn của bản thử chơi được, khớp luật lõi của bản thử (không đối chiếu hình ảnh hay giao diện) |
 | M4 Nội dung và tiệm may | Level Editor, kiểm tra hàng loạt trong CI, khoảng 20 màn, tiến trình và save; màn Home khách ở quầy, bong bóng, thẻ đơn, chuyển cảnh cơ bản, khách nhận đồ | Kiểm tra hàng loạt xanh; lưu và tải lại đúng; chơi trọn một đơn từ Home |
 | M5 Hoàn thiện | Âm thanh, nốt nhạc, rung, telemetry, giảm chuyển động, hiệu năng, QA trên máy thật | Đạt định nghĩa hoàn thành trong đặc tả |
 | Sau đó | Đặt mảnh và hoàn thiện sản phẩm (vải nền, decor bất ngờ); meta mở rộng: khách có câu chuyện, lookbook, vải, nâng cấp tiệm | Theo mục tương ứng trong đặc tả |
