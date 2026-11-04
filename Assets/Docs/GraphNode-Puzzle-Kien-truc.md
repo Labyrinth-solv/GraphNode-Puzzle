@@ -445,7 +445,7 @@ Tiền công, nâng cấp tiệm, lookbook, vải, câu chuyện khách, sự ki
 
 - [x] Thêm Newtonsoft Json làm phụ thuộc chính thức (đã cài 3.2.2).
 - [ ] Tiêm phụ thuộc: đề xuất nối thủ công qua hàm khởi tạo tới M3, xem lại VContainer trước meta mở rộng.
-- [ ] Bật define `UNITASK_DOTWEEN_SUPPORT`. Đã tạo asmdef `DOTween.Modules`; define đã có cho Android (assembly `UniTask.DOTween` đã biên dịch), còn thiếu iOS và chưa lưu xuống `ProjectSettings.asset`.
+- [x] Bật define `UNITASK_DOTWEEN_SUPPORT` cho Android (đã tạo asmdef `DOTween.Modules`, assembly `UniTask.DOTween` đã biên dịch). Hiện chỉ build Android; khi bắt đầu build iOS thì thêm define này cho iOS.
 - [x] Gỡ gói Visual Scripting (đã gỡ khỏi `manifest.json` và `packages-lock.json`, Console không lỗi).
 - [ ] Chọn CI (đề xuất GitHub Actions với GameCI) và nhà cung cấp telemetry, crash.
 - [ ] Android min SDK và vài máy phổ biến để kiểm tra 60 fps.
