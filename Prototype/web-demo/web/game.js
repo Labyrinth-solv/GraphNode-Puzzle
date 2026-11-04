@@ -12,6 +12,7 @@
   var FX = 33, FY = 270, FS = 324;                 // tấm vải vuông trong thẻ trắng
   var THR_DEFAULT = 0.92, M1 = 0.70, M2 = 0.85;     // ngưỡng mặc định của đặc tả và hai mốc màu; ngưỡng thật lấy theo level
   var RUN_SPEED = 0.68;                              // bề rộng vải mỗi giây
+  var BOUNCE_PEAK = 0.5, BOUNCE_DECAY = 0.5, MIN_EDGE_TIME = 0.2; // nảy khi qua node: +50% rồi chậm dần 0,5 s (giá trị tạm)
   var PICK_MIN = 0.071, PICK_MAX = 0.19, MOVE_EPS = 0.016;
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -259,7 +260,12 @@
   function runnerStep(dt) {
     var lv = LV[S.li].def, n = lv.ring.length, ver = false;
     S.path = GN.ringPath(lv, S.pos, 20);
-    var rem = RUN_SPEED * dt, guard = 0;
+    // Nảy theo nhịp: qua node trên viền thì vọt nhẹ rồi chậm dần; trong lúc vọt, mỗi cạnh vẫn mất
+    // ít nhất MIN_EDGE_TIME để hai nốt liền nhau không chồng tiếng.
+    S.boost = Math.max(0, (S.boost || 0) - dt / BOUNCE_DECAY);
+    var speed = RUN_SPEED * (1 + BOUNCE_PEAK * S.boost * S.boost);
+    if (S.boost > 0) speed = Math.max(RUN_SPEED, Math.min(speed, edgeLen(S.path, S.runK, n) / MIN_EDGE_TIME));
+    var rem = speed * dt, guard = 0;
     while (rem > 0 && guard++ < 10) {
       var len = Math.max(edgeLen(S.path, S.runK, n), 1e-4), left = (1 - S.runT) * len;
       if (rem < left) { S.runT += rem / len; rem = 0; }
@@ -270,6 +276,7 @@
           S.pl[node] = 1; S.ripples.push({ x: X(S.pos[node][0]), y: Y(S.pos[node][1]), t0: now(), c: C.mustard });
           var vol = (0.03 + 0.06 * S.dv) * (S.drag ? 0.45 : 1);
           pop(noteF(S.runK + (ver ? 2 : 0)), vol, 0, 0.26);
+          S.boost = 1;
         }
       }
     }

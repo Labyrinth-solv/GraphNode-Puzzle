@@ -133,7 +133,7 @@ Assets/
 │   │   ├── Outline/              Mặt nạ vùng tô, viền ngoài
 │   │   ├── Scoring/              Điểm khớp, độ lệch viền
 │   │   ├── Rules/                IWinCondition: ngưỡng khớp, vùng cấm
-│   │   ├── Runner/               Mô phỏng điểm sáng: chiều dài cung, chiều chạy, tăng tốc
+│   │   ├── Runner/               Mô phỏng điểm sáng: chiều dài cung, chiều chạy, nhịp nảy khi qua node
 │   │   ├── Pins/                 Kiểm tra ghim tức thì lúc thả tay (khi level có ghim)
 │   │   └── Levels/               Mô hình level lúc chạy, trình kiểm tra level
 │   ├── Foundation/               GraphNode.Foundation
@@ -247,7 +247,7 @@ stateDiagram-v2
 - **Thứ tự mỗi khung hình trong pha Chơi:**
   1. Input cập nhật vị trí node đang kéo (qua ràng buộc).
   2. Nếu đồ thị đổi: Core tính lại mặt nạ, điểm khớp, trạng thái vùng cấm.
-  3. Core bước điểm sáng theo `dt` (tốc độ, chiều chạy, tăng tốc).
+  3. Core bước điểm sáng theo `dt` (tốc độ, chiều chạy, nhịp nảy).
   4. Chỉ ở khung hình có sự kiện thả tay: Core xét luật thắng trên vị trí node cuối cùng. Đang kéo thì không xét.
   5. Hiển thị đọc trạng thái và vẽ.
 - **Kết quả:** khi vào pha Kết quả, phiên phát `LevelResult` lên message bus rồi mới mở bảng thắng.
@@ -260,10 +260,10 @@ stateDiagram-v2
 | `RegionMask` | Vẽ cạnh lên lưới 200×200, tô loang từ biên, ra mặt nạ vùng tô; tham số theo bảng Tham số mặt nạ trong đặc tả | Hàm `region` |
 | `MatchScorer` | Giao chia hợp giữa mặt nạ người chơi và mặt nạ dựng từ đồ thị ở vị trí lời giải; sau này thêm độ lệch viền | Hàm `iou` |
 | `SolutionOutline` | Viền lời giải dựng một lần lúc vào màn (24 đoạn mỗi cạnh): sinh `targetShape`, vị trí ghim, số thứ tự ghim số, đường cho cảnh cắt | Hàm `ringPolyline`, `buildGeo` |
-| `RunnerSimulator` | Điểm sáng gắn với cạnh và vị trí tỉ lệ trên cạnh, tốc độ không đổi, hai chiều, tăng tốc khi qua ghim | `runnerStep` |
+| `RunnerSimulator` | Điểm sáng gắn với cạnh và vị trí tỉ lệ trên cạnh; tốc độ thường cộng nhịp nảy nhẹ khi qua node trên viền, có giới hạn thời gian tối thiểu mỗi cạnh; hai chiều | `runnerStep` |
 | `PinChecker` | Chỉ khi level có ghim: lúc thả tay kiểm tra tức thì từng ghim bằng `IPinRule` (khoảng cách tới viền ngoài, thứ tự dọc viền). Thay cho vòng kiểm tra bằng điểm sáng đã bỏ | Ghim tròn, ghim số |
 | `IPinRule` | Luật của một loại ghim: "đi qua là sáng", "theo thứ tự"; thêm loại mới (theo nhịp…) bằng một lớp mới | Ghim tròn, ghim số |
-| `IRunnerRule` | Quyết định tốc độ, chiều, tăng tốc của điểm sáng; thêm hai điểm sáng hay nhảy cổng bằng lớp mới | Tốc độ, đảo chiều, tăng tốc |
+| `IRunnerRule` | Quyết định tốc độ, chiều, nhịp nảy của điểm sáng; thêm hai điểm sáng hay nhảy cổng bằng lớp mới | Tốc độ, đảo chiều |
 | `IHintProvider` | Chọn node cần gợi ý (mặc định node xa lời giải nhất, hoặc theo `hintOrder`). Không giữ số booster: số đó đi vào qua `LevelRequest` | Nút Gợi ý |
 | `WinConditions` | Chuỗi điều kiện xét lúc thả tay: ngưỡng khớp, vùng cấm, rồi ghim (nếu có) | Luật thắng |
 | `LevelValidator` | Kiểm tra level cho Editor, CI và test | Mục "Kiểm tra hàng loạt" của đặc tả |
@@ -315,7 +315,7 @@ Yêu cầu: API không cấp phát khi đang chơi (bộ đệm dựng một l�
 
 ### 5.10 Cấu hình cân bằng
 
-- Mọi số trong đặc tả (ngưỡng 92%, tốc độ điểm sáng 68% bề rộng vải mỗi giây, tăng tốc 2,4 lần, dung sai ghim 4,3%, vùng chọn 7,1% tới 19%, thời lượng trình diễn) nằm trong asset cấu hình, theo đơn vị bề rộng vải.
+- Mọi số trong đặc tả (ngưỡng 92%, tốc độ điểm sáng 68% bề rộng vải mỗi giây, nhịp nảy khi qua node trên viền: tối đa 1,5 lần, chậm dần 0,5 s, mỗi cạnh tối thiểu 0,2 s; dung sai ghim 4,3% nếu dùng ghim; vùng chọn 7,1% tới 19%, thời lượng trình diễn) nằm trong asset cấu hình, theo đơn vị bề rộng vải.
 - Sau này có thể ghi đè từ remote config qua interface, không đổi nơi đọc.
 
 ### 5.11 Chuyển cảnh giữa Home và màn chơi
