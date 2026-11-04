@@ -122,19 +122,21 @@ Khi thắng, mỗi node không khóa trượt tới **điểm gần nhất trên
 | Bước | Thời lượng | Diễn ra |
 | --- | --- | --- |
 | Snap | 0,3 s | Khóa thao tác, đường cắt biến về viền hình mẫu, node mờ đi |
-| Cắt | 1,2 s | Kéo chạy dọc viền, phần đã cắt thành nét liền |
+| Cắt | Theo chu vi viền mẫu (bản thử 2,0–3,6 s) | Kéo chạy dọc viền ở 1,5 lần tốc độ thường (tạm, khoảng 1,25–1,5), phần đã cắt thành nét liền |
 | Nhấc lên | 0,4 s | Miếng vải nảy lên, đổ bóng, để lại lỗ trên vải |
 | Đổ màu | 0,6 s | Màu hoặc hoa văn chạy từ dưới lên, hiện đường chỉ khâu |
 | Ghép | 0,6 s | Mảnh bay vào sản phẩm, thanh tiến độ sản phẩm tăng |
 
-Tổng khoảng 3 giây; chạm màn hình để tua nhanh.
+Tổng khoảng 4 tới 5,5 giây tùy chu vi mảnh (bản thử: mảnh nhỏ khoảng 4 giây, thân áo cardigan dài nhất khoảng 5,5 giây); chạm màn hình để tua nhanh.
 
 ### Điểm chạy dọc viền và nốt nhạc
 
 Một điểm sáng có đuôi chạy theo vòng node của level (trường `ring`, gồm cạnh vòng, không đi theo viền ngoài hay cạnh trong), vừa để bắt mắt, vừa cho người chơi thấy node nào đang nằm trên viền ngoài. Điểm sáng chỉ để trang trí và phát nốt nhạc, không còn quyết định thắng thua (đã bỏ vòng kiểm tra). Bản web thử vẽ điểm sáng thành hình cây kéo, mỗi lần qua một node trên viền phát một tiếng "pop" trong theo thang ngũ cung.
 
 - **Chuyển động:** tốc độ thường 250 px mỗi giây (khung vải 368 px, tức 68% bề rộng vải mỗi giây), kể cả khi người chơi đang kéo.
-- **Nảy theo nhịp (đã chốt hướng, số tạm):** mỗi khi đi qua một node nằm trên viền ngoài (lúc phát nốt), điểm sáng vọt nhẹ lên tối đa 1,5 lần tốc độ thường rồi chậm dần về tốc độ thường trong 0,5 giây (đường cong chậm dần, không giật). Không tăng gắt: trong lúc đang vọt, mỗi cạnh vẫn phải mất ít nhất 0,2 giây để chạy hết, nên hai node liền nhau không phát nốt chồng lên nhau. Ba số 1,5 lần, 0,5 giây, 0,2 giây đặt trong ScriptableObject cấu hình, chốt sau khi thử trên máy. Điểm gắn với một cạnh và một vị trí tỷ lệ trên cạnh đó, nên khi node bị kéo làm cạnh dài ra hay co lại, điểm đi theo cạnh liên tục. Cách đầu tiên tính theo tỷ lệ cả vòng làm điểm nhảy giật mỗi khi chu vi đổi, đã bỏ.
+- **Tốc độ đều, không nảy (đã chốt 2026-11-04):** điểm sáng giữ một tốc độ khi đi qua node, không vọt lên rồi chậm dần. Đã thử nảy nhẹ khi qua node trên viền và bỏ.
+- **Tăng tốc khi thắng (đã chốt hướng, số tạm):** trong cảnh cắt của chuỗi hoàn thành, đầu kéo chạy dọc viền hình mẫu ở khoảng 1,25 tới 1,5 lần tốc độ thường; bản thử để 1,5 lần. Thời lượng cảnh cắt vì vậy tính theo chu vi viền mẫu (chu vi chia cho tốc độ đó), không cố định. Hệ số đặt trong ScriptableObject cấu hình, chốt sau khi thử trên máy.
+-Điểm gắn với một cạnh và một vị trí tỷ lệ trên cạnh đó, nên khi node bị kéo làm cạnh dài ra hay co lại, điểm đi theo cạnh liên tục. Cách đầu tiên tính theo tỷ lệ cả vòng làm điểm nhảy giật mỗi khi chu vi đổi, đã bỏ.
 - **Nốt nhạc:** khi điểm tới một node nằm trên viền ngoài thì phát một nốt thang ngũ cung (đô, rê, mi, sol, la). Mỗi node một nốt cố định. Node nảy to 1,3 lần và có vòng sóng vàng lan ra trong 0,45 giây. Node nằm lọt trong vùng tô thì im lặng. Node được coi là trên viền nếu trong ô 7×7 của mặt nạ quanh nó có một ô nằm ngoài vùng.
 - **Phản hồi theo độ khớp:** độ khớp thấp thì nốt nhỏ và lệch tông tối đa 30 cent, độ khớp cao thì đầy và đúng tông. Khi đang kéo, âm lượng giảm còn khoảng 45% để không lấn tiếng chạm node.
 - **Cảnh cắt:** đầu kéo chạy dọc viền hình mẫu và phát một nốt ở mỗi node, thành một giai điệu ngắn.

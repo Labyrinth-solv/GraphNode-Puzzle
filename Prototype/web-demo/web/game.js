@@ -12,7 +12,7 @@
   var FX = 33, FY = 270, FS = 324;                 // tấm vải vuông trong thẻ trắng
   var THR_DEFAULT = 0.92, M1 = 0.70, M2 = 0.85;     // ngưỡng mặc định của đặc tả và hai mốc màu; ngưỡng thật lấy theo level
   var RUN_SPEED = 0.68;                              // bề rộng vải mỗi giây
-  var BOUNCE_PEAK = 0.5, BOUNCE_DECAY = 0.5, MIN_EDGE_TIME = 0.2; // nảy khi qua node: +50% rồi chậm dần 0,5 s (giá trị tạm)
+  var WIN_RUN_MULT = 1.5;                            // cảnh cắt khi thắng chạy nhanh hơn tốc độ thường (tạm, khoảng 1,25–1,5)
   var PICK_MIN = 0.071, PICK_MAX = 0.19, MOVE_EPS = 0.016;
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -257,15 +257,12 @@
     return best;
   }
   function edgeLen(path, k, n) { return (k + 1 < n ? path.nodeD[k + 1] : path.total) - path.nodeD[k]; }
+  // Thời gian cảnh cắt theo chu vi viền mẫu, để kéo chạy đúng WIN_RUN_MULT lần tốc độ thường.
+  function cutDur(lv) { return lv.solPath.total / (RUN_SPEED * WIN_RUN_MULT); }
   function runnerStep(dt) {
     var lv = LV[S.li].def, n = lv.ring.length, ver = false;
     S.path = GN.ringPath(lv, S.pos, 20);
-    // Nảy theo nhịp: qua node trên viền thì vọt nhẹ rồi chậm dần; trong lúc vọt, mỗi cạnh vẫn mất
-    // ít nhất MIN_EDGE_TIME để hai nốt liền nhau không chồng tiếng.
-    S.boost = Math.max(0, (S.boost || 0) - dt / BOUNCE_DECAY);
-    var speed = RUN_SPEED * (1 + BOUNCE_PEAK * S.boost * S.boost);
-    if (S.boost > 0) speed = Math.max(RUN_SPEED, Math.min(speed, edgeLen(S.path, S.runK, n) / MIN_EDGE_TIME));
-    var rem = speed * dt, guard = 0;
+    var rem = RUN_SPEED * dt, guard = 0;
     while (rem > 0 && guard++ < 10) {
       var len = Math.max(edgeLen(S.path, S.runK, n), 1e-4), left = (1 - S.runT) * len;
       if (rem < left) { S.runT += rem / len; rem = 0; }
@@ -276,7 +273,6 @@
           S.pl[node] = 1; S.ripples.push({ x: X(S.pos[node][0]), y: Y(S.pos[node][1]), t0: now(), c: C.mustard });
           var vol = (0.03 + 0.06 * S.dv) * (S.drag ? 0.45 : 1);
           pop(noteF(S.runK + (ver ? 2 : 0)), vol, 0, 0.26);
-          S.boost = 1;
         }
       }
     }
@@ -322,7 +318,7 @@
       recompute(); S.dv += (1 - S.dv) * Math.min(1, dt * 12);
       if (S.t >= 0.35) { setPhase('cut'); S.cutLast = -1; S.snipT = 0; }
     } else if (S.phase === 'cut') {
-      var L = lv.solPath.total * clamp(S.t / 1.2, 0, 1);
+      var L = lv.solPath.total * clamp(S.t / cutDur(lv), 0, 1);
       for (var q = 0; q < lv.def.ring.length; q++) {
         var nd = lv.solPath.nodeD[q];
         if (S.cutLast < nd && nd <= L) { pop(noteF(q + 2), 0.07, 0, 0.3); var nn = lv.def.ring[q]; S.ripples.push({ x: X(S.snapTo[nn][0]), y: Y(S.snapTo[nn][1]), t0: now(), c: C.mustard }); }
@@ -330,7 +326,7 @@
       var ch = runnerHead(lv.solPath, L);
       advanceSnip(SNIP_RATE * 1.4 * dt * sp, ch.x, ch.y, ch.ang, true);
       S.cutLast = L;
-      if (S.t >= 1.2) { setPhase('lift'); noise(0.25, 0.04, 900, 'bandpass'); vib(14); }
+      if (S.t >= cutDur(lv)) { setPhase('lift'); noise(0.25, 0.04, 900, 'bandpass'); vib(14); }
     } else if (S.phase === 'lift') {
       if (S.t >= 0.45) { setPhase('fill'); }
     } else if (S.phase === 'fill') {
@@ -762,7 +758,7 @@
       drawWire();
     } else if (ph === 'cut') {
       drawGhost(lv, 0.6);
-      var L = lv.solPath.total * clamp(t / 1.2, 0, 1), pts = lv.solPath.pts, cum = lv.solPath.cum;
+      var L = lv.solPath.total * clamp(t / cutDur(lv), 0, 1), pts = lv.solPath.pts, cum = lv.solPath.cum;
       outlinePath(pts, FX, FY, FS); ctx.fillStyle = 'rgba(255,252,246,0.5)'; ctx.fill();
       ctx.beginPath(); ctx.moveTo(X(pts[0]), Y(pts[1]));
       for (var k = 1; k < cum.length && cum[k] <= L; k++) ctx.lineTo(X(pts[k * 2]), Y(pts[k * 2 + 1]));
