@@ -79,6 +79,8 @@
     s.buffer = b; f.type = type || 'highpass'; f.frequency.value = freq || 2800; g.gain.value = vol;
     s.connect(f); f.connect(g); g.connect(master); s.start(t);
   }
+  // Nốt leo dần không giới hạn: hết một quãng tám ngũ cung thì lên quãng kế, không vòng về nốt trầm.
+  function risingF(k) { var P = [0, 2, 4, 7, 9]; return 523.25 * Math.pow(2, (12 * Math.floor(k / 5) + P[k % 5]) / 12); }
   function chord(ns, vol, gap) { for (var i = 0; i < ns.length; i++) pop(noteF(ns[i]), vol, i * (gap || 0.07), 0.5); }
 
   /* ---------- dữ liệu level ---------- */
@@ -270,11 +272,11 @@
       else {
         rem -= left; S.runK = (S.runK + 1) % n; S.runT = 0;
         var node = lv.ring[S.runK];
-        if (GN.onBoundary(S.mask, S.pos[node])) {
-          S.pl[node] = 1; S.ripples.push({ x: X(S.pos[node][0]), y: Y(S.pos[node][1]), t0: now(), c: C.mustard });
-          var vol = (0.03 + 0.06 * S.dv) * (S.drag ? 0.45 : 1);
-          pop(noteF(S.runK + (ver ? 2 : 0)), vol, 0, 0.26);
-        }
+        // Mọi node đi qua đều phát nốt; hai node sát nhau qua cùng khung thì phát đồng thời.
+        // Âm lượng có sàn để nốt lúc độ khớp thấp và đang kéo vẫn nghe rõ.
+        S.pl[node] = 1; S.ripples.push({ x: X(S.pos[node][0]), y: Y(S.pos[node][1]), t0: now(), c: C.mustard });
+        var vol = (0.045 + 0.045 * S.dv) * (S.drag ? 0.6 : 1);
+        pop(noteF(S.runK + (ver ? 2 : 0)), vol, 0, 0.26);
       }
     }
     S.runDist = S.path.nodeD[S.runK] + S.runT * edgeLen(S.path, S.runK, n);
@@ -322,7 +324,7 @@
       var L = lv.solPath.total * clamp(S.t / cutDur(lv), 0, 1);
       for (var q = 0; q < lv.def.ring.length; q++) {
         var nd = lv.solPath.nodeD[q];
-        if (S.cutLast < nd && nd <= L) { pop(noteF(q + 2), 0.07, 0, 0.3); var nn = lv.def.ring[q]; S.ripples.push({ x: X(S.snapTo[nn][0]), y: Y(S.snapTo[nn][1]), t0: now(), c: C.mustard }); }
+        if (S.cutLast < nd && nd <= L) { pop(risingF(q), 0.07, 0, 0.3); var nn = lv.def.ring[q]; S.ripples.push({ x: X(S.snapTo[nn][0]), y: Y(S.snapTo[nn][1]), t0: now(), c: C.mustard }); }
       }
       var ch = runnerHead(lv.solPath, L);
       advanceSnip(SNIP_RATE * 1.4 * dt * sp, ch.x, ch.y, ch.ang, true);
