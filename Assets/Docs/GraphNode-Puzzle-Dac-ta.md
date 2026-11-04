@@ -21,7 +21,7 @@ Mỗi màn là một vòng kéo điểm và xem thanh khớp; không có nút C�
 
 1. **Vào màn:** hình mẫu hiện thành bóng mờ trên vải và thẻ nhỏ phía trên. Graph ở trạng thái xáo trộn, thanh khớp khoảng 30–60%.
 2. **Kéo điểm:** viền ngoài (đường cắt) cập nhật trực tiếp, thanh khớp tăng giảm theo.
-3. **Đạt ngưỡng:** khi người chơi thả tay mà độ khớp đạt ngưỡng thì thao tác bị khóa, các điểm mờ đi và điểm sáng chạy kiểm tra: nó phải đi qua mọi điểm và mọi ghim, rồi mới chuyển sang bước 4. Bảng thắng chỉ hiện sau cảnh cắt và ghép. Chưa đạt thì tiếp tục kéo; có nút Gợi ý và Đặt lại.
+3. **Đạt ngưỡng:** khi người chơi thả tay mà độ khớp đạt ngưỡng thì thao tác bị khóa, các điểm mờ đi và điểm sáng chạy kiểm tra: nó phải đi qua mọi điểm và mọi ghim, rồi mới chuyển sang bước 4. Bảng thắng chỉ hiện sau cảnh cắt và ghép. Chưa đạt thì tiếp tục kéo, không giới hạn số lần kéo; có nút Gợi ý (dùng booster) và Đặt lại.
 4. **Auto-snap:** khóa thao tác, đường cắt biến về đúng đường viền hình mẫu.
 5. **Cắt:** kéo chạy dọc viền, miếng vải nhấc lên, đổ màu hoặc hoa văn.
 6. **Ghép vào sản phẩm:** mảnh vải bay vào sản phẩm đang may dở. Đủ mảnh thì chạy màn lộ diện sản phẩm.
@@ -34,8 +34,19 @@ Người chơi chỉ di chuyển điểm; số điểm, số cạnh và cách n�
 ### Graph
 
 - **Điểm (node):** vị trí, loại (thẳng hoặc cong). Kéo được trong phạm vi tấm vải, không ra ngoài mép, trừ node bị khóa.
-- **Cạnh (edge):** nối hai điểm, cố định. Cạnh được phép cắt chéo nhau.
-- **Hình dạng cạnh:** nối hai điểm cong là đường cong Catmull-Rom đi qua đúng các điểm. Có ít nhất một đầu là điểm thẳng thì là đoạn thẳng. Mỗi cạnh lấy mẫu 16–24 điểm thành đường gấp khúc.
+- **Vòng (ring):** mỗi level có một vòng node theo thứ tự cố định; hai node liền kề trên vòng (kể cả node cuối với node đầu) nối bằng một cạnh vòng. Mọi node đều nằm trên vòng; đồ thị không có nhánh treo hay node thừa ra ngoài vòng (đã chốt). Vòng quyết định tiếp tuyến của điểm cong, chiều của cạnh, đường chạy của điểm sáng và danh sách node phải sáng khi kiểm tra. Vòng là cấu trúc dữ liệu, không phải viền ngoài: khi người chơi kéo, viền ngoài có thể khác vòng (cạnh chéo nhau, node lọt vào trong).
+- **Cạnh trong (inner edge):** cạnh nối thêm giữa hai node, không thuộc vòng. Cạnh trong có thể nằm trên viền ngoài nếu người chơi xếp như vậy.
+- **Cạnh (edge):** gồm cạnh vòng và cạnh trong, cố định theo level. Cạnh được phép cắt chéo nhau.
+- **Hình dạng cạnh:** có ít nhất một đầu là điểm thẳng thì là đoạn thẳng. Nối hai điểm cong là đường cong Hermite bậc ba đi qua đúng hai đầu, tiếp tuyến lấy kiểu Catmull-Rom (luật ở mục dưới).
+- **Số điểm lấy mẫu mỗi cạnh:** 20 đoạn khi vẽ lên mặt nạ và khi tính đường chạy của điểm sáng; 24 đoạn khi dựng viền lời giải (hình mẫu, vị trí ghim, cảnh cắt). Giữ đúng hai số này để số liệu khớp bản thử.
+
+### Luật tiếp tuyến của điểm cong
+
+Theo bản thử. Đã chốt giữ nguyên trong bản chính để số liệu đối chiếu khớp (lý do ở mục Cần chốt).
+
+- Tiếp tuyến của node cong `i`: `T(i) = (vị trí node sau i trên vòng − vị trí node trước i trên vòng) × 0,5`.
+- Cạnh vòng đi từ `a` sang node sau nó: tiếp tuyến đầu `a` là `T(a)`; đi ngược sang node trước thì dùng `−T(a)`. Đầu `b` tính đối xứng như vậy.
+- Cạnh trong (hai đầu không liền kề trên vòng): ở mỗi đầu, chọn `T` hoặc `−T` sao cho tích vô hướng với hướng `b − a` không âm.
 
 ### Node bị khóa
 
@@ -64,13 +75,26 @@ Vùng bên trong viền ngoài được tô hồng nhạt khi kéo, để ngư�
 - Phần tô cho thấy chỗ thừa, chỗ thiếu so với bóng mờ hình mẫu, và phần nào của viền chéo nhau bị loại. Nó không chỉ ra điểm nào cần kéo hay kéo tới đâu; việc đó thuộc về nút Gợi ý.
 - Cách tính: vẽ mọi cạnh lên mặt nạ 200×200, tô loang từ biên ngoài vào, phần không bị chạm tới là vùng bên trong. Cùng mặt nạ này cho ra điểm khớp.
 
+**Tham số mặt nạ (theo bản thử, phải giữ đúng để test khớp số liệu đối chiếu):**
+
+| Tham số | Giá trị |
+| --- | --- |
+| Kích thước lưới | 200×200 ô |
+| Vùng phủ | toạ độ chuẩn hóa từ −0,125 tới 1,125 theo cả hai trục (rộng hơn khung vải để không cắt mất hình sát mép) |
+| Quy đổi | `ô = (toạ độ − (−0,125)) / (1,25 / 200)`; tâm ô `(x, y)` ở `(x + 0,5, y + 0,5)` |
+| Vẽ cạnh | mỗi đoạn của đường gấp khúc tô mọi ô có tâm cách đoạn không quá 1,35 ô |
+| Tô loang | bắt đầu từ mọi ô trên bốn mép lưới chưa bị vẽ, lan theo 4 hướng (trên, dưới, trái, phải) |
+| Vùng bên trong | mọi ô không được tô loang tới, kể cả ô nằm trên nét vẽ |
+| Trục toạ độ | trong dữ liệu level, gốc ở góc trên trái và trục dọc hướng xuống (như bản thử). Bản Unity đổi trục ở biên (`FabricSpace`), lõi giữ quy ước của dữ liệu |
+
 ### Thanh khớp
 
-- **Điểm khớp:** tỷ lệ diện tích trùng nhau (giao chia hợp) giữa miếng vải và hình mẫu. Tính bằng thư viện đa giác Clipper2, hoặc vẽ hai mặt nạ 128×128 rồi đếm điểm ảnh.
-- **Điều kiện phụ:** độ lệch viền lớn nhất không quá ngưỡng, để không thắng khi còn cụt mất mũi nhọn hay cuống lá.
+- **Điểm khớp:** tỷ lệ diện tích trùng nhau (giao chia hợp) giữa miếng vải và hình mẫu, tính bằng đếm ô trên hai mặt nạ 200×200 (tham số ở mục Phần tô vùng cắt). Mặt nạ người chơi dựng từ vị trí node hiện tại; mặt nạ mẫu dựng một lần lúc vào màn từ chính đồ thị đặt ở vị trí lời giải, không dựng từ đa giác `targetShape`. Clipper2 chỉ để dành cho phép đa giác chính xác về sau (vùng cấm, khoét lỗ).
+- **Chấm theo vị trí (đã chốt):** so hai mặt nạ tại chỗ, không căn miếng vải cho khớp hình mẫu trước khi so. Lý do ở mục Cần chốt.
+- **Điều kiện phụ (chưa làm, cần chốt):** độ lệch viền lớn nhất không quá ngưỡng, để không thắng khi còn cụt mất mũi nhọn hay cuống lá. Đơn vị và cách tính chưa có; tới khi chốt, trường `maxDeviation` để trống và lõi bỏ qua.
 - **Ngưỡng thắng:** mặc định 92%, chỉnh được theo từng level.
 - **Hiển thị:** thanh không hiện thẳng phần trăm thô. Đoạn từ 50% đến ngưỡng được giãn ra cả thanh, nên mỗi lần kéo đều thấy thanh nhúc nhích rõ. Thanh trượt mượt về giá trị mới, đổi màu theo mốc và rung nhẹ khi qua 70%, 85%.
-- **Tần suất tính:** khi đang kéo, 2–3 khung hình một lần.
+- **Tần suất tính:** khi đang kéo, chỉ để cập nhật thanh và vùng tô, có thể giãn ra 2–3 khung hình một lần nếu đo thấy cần (bản thử tính mỗi khung, khoảng 0,7 ms). Lúc thả tay luôn tính lại ngay trên vị trí node cuối cùng, không dùng kết quả của khung trước.
 - **Khi nào thắng (đã chốt):** chỉ kiểm tra khi người chơi thả tay. Lúc đang kéo, thanh có thể chạm ngưỡng nhưng màn không khóa và chưa chạy hoạt ảnh; người chơi còn chỉnh tiếp được. Lúc thả tay, độ khớp tính theo vị trí node cuối cùng: đạt ngưỡng thì khóa thao tác, chạy vòng kiểm tra điểm và ghim, rồi mới chạy chuỗi hoàn thành và hiện bảng thắng; chưa đạt thì chơi tiếp.
   - **Lý do:** thắng giữa lúc ngón tay còn đang di chuyển làm người chơi bị giật tay khỏi node, cảm giác hụt; thả tay là hành động có chủ ý nên trải nghiệm tốt hơn.
   - **Bỏ điều kiện giữ 0,1 giây:** thả tay đã là mốc rõ ràng, không còn chuyện thắng vì lướt qua ngưỡng một khung hình.
@@ -94,7 +118,7 @@ Tổng khoảng 3 giây; chạm màn hình để tua nhanh.
 
 ### Điểm chạy dọc viền và nốt nhạc
 
-Một điểm vàng có đuôi sáng chạy theo vòng các node, vừa để bắt mắt, vừa cho người chơi thấy node nào đang nằm trên viền ngoài.
+Một điểm vàng có đuôi sáng chạy theo vòng node của level (trường `ring`, gồm cạnh vòng, không đi theo viền ngoài hay cạnh trong), vừa để bắt mắt, vừa cho người chơi thấy node nào đang nằm trên viền ngoài.
 
 - **Chuyển động:** tốc độ không đổi 250 px mỗi giây (khung vải 368 px), kể cả khi người chơi đang kéo. Điểm gắn với một cạnh và một vị trí tỷ lệ trên cạnh đó, nên khi node bị kéo làm cạnh dài ra hay co lại, điểm đi theo cạnh liên tục. Cách đầu tiên tính theo tỷ lệ cả vòng làm điểm nhảy giật mỗi khi chu vi đổi, đã bỏ.
 - **Nốt nhạc:** khi điểm tới một node nằm trên viền ngoài thì phát một nốt thang ngũ cung (đô, rê, mi, sol, la). Mỗi node một nốt cố định. Node nảy to 1,3 lần và có vòng sóng vàng lan ra trong 0,45 giây. Node nằm lọt trong vùng tô thì im lặng. Node được coi là trên viền nếu trong ô 7×7 của mặt nạ quanh nó có một ô nằm ngoài vùng.
@@ -119,7 +143,13 @@ Sau khi viền khớp hình, các điểm mờ đi và điểm sáng phải đi 
 - **Tăng tốc ngắn:** mỗi lần điểm sáng đi qua một ghim, nó tăng tốc tới khoảng 2,4 lần rồi giảm dần trong khoảng 0,6 giây, đuôi sáng dài ra. Lúc đang chơi, ghim chỉ nhấp sáng khi điểm sáng qua, không tính điểm, để người chơi tự thấy viền đã đi qua ghim hay chưa.
 - **Dung sai:** khoảng cách từ ghim tới đoạn đường điểm sáng đi trong một khung hình dưới 16 đơn vị. Vì khớp 92% cho phép lệch vài px, cần theo dõi xem dung sai này có khắt trên màn hình nhỏ không.
 - **Thất bại:** điểm sáng chạy hết một vòng mà còn ghim chưa sáng thì màn trở lại chơi bình thường. Ghim còn trống nhấp đỏ, kèm lời nhắn (sai thứ tự, hay chưa đi qua đủ ghim). Màn chỉ tự kiểm tra lại sau khi người chơi kéo một node rồi thả.
-- **Vị trí ghim:** đặt giữa cạnh, không đặt đúng chỗ node, để không bị node che. Dữ liệu level thêm danh sách `markers`, mỗi ghim gồm cạnh, tỷ lệ trên cạnh và loại. Thử nghiệm: cá 2 ghim tròn; nhà 3 ghim số; lá và tim mỗi màn 1 ghim tròn và 3 ghim số.
+- **Vị trí ghim:** đặt giữa cạnh, không đặt đúng chỗ node, để không bị node che. Dữ liệu level thêm danh sách `markers`, mỗi ghim gồm:
+  - `edge`: chỉ số trên vòng của node đứng đầu cạnh vòng chứa ghim (cạnh từ `ring[edge]` tới node kế tiếp trên vòng);
+  - `t`: tỉ lệ theo chiều dài cung dọc cạnh đó, từ 0 tới 1;
+  - `kind`: `pass` (ghim tròn) hoặc `order` (ghim số).
+- **Ghim cố định trên viền mẫu:** vị trí ghim tính một lần lúc vào màn trên viền lời giải (đồ thị ở vị trí lời giải, 24 đoạn mỗi cạnh), không đi theo đồ thị khi người chơi kéo.
+- **Số thứ tự ghim số không lưu trong dữ liệu:** xếp các ghim `order` theo khoảng cách dọc vòng lời giải tính từ `ring[0]`, theo chiều vòng; ghim gần nhất là số 1. Muốn đổi thứ tự thì đổi vị trí ghim.
+- **Thử nghiệm:** cá 2 ghim tròn; nhà 3 ghim số; lá và tim mỗi màn 1 ghim tròn và 3 ghim số.
 
 ### Nút đảo chiều điểm sáng (đề xuất, chưa làm)
 
@@ -138,16 +168,30 @@ Level là dữ liệu, không phải scene: một scene gameplay dùng chung t�
 
 | Trường | Kiểu | Ý nghĩa |
 | --- | --- | --- |
+| schemaVersion | int | Phiên bản cấu trúc file, để chuyển đổi khi đổi cấu trúc |
 | id, chapterId | string | Định danh và chương chứa màn |
-| targetShape | danh sách điểm (0–1) | Đường viền hình mẫu, chuẩn hóa theo khung vải |
+| targetShape | danh sách điểm (0–1) | Đường viền hình mẫu, chuẩn hóa theo khung vải. Level Editor sinh ra từ vòng lời giải (24 đoạn mỗi cạnh), không vẽ tay riêng; kiểm tra hàng loạt báo lỗi nếu lệch với lời giải |
 | nodes | id, startPos, solutionPos, type, locked | Vị trí ban đầu, một lời giải mẫu, loại thẳng hoặc cong, có bị khóa không |
-| edges | cặp id node | Cách nối cố định |
+| ring | danh sách id node có thứ tự | Vòng node: mỗi cặp liền kề, kể cả cuối với đầu, là một cạnh vòng. Phải chứa mọi node, mỗi node đúng một lần |
+| innerEdges | cặp id node | Cạnh trong, nối thêm ngoài vòng; có thể rỗng |
+| markers | edge, t, kind | Ghim trên viền mẫu (mục Vòng kiểm tra điểm và ghim); có thể rỗng |
 | winThreshold | float | Ngưỡng khớp để thắng, mặc định 0,92 |
-| maxDeviation | float | Độ lệch viền tối đa được phép |
+| maxDeviation | float, tùy chọn | Độ lệch viền tối đa. Chưa có luật, để trống tới khi chốt |
 | fabricId | string | Họa tiết vải của màn |
 | productId, slotIndex | string, int | Mảnh này thuộc sản phẩm nào, ở vị trí nào |
-| hintOrder | danh sách id node | Thứ tự node được gợi ý di chuyển |
+| hintOrder | danh sách id node, tùy chọn | Thứ tự node được gợi ý. Bản thử không dùng (xem mục Gợi ý); giữ chỗ cho người thiết kế ép thứ tự gợi ý |
+| depthProfile | đối tượng, tùy chọn | Lớp chiều sâu (mục Level chiều sâu) |
+| forbiddenZones | danh sách đa giác, tùy chọn | Vùng cấm (mục Ý tưởng mở rộng: vùng cấm), chưa làm |
 | tags | danh sách | Cơ chế dùng trong màn, để mở rộng sau |
+
+### Gợi ý (booster), lượt kéo và Đặt lại
+
+- **Lượt kéo không giới hạn (đã chốt):** người chơi kéo bao nhiêu lần cũng được. Số lần kéo chỉ để đo (telemetry, bảng kết quả), không liên quan tới thắng thua; màn không có luật thua.
+- **Gợi ý là booster (đã chốt hướng):** mỗi lần dùng gợi ý tiêu một booster gợi ý. Số booster người chơi đang có do Meta giữ và lưu, không thuộc phần chơi màn.
+- **Hiệu ứng một lần gợi ý (theo bản thử):** chọn node không khóa nằm xa vị trí lời giải nhất, vẽ nét đứt từ node tới vị trí lời giải và vòng vàng nhấp nháy ở đó trong 3 giây. Chỉ dùng được trong pha Chơi.
+- **Đặt lại:** đưa mọi node về vị trí ban đầu, tính vào số lần đặt lại.
+- **Luồng dữ liệu:** Meta đưa số booster hiện có vào màn qua `LevelRequest`; Gameplay chỉ hiển thị và cho dùng khi còn booster, rồi báo số booster đã dùng trong `LevelResult`; Meta trừ và lưu. Gameplay không ghi save. Luật "node xa nhất" là mặc định; `hintOrder` chỉ điền khi người thiết kế muốn ép thứ tự gợi ý.
+- **Cần chốt:** booster gợi ý có trong bản đầu không (đặc tả đang để IAP, quảng cáo, tiền tệ ngoài phạm vi); số booster tặng lúc bắt đầu; người chơi nhận thêm từ đâu; hết booster thì nút gợi ý mờ đi hay mở chỗ nhận thêm; dùng booster có hiện xác nhận không. Các số đặt trong ScriptableObject cấu hình.
 
 File JSON là bản gốc của level: Level Editor đọc và ghi thẳng JSON, game nạp JSON lúc chạy, test và CI kiểm tra đúng file đó. Không có bản ScriptableObject song song cho level. Thứ cần tham chiếu asset (khách, sản phẩm, vải, cấu hình) vẫn là ScriptableObject, level chỉ trỏ tới chúng bằng id.
 
@@ -354,11 +398,9 @@ Mỗi khi node di chuyển, phần điều khiển đưa vị trí mới vào l�
 - `IWinCondition`: điều kiện thắng (khớp một hình, nhiều mảnh, khoét lỗ).
 - `IPinRule`: luật của từng loại ghim (đi qua lúc nào cũng được, theo thứ tự, sau này theo nhịp).
 - `IRunnerRule`: cách điểm sáng chạy (tốc độ, chiều, tăng tốc, sau này nhảy cổng hay hai điểm sáng).
-- `IHintProvider`: cách đưa gợi ý và số lượt gợi ý, để meta thêm lượt gợi ý qua modifier mà không sửa code chơi.
+- `IHintProvider`: cách chọn và hiển thị gợi ý. Số booster gợi ý do Meta cấp qua `LevelRequest`, nên đổi cách nhận booster không sửa code chơi.
 
-**Cấu trúc thư mục đề xuất:** `Core/` (lõi, có Assembly Definition riêng), `Gameplay/` (điều khiển), `UI/`, `Data/`, `Editor/`, `Tests/`.
-
-**Kế hoạch kiến trúc chi tiết:** hệ thống, assembly, cấu trúc thư mục, công nghệ và cách cắm meta loop nằm ở [GraphNode-Puzzle-Kien-truc.md](GraphNode-Puzzle-Kien-truc.md). Tài liệu đó thay cho cấu trúc thư mục đề xuất ở trên.
+**Kế hoạch kiến trúc chi tiết:** hệ thống, assembly, cấu trúc thư mục, công nghệ và cách cắm meta loop nằm ở [GraphNode-Puzzle-Kien-truc.md](GraphNode-Puzzle-Kien-truc.md). Mọi câu hỏi về assembly và thư mục lấy theo tài liệu đó.
 
 ## Lộ trình triển khai
 
@@ -375,13 +417,13 @@ Mục này là yêu cầu kỹ thuật để đưa game từ bản thử web san
 ### Nền tảng kỹ thuật
 
 - **Project hiện có:** Unity 2022.3.62f3 (LTS), URP 14.0.12 với Renderer 2D, Input System 1.14.2, TextMeshPro 3.0.7, Test Framework 1.1.33. Thư mục Plugins đã có UniTask và DOTween. Thư mục Scripts còn trống.
-- **Cần chốt trước khi làm tiếp:** khóa màn hình dọc (hiện đang để tự xoay), đổi tên công ty và gói (hiện là DefaultCompany), nâng Android min SDK theo máy mục tiêu (hiện 22), IL2CPP và ARM64 cho bản phát hành.
+- **Cần chốt trước khi làm tiếp:** khóa màn hình dọc (hiện đang để tự xoay), đổi tên công ty và gói (hiện là DefaultCompany), nâng Android min SDK theo máy mục tiêu (hiện 22). Android đã đúng: IL2CPP, ARMv7 + ARM64 (xem mục Build và phát hành).
 - **Gói chỉ dùng khi phát triển:** gói MCP for Unity chỉ dùng trong Editor, phải gỡ khỏi bản build phát hành.
-- **Addressables:** chưa dùng. Level là dữ liệu nhỏ nên bản đầu tham chiếu trực tiếp hoặc nạp từ Resources; chỉ thêm Addressables nếu cần cập nhật level từ xa.
+- **Addressables:** chưa dùng. Level là dữ liệu nhỏ nên bản đầu tham chiếu trực tiếp: `LevelCatalog` (ScriptableObject) giữ tham chiếu tới file JSON của từng level dưới dạng `TextAsset`, lớp khởi động giữ tham chiếu tới catalog. Không dùng `Resources`. Chỉ thêm Addressables nếu cần cập nhật level từ xa.
 
 ### Kiến trúc và quy ước code
 
-- **Assembly:** tách `GraphNode.Core` (lõi, không tham chiếu UnityEngine, dùng struct toạ độ riêng và chuyển đổi ở biên), `GraphNode.Gameplay`, `GraphNode.UI`, `GraphNode.Data`, `GraphNode.Editor`, `GraphNode.Tests.EditMode`, `GraphNode.Tests.PlayMode`. Namespace trùng cấu trúc thư mục.
+- **Assembly:** danh sách đầy đủ và luật phụ thuộc ở mục 3.1 tài liệu kiến trúc. Điểm bắt buộc: `GraphNode.Core` là lõi không tham chiếu UnityEngine, dùng struct toạ độ riêng và chuyển đổi ở biên; namespace trùng cấu trúc thư mục.
 - **Máy trạng thái màn chơi:** một máy trạng thái rõ ràng với các pha như bản thử: Chơi, Kiểm tra, Snap, Cắt, Nhấc lên, Đổ màu, Ghép, Kết quả. Chuyển pha chỉ qua một chỗ. Animation bất đồng bộ dùng UniTask kèm CancellationToken gắn vòng đời màn, để thoát màn hay đặt lại không để lại animation chạy dở.
 - **Dịch vụ:** âm thanh, rung, lưu trữ, telemetry nằm sau interface (`IAudioService`, `IHaptics`, `ISaveService`, `IAnalytics`), khởi tạo ở một điểm duy nhất. Không dùng singleton tĩnh cho dữ liệu màn chơi.
 - **Dữ liệu:** mọi thông số cân bằng (ngưỡng, tốc độ điểm sáng, bán kính chọn, dung sai ghim, thang âm) đặt trong ScriptableObject, không ghi cứng trong code.
@@ -438,6 +480,7 @@ Mọi khoảng cách và tốc độ trong bản chính thức tính theo bề r
 
 ### Kiểm thử
 
+- **Dữ liệu đối chiếu:** 4 level của bản thử (mục Dữ liệu 4 level của bản thử) chuyển thành file JSON mẫu cho test EditMode, đặt cùng thư mục test, không đặt trong `Content/Levels`.
 - **EditMode (lõi hình học):** dùng số liệu từ bản thử làm đối chiếu. Đáp án mỗi level cho điểm khớp 100%; lệch 0,02 cho kết quả trong khoảng ghi ở bảng độ nhạy; viền ngoài khi có cạnh chéo nhau; thứ tự ghim, gồm bản đối xứng gương thất bại và thành công khi đảo chiều.
 - **Kiểm tra hàng loạt level** (Editor và CI): lời giải vượt ngưỡng, vị trí đầu chưa vượt, ghim nằm trên viền trong dung sai, không chồng vùng cấm.
 - **PlayMode:** mỗi level chạy từ vào màn tới bảng kết quả không lỗi.
@@ -445,13 +488,16 @@ Mọi khoảng cách và tốc độ trong bản chính thức tính theo bề r
 
 ### Build và phát hành
 
-- IL2CPP, ARM64. Lưu ý cấu hình stripping để UniTask và DOTween không bị cắt nhầm.
+- IL2CPP. Lưu ý cấu hình stripping để UniTask và DOTween không bị cắt nhầm.
+- **Android: build cả ARM64 và ARMv7 (đã chốt), ưu tiên ARM64.** ARM64 là kiến trúc của gần như mọi máy Android đang bán và Google Play bắt buộc có bản 64-bit; ARMv7 giữ để máy 32-bit cũ vẫn cài được. AAB tách theo kiến trúc nên mỗi máy chỉ tải phần của nó.
+  - Ưu tiên ARM64 nghĩa là: đo hiệu năng, kiểm tra 60 fps và QA chính chạy trên máy ARM64. Máy ARMv7 chỉ cần cài và chơi được; chưa đặt mục tiêu 60 fps riêng cho nhóm này (theo mục Hiệu năng và bộ nhớ). Lỗi chỉ xảy ra trên ARMv7 xử lý sau lỗi trên ARM64.
+  - Cái giá: IL2CPP biên dịch hai lần nên build lâu hơn, file AAB lớn hơn (người tải không bị ảnh hưởng).
 - Đánh phiên bản major.minor.patch cộng số build. CI tự động dựng Android (AAB) và iOS (dự án Xcode). Ký bản phát hành theo quy trình của cửa hàng.
 - Báo lỗi crash bằng dịch vụ chuẩn (cần chốt nhà cung cấp).
 
 ### Định nghĩa hoàn thành
 
-Mỗi tính năng chỉ xong khi: chạy đúng trên thiết bị thật, giữ 60 fps trên máy thử, có unit test cho phần lõi, có ghi telemetry, không còn cảnh báo trong Console, đã qua review, và đã cập nhật tài liệu này.
+Mỗi tính năng chỉ xong khi: chạy đúng và giữ 60 fps trên máy thử thật, có unit test cho phần lõi, có ghi telemetry nếu là sự kiện đo chỉ số, không còn cảnh báo trong Console, đã qua review, và đã cập nhật tài liệu này. Mục "Định nghĩa hoàn thành" trong CLAUDE.md là bản rút gọn của danh sách này.
 
 ### Rủi ro production
 
@@ -474,6 +520,32 @@ Bản thử chạy trên trình duyệt, chỉ là demo luật lõi để kiểm
 
 Mỗi level đều có ít nhất một chỗ viền tự cắt chéo nhau lúc bắt đầu. Hình mẫu được sinh từ chính vị trí lời giải, nên màn nào cũng có lời giải khớp 100%.
 
+### Dữ liệu 4 level của bản thử
+
+Số liệu đối chiếu cho test lõi, chép từ bản thử. Toạ độ chuẩn hóa 0–1 theo khung vải, trục dọc hướng xuống. Node đánh số từ 0; ở cả 4 level, vòng là các node theo thứ tự 0, 1, 2… Loại node: `c` cong, `s` thẳng, theo thứ tự node. Ghim ghi dạng `(edge, t, kind)`.
+
+| Level | Loại node | Cạnh trong | Node khóa | Ghim |
+| --- | --- | --- | --- | --- |
+| Con cá | `ccssssc` | 2–5 | 2 | (3; 0,5; pass), (6; 0,5; pass) |
+| Ngôi nhà | `sssss` | 1–3 | 2 | (0; 0,5; order), (2; 0,5; order), (3; 0,5; order) |
+| Chiếc lá | `sccscc` | 0–3 | 0 | (3; 0,5; pass), (0; 0,5; order), (1; 0,5; order), (4; 0,5; order) |
+| Trái tim | `sccscc` | không có | 3 | (0; 0,5; pass), (1; 0,5; order), (2; 0,5; order), (4; 0,5; order) |
+
+Vị trí lời giải và vị trí ban đầu, theo thứ tự node:
+
+```text
+Con cá    lời giải  (.10,.52) (.40,.18) (.66,.40) (.92,.14) (.92,.88) (.66,.64) (.40,.86)
+          ban đầu   (.16,.43) (.22,.16) (.66,.40) (.90,.28) (.61,.22) (.47,.57) (.21,.84)
+Ngôi nhà  lời giải  (.14,.90) (.14,.50) (.50,.10) (.86,.50) (.86,.90)
+          ban đầu   (.81,.52) (.18,.59) (.50,.10) (.87,.36) (.82,.11)
+Chiếc lá  lời giải  (.22,.92) (.10,.56) (.24,.24) (.80,.08) (.92,.46) (.72,.76)
+          ban đầu   (.22,.92) (.44,.51) (.45,.69) (.11,.73) (.73,.11) (.73,.49)
+Trái tim  lời giải  (.50,.30) (.76,.12) (.94,.40) (.50,.92) (.06,.40) (.24,.12)
+          ban đầu   (.87,.31) (.55,.30) (.12,.68) (.50,.92) (.83,.62) (.22,.24)
+```
+
+Bảng "Khớp ban đầu" ở trên và bảng độ nhạy dưới đây là số làm tròn. Khi viết test lõi, đo lại giá trị chính xác từ dữ liệu này rồi ghi vào test kèm dung sai.
+
 ### Độ nhạy của ngưỡng thắng
 
 Kết quả đo khi mọi điểm không khóa lệch khỏi lời giải một đoạn 0,02 (khoảng 7 px trên khung 368 px):
@@ -492,7 +564,7 @@ Vì vậy ngưỡng 92% chỉ dễ chịu với hình đủ to. Với hình nh�
 - **Ngưỡng thắng:** mặc định 92%; bản thử chỉ còn hai lựa chọn 92% và 95%. Bản thử thắng ngay khi điểm trên ngưỡng liên tục 0,1 giây, kể cả lúc đang kéo; bản chính thức đổi thành chỉ kiểm tra khi thả tay (xem mục Thanh khớp).
 - **Snap:** đang đưa node về vị trí lời giải lưu sẵn, chưa biến đường cắt về viền mẫu như đề xuất.
 - **Tính điểm:** mặt nạ 200×200 thay cho Clipper2, tính mỗi khung hình (khoảng 0,7 ms) thay vì 2–3 khung một lần. Chưa có điều kiện độ lệch viền tối đa, nên một mũi nhọn nhỏ bị cụt vẫn có thể thắng.
-- **Tiếp tuyến điểm cong:** lấy từ hai láng giềng trên vòng ngoài (Catmull-Rom). Điểm cong có nhiều hơn hai cạnh thì cạnh thêm dùng chiều gần nhất với hướng đi, chưa chốt được quy tắc cuối cùng.
+- **Tiếp tuyến điểm cong:** lấy từ hai láng giềng trên vòng (Catmull-Rom). Cạnh trong chọn chiều tiếp tuyến theo hướng cạnh. Luật đầy đủ ở mục Luật tiếp tuyến của điểm cong; đã chốt giữ nguyên.
 - **Sản phẩm:** mỗi màn lấp một ô trong bộ vải ghép 4 ô.
 - **Trên màn hình:** thêm bảng kết quả sau mỗi màn (thời gian, lần kéo, gợi ý, đặt lại) so với mục tiêu 30–90 giây, và ô bật để hiện % khớp thật.
 
@@ -506,9 +578,12 @@ Các điểm dưới đây cần chốt trước khi viết code, vì chúng ả
 
 - [x] Đã chốt: khi thanh đạt ngưỡng thì khóa thao tác và chạy vòng kiểm tra: điểm sáng đi qua mọi điểm và mọi ghim thì thắng, chạy animation rồi mới hiện bảng thắng (màn không có ghim vẫn kiểm tra qua các điểm).
 - [ ] Snap bằng cách biến đường cắt về viền hình mẫu (đề xuất hiện tại), hay đưa node về vị trí lời giải lưu sẵn? Bản thử web đang dùng cách sau, cần thử thêm cách đầu.
-- [ ] Có cho phép nhánh treo, tức cạnh không nằm trên vòng kín nào? Đề xuất: chưa cho trong prototype.
+- [x] Đã chốt: game không có nhánh treo, kể cả về sau. Đồ thị luôn là một vòng kín qua mọi node, không có node thừa ra để đánh lạc hướng; cạnh trong (nối hai node đã có trên vòng) vẫn dùng như cũ. Lý do: điểm sáng và vòng kiểm tra chạy theo `ring`; nhánh treo nhô ra ngoài còn làm điểm khớp nhiễu vì ô nằm dưới nét vẽ được tính là bên trong. Trình kiểm tra level báo lỗi nếu `ring` thiếu node hoặc lặp node, hoặc cạnh trong trỏ tới node không có trên vòng.
+- [x] Đã chốt: giữ đúng luật tiếp tuyến của bản thử (mục Luật tiếp tuyến của điểm cong). Lý do: test lõi khớp số liệu đối chiếu, cảm giác kéo đã được thử, luật nằm sau `IEdgeShape` nên đổi sau chỉ cần thêm một lớp. Theo dõi khi thử chơi: cạnh trong giữa hai node cong cũng cong; nếu gây khó hiểu thì cân nhắc cạnh trong luôn thẳng, sau M1.
+- [x] Đã chốt: gợi ý là booster, mỗi lần dùng tiêu một booster; số booster do Meta giữ và lưu, đưa vào màn qua `LevelRequest`, số đã dùng báo về qua `LevelResult`. Lượt kéo không giới hạn và không liên quan tới thắng thua. Mặc định chỉ node xa vị trí lời giải nhất; `hintOrder` là trường tùy chọn, chỉ điền cho màn muốn dạy thứ tự kéo.
+- [ ] Booster gợi ý: có trong bản đầu không, số tặng lúc bắt đầu, nguồn nhận thêm, hành vi khi hết booster, có xác nhận trước khi dùng không (chi tiết ở mục Gợi ý (booster), lượt kéo và Đặt lại).
 - [x] Đã chốt: ngưỡng thắng mặc định 92%, có thêm 95% để thử. Hình nhỏ hoặc nhiều node cần ngưỡng riêng theo level.
-- [ ] Chấm theo cả vị trí trên vải, hay chỉ theo hình dạng (game tự căn miếng vải cho khớp rồi mới so)?
+- [x] Đã chốt: chấm theo vị trí trên vải, như bản thử (so hai mặt nạ tại chỗ, không căn hình trước). Lý do: node khóa chỉ có tác dụng làm mốc khi chấm theo vị trí; bóng mờ và ghim cố định trên vải nên người chơi hiểu mục tiêu là trùng bóng mờ; chấm hình dạng phải chọn cách căn (trọng tâm, co giãn, xoay), mỗi cách cho một điểm khác và phải đo lại số liệu đối chiếu. Cái giá: đúng hình nhưng lệch chỗ thì điểm thấp; giảm bằng bóng mờ đủ rõ và node khóa làm mốc ở màn đầu.
 - [x] Đã chốt: Unity 2022.3 LTS, URP với Renderer 2D.
 - [ ] Điểm chạy dọc viền và nốt nhạc: giữ hay bỏ sau khi thử với người chơi? Theo dõi xem có gây mệt ở màn nhiều node không.
 - [x] Đã chốt: dùng kéo tương đối, chưa thêm node tay nắm bên ngoài. Xem lại nếu người thử vẫn nói bị che hoặc chọn nhầm node ở màn nhiều node.

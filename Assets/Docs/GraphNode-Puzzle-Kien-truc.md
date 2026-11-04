@@ -15,7 +15,7 @@ Trạng thái: kế hoạch, chưa có mã. Thư mục `Assets/Scripts` đang tr
 ## 1. Nguyên tắc
 
 1. **Lõi thuần, hiển thị mỏng.** Mọi tính toán có thể sai (viền ngoài, điểm khớp, ghim, điểm sáng) nằm trong `GraphNode.Core`, không tham chiếu UnityEngine, chạy được trong test EditMode và tái hiện được theo từng bước thời gian.
-2. **Dữ liệu điều khiển.** Level, chương, sản phẩm và thông số cân bằng là dữ liệu (ScriptableObject, xuất JSON có `schemaVersion`). Thêm màn hay chỉnh số không sửa code.
+2. **Dữ liệu điều khiển.** Level là file JSON gốc có `schemaVersion`; chương, sản phẩm, khách và thông số cân bằng là ScriptableObject. Thêm màn hay chỉnh số không sửa code.
 3. **Phụ thuộc một chiều.** Module tính năng không tham chiếu lẫn nhau. Gameplay không biết Meta, Meta không biết bên trong Gameplay. Chỉ `GraphNode.App` biết tất cả để nối lại.
 4. **Mở rộng bằng thêm, không bằng sửa.** Cơ chế mới đi qua các điểm mở rộng có sẵn (`IEdgeShape`, `INodeConstraint`, `IWinCondition`, `IPinRule`, `IRunnerRule`, `IHintProvider`, `IPresentationStep`, phần lưu theo mục). Không rải `if (levelType == ...)` trong code chơi.
 5. **Bất đồng bộ có vòng đời.** Mọi tác vụ chờ (animation, nạp dữ liệu) dùng UniTask kèm `CancellationToken` gắn với đối tượng hoặc phiên chơi.
@@ -43,7 +43,7 @@ Trạng thái: kế hoạch, chưa có mã. Thư mục `Assets/Scripts` đang tr
 | Telemetry, crash, remote config | Interface trong Foundation | Chốt nhà cung cấp sau | Firebase hoặc Unity Gaming Services; code chơi không gọi thẳng SDK |
 | CI | GitHub Actions + GameCI | **Đề xuất, cần chốt** | Cần license Unity cho máy CI |
 | Gói không dùng | Visual Scripting (`com.unity.visualscripting`) | **Đề xuất gỡ, cần duyệt** | Không dùng, làm chậm biên dịch |
-| Gói chỉ dùng khi phát triển | MCP for Unity | Giữ ở Editor | Gỡ khỏi bản phát hành (xem CLAUDE.md mục Build) |
+| Gói chỉ dùng khi phát triển | MCP for Unity | Giữ ở Editor | Gỡ khỏi bản phát hành (xem CLAUDE.md mục Build). `manifest.json` đang trỏ vào nhánh `#main`, mỗi lần nạp lại có thể ra bản khác: **đề xuất ghim vào một tag hoặc commit, cần duyệt** |
 | Timeline | Đã có | Tùy chọn | Có thể dùng cho cảnh lộ diện sản phẩm |
 
 ---
@@ -103,8 +103,8 @@ flowchart TD
 
 ### 3.2 Gameplay và Meta nói chuyện thế nào
 
-- **Vào màn:** Meta gửi `LevelRequest` gồm `levelId`, `fabricId` (tùy chọn, đè lên vải mặc định của level khi người chơi tự chọn vải) và danh sách `modifiers` chung (ví dụ thêm lượt gợi ý). Gameplay chỉ hiểu modifier qua interface, không biết nó đến từ cửa hàng hay phần thưởng.
-- **Ra màn:** Gameplay phát `LevelResult` lên message bus, gồm: `levelId`, `fabricId` thực dùng, kết quả (thắng hay bỏ), số liệu chơi (thời gian, số lần kéo, gợi ý, đặt lại, đảo chiều, lần kiểm tra thất bại). Hình mảnh vải không cần gửi kèm: Meta lấy từ `targetShape` của `levelId`. Meta nghe để cho mảnh bay vào thẻ đơn, mở màn tiếp, đặt mảnh vào sản phẩm, tính thưởng. Telemetry nghe để gửi sự kiện.
+- **Vào màn:** Meta gửi `LevelRequest` gồm `levelId`, `fabricId` (tùy chọn, đè lên vải mặc định của level khi người chơi tự chọn vải), số booster người chơi đang có theo từng loại (bản đầu: booster gợi ý) và danh sách `modifiers` chung. Gameplay chỉ hiểu booster và modifier qua interface, không biết chúng đến từ cửa hàng hay phần thưởng.
+- **Ra màn:** Gameplay phát `LevelResult` lên message bus, gồm: `levelId`, `fabricId` thực dùng, kết quả (thắng hay bỏ), số booster đã dùng theo từng loại, số liệu chơi (thời gian, số lần kéo, đặt lại, đảo chiều, lần kiểm tra thất bại). Meta trừ booster và lưu; Gameplay không ghi save. Thoát giữa màn cũng phát `LevelResult` (kết quả "bỏ") nên booster đã dùng vẫn được trừ. Hình mảnh vải không cần gửi kèm: Meta lấy từ `targetShape` của `levelId`. Meta nghe để cho mảnh bay vào thẻ đơn, mở màn tiếp, đặt mảnh vào sản phẩm, tính thưởng. Telemetry nghe để gửi sự kiện.
 - **Chuyển cảnh:** cả hai phía gọi `ISceneTransition` (mục 5.11), không tự nạp scene.
 - **Lưu:** mỗi module có mục lưu riêng. Thêm module meta là thêm mục lưu, không đụng mục cũ.
 
@@ -254,14 +254,15 @@ stateDiagram-v2
 
 | Thành phần | Trách nhiệm | Đối chiếu với bản thử |
 | --- | --- | --- |
-| `EdgeShapes` | Sinh đường gấp khúc của cạnh: thẳng, cong Hermite với tiếp tuyến Catmull-Rom từ láng giềng trên vòng | Hàm `edgePoly` |
-| `RegionMask` | Vẽ cạnh lên lưới 200×200, tô loang từ biên, ra mặt nạ vùng tô | Hàm `region` |
-| `MatchScorer` | Giao chia hợp giữa mặt nạ người chơi và mặt nạ lời giải; sau này thêm độ lệch viền | Hàm `iou` |
+| `EdgeShapes` | Sinh đường gấp khúc của cạnh: thẳng, cong Hermite với tiếp tuyến Catmull-Rom từ láng giềng trên `ring` (luật ở mục Luật tiếp tuyến của điểm cong trong đặc tả) | Hàm `edgePoly` |
+| `RegionMask` | Vẽ cạnh lên lưới 200×200, tô loang từ biên, ra mặt nạ vùng tô; tham số theo bảng Tham số mặt nạ trong đặc tả | Hàm `region` |
+| `MatchScorer` | Giao chia hợp giữa mặt nạ người chơi và mặt nạ dựng từ đồ thị ở vị trí lời giải; sau này thêm độ lệch viền | Hàm `iou` |
+| `SolutionOutline` | Viền lời giải dựng một lần lúc vào màn (24 đoạn mỗi cạnh): sinh `targetShape`, vị trí ghim, số thứ tự ghim số, đường cho cảnh cắt | Hàm `ringPolyline`, `buildGeo` |
 | `RunnerSimulator` | Điểm sáng gắn với cạnh và vị trí tỉ lệ trên cạnh, tốc độ không đổi, hai chiều, tăng tốc khi qua ghim | `runnerStep` |
 | `VerificationTracker` | Đánh dấu điểm và ghim đã sáng, gọi `IPinRule` của từng ghim, thất bại sau một vòng | `onPass`, `checkVerifyDone` |
 | `IPinRule` | Luật của một loại ghim: "đi qua là sáng", "theo thứ tự"; thêm loại mới (theo nhịp…) bằng một lớp mới | Ghim tròn, ghim số |
 | `IRunnerRule` | Quyết định tốc độ, chiều, tăng tốc của điểm sáng; thêm hai điểm sáng hay nhảy cổng bằng lớp mới | Tốc độ, đảo chiều, tăng tốc |
-| `IHintProvider` | Chọn gợi ý và đếm lượt gợi ý; modifier từ meta có thể đổi số lượt | Nút Gợi ý |
+| `IHintProvider` | Chọn node cần gợi ý (mặc định node xa lời giải nhất, hoặc theo `hintOrder`). Không giữ số booster: số đó đi vào qua `LevelRequest` | Nút Gợi ý |
 | `WinConditions` | Chuỗi điều kiện: ngưỡng khớp, vùng cấm, rồi vòng kiểm tra | Luật thắng |
 | `LevelValidator` | Kiểm tra level cho Editor, CI và test | Mục "Kiểm tra hàng loạt" của đặc tả |
 
@@ -288,8 +289,10 @@ Yêu cầu: API không cấp phát khi đang chơi (bộ đệm dựng một l�
 
 ### 5.7 Dữ liệu và nội dung
 
-- **Level là file JSON (bản gốc)**, mỗi level một file trong `Content/Levels/`. Gồm các trường trong đặc tả (hình mẫu, node, cạnh, ngưỡng, độ lệch tối đa, vải, sản phẩm, thứ tự gợi ý, tags) cộng `markers` (ghim), `forbiddenZones` (sau), `depthProfile`. Lúc chạy, JSON được đọc thành `LevelDefinition` (lớp C# thường, không phải ScriptableObject).
-- Level Editor đọc và ghi thẳng JSON. Không có bản ScriptableObject song song, nên không có hai nguồn lệch nhau. `LevelCatalog` (một ScriptableObject) chỉ là danh mục id trỏ tới các file, do công cụ trong Editor sinh lại tự động.
+- **Level là file JSON (bản gốc)**, mỗi level một file trong `Content/Levels/`. Trường theo bảng "Dữ liệu một level" trong đặc tả: hình mẫu, node, `ring`, `innerEdges`, `markers`, ngưỡng, độ lệch tối đa (tùy chọn), vải, sản phẩm, thứ tự gợi ý (tùy chọn), `depthProfile`, `forbiddenZones` (sau), tags. Lúc chạy, JSON được đọc thành `LevelDefinition` (lớp C# thường, không phải ScriptableObject).
+- Level Editor đọc và ghi thẳng JSON. Không có bản ScriptableObject song song, nên không có hai nguồn lệch nhau.
+- **Đưa JSON vào bản build mà không dùng `Resources`:** `LevelCatalog` (một ScriptableObject) giữ danh sách id kèm tham chiếu `TextAsset` tới từng file, do công cụ trong Editor sinh lại tự động. Lớp nối của App giữ tham chiếu tới catalog (gán trong scene Boot), nên Unity đưa các file vào build theo chuỗi tham chiếu. Các ScriptableObject cấu hình cũng đi theo cách này.
+- **IL2CPP:** thêm `link.xml` giữ các kiểu DTO và bộ chuyển đổi JSON, để bước cắt code không xóa hàm khởi tạo mà Newtonsoft gọi qua reflection.
 - JSON có `schemaVersion`; khi đổi cấu trúc thì viết bước chuyển đổi, không sửa tay file cũ.
 - Dữ liệu nhiều loại (loại ghim, điều kiện thắng, hình dạng cạnh) ghi trường `kind` và đọc bằng bộ chuyển đổi tự viết. Không dùng chế độ tự ghi tên kiểu của Newtonsoft (`TypeNameHandling`): kém an toàn và dễ hỏng khi IL2CPP cắt code.
 - Level trỏ tới vải, sản phẩm bằng id; định nghĩa có asset (khách, sản phẩm, vải, cấu hình cân bằng) vẫn là ScriptableObject.
@@ -299,7 +302,7 @@ Yêu cầu: API không cấp phát khi đang chơi (bộ đệm dựng một l�
 
 ### 5.8 Lưu trữ
 
-- `ISaveService` lưu theo mục: mỗi mục có khóa và phiên bản riêng (ví dụ `progression`, `settings`, sau này `economy`, `tailor_shop`).
+- `ISaveService` lưu theo mục: mỗi mục có khóa và phiên bản riêng (ví dụ `progression`, `settings`, `boosters` khi có booster gợi ý, sau này `economy`, `tailor_shop`).
 - Ghi nguyên tử (file tạm rồi đổi tên), giữ một bản sao lưu, đọc lỗi thì quay về bản sao lưu.
 - Gameplay không ghi save trực tiếp. Nó phát `LevelResult`, Meta quyết định lưu gì.
 
@@ -374,7 +377,7 @@ Không bước nào sửa `Core` hay `Gameplay`. Thứ tự thêm đề xuất k
 - **Chia sẻ ảnh lookbook:** cần một plugin chia sẻ gốc cho iOS và Android (bạn tự cài khi tới lúc).
 - **Sự kiện theo mùa:** cần remote config, nội dung tải từ xa (Addressables) và giờ máy chủ để chống chỉnh đồng hồ máy; `IClock` đã chừa chỗ.
 - **Nâng cấp tiệm nhiều art:** nạp và giải phóng art theo mốc, có thể cần Addressables.
-- **Kiếm tiền (quảng cáo, mua trong game):** hiện game không dùng. Nếu sau này cần thì thêm interface (`IAdsService`, `IStoreService`) vào Foundation và cài ở Services; Gameplay chỉ thấy thêm lượt gợi ý qua `IHintProvider`. Chưa làm gì bây giờ.
+- **Kiếm tiền (quảng cáo, mua trong game):** hiện game không dùng. Nếu sau này cần thì thêm interface (`IAdsService`, `IStoreService`) vào Foundation và cài ở Services; Gameplay chỉ thấy số booster trong `LevelRequest`. Chưa làm gì bây giờ.
 
 ### Không làm sẵn bây giờ
 
@@ -404,3 +407,5 @@ Tiền công, nâng cấp tiệm, lookbook, vải, câu chuyện khách, sự ki
 - [ ] Gỡ gói Visual Scripting.
 - [ ] Chọn CI (đề xuất GitHub Actions với GameCI) và nhà cung cấp telemetry, crash.
 - [ ] Android min SDK và vài máy phổ biến để kiểm tra 60 fps.
+- [ ] Ghim gói MCP for Unity vào một tag hoặc commit thay cho `#main`.
+- [ ] ProjectSettings: khóa màn hình dọc (đang cho tự xoay 4 hướng), đặt tên công ty và bundle id (đang `DefaultCompany`, chưa có id). Android đã đúng: IL2CPP, ARMv7 + ARM64 (đã chốt giữ cả hai, ưu tiên ARM64; xem mục Build và phát hành trong đặc tả).

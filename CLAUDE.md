@@ -65,7 +65,7 @@ Game mobile Unity dạng giải đố: kéo node của một đồ thị cho vi�
 
 ## Build và phát hành
 
-- Android: IL2CPP, ARM64, AAB. iOS: IL2CPP, dự án Xcode. Khóa màn hình dọc.
+- Android: IL2CPP, ARM64 + ARMv7, AAB. Ưu tiên ARM64: đo hiệu năng và QA chính trên máy ARM64. iOS: IL2CPP, dự án Xcode. Khóa màn hình dọc.
 - Bản phát hành phải **không chứa gói MCP**. Quy tắc: CI dựng từ `manifest.json` đã gỡ dòng `com.coplaydev.unity-mcp`, và có bước kiểm tra trước build làm hỏng build nếu assembly `MCPForUnity` xuất hiện.
 - Đánh phiên bản major.minor.patch cộng số build. Không commit khóa ký hay thông tin bí mật.
 
