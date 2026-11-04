@@ -42,7 +42,7 @@ Trạng thái: kế hoạch, chưa có mã. Thư mục `Assets/Scripts` đang tr
 | Ngôn ngữ | `ILocalizer` và bảng chuỗi riêng | Để sau mới thay | Có thể đổi sang gói Unity Localization mà không sửa nơi gọi |
 | Telemetry, crash, remote config | Interface trong Foundation | Chốt nhà cung cấp sau | Firebase hoặc Unity Gaming Services; code chơi không gọi thẳng SDK |
 | CI | GitHub Actions + GameCI | **Đề xuất, cần chốt** | Cần license Unity cho máy CI |
-| Gói không dùng | Visual Scripting (`com.unity.visualscripting`) | **Đề xuất gỡ, cần duyệt** | Không dùng, làm chậm biên dịch |
+| Gói không dùng | Visual Scripting (`com.unity.visualscripting`) | Đã gỡ | Không dùng, làm chậm biên dịch |
 | Gói chỉ dùng khi phát triển | MCP for Unity | Giữ ở Editor | Gỡ khỏi bản phát hành (xem CLAUDE.md mục Build). `manifest.json` đang trỏ vào nhánh `#main`, mỗi lần nạp lại có thể ra bản khác: **đề xuất ghim vào một tag hoặc commit, cần duyệt** |
 | Timeline | Đã có | Tùy chọn | Có thể dùng cho cảnh lộ diện sản phẩm |
 
@@ -201,6 +201,10 @@ Assets/
 └── Prefabs/
     ├── Gameplay/
     └── UI/
+        ├── Common/               Nút, chip, thanh dùng chung; SafeArea, Canvas gốc
+        ├── Home/                 Bố cục Home (đặt sẵn trong scene Home)
+        ├── Gameplay/             HUD (đặt sẵn trong scene Gameplay)
+        └── Popups/               Màn hình, popup instantiate khi mở (mục 5.13)
 ```
 
 Quy ước: namespace trùng đường dẫn dưới `Scripts` (ví dụ `GraphNode.Core.Runner`). Mỗi thư mục cấp hai trong `Scripts` có đúng một asmdef. Asset game không đặt trong `Resources`.
@@ -334,6 +338,44 @@ Yêu cầu: API không cấp phát khi đang chơi (bộ đệm dựng một l�
 - **`CharacterView`:** nhân vật gồm các lớp (thân, tóc, biểu cảm, trang phục). Trang phục lấy từ phần mặc lên người của `ProductDefinition`, đổ vải bằng `FabricMaterial`. Dùng cho khách ở quầy, cảnh khách nhận đồ; sau này cho mặc thử và lookbook.
 - **Quy trình art cho mỗi sản phẩm:** bản phác thảo cho thẻ đơn; khi làm mở rộng mặc thử thì thêm một sprite trang phục, một mặt nạ vùng đổ vải, vị trí đặt hình đắp; cùng kích thước khung với chân dung khách để chồng lớp đúng.
 
+### 5.13 Giao diện (uGUI)
+
+Giao diện (bố cục, art, prefab) do người dùng làm; code chỉ làm View script và Presenter. Dùng uGUI (Canvas) với TextMeshPro, không dùng UI Toolkit.
+
+**Đặt sẵn hay instantiate, chia theo vòng đời:**
+
+| Loại | Ví dụ | Cách làm |
+| --- | --- | --- |
+| Bố cục chính sống suốt scene | Home: quầy, khách, bong bóng, nút bắt đầu, chip số màn. Gameplay: HUD (thanh khớp, Gợi ý, Đặt lại, Đảo chiều) | Prefab đặt sẵn trong scene |
+| Màn hình, popup lúc có lúc không | Cài đặt, bảng thắng, hỏi dùng booster, hết booster | Prefab, `ScreenNavigator` instantiate lần đầu mở rồi giữ lại để ẩn hiện |
+| Phần tử lặp theo dữ liệu | Ô tiến độ trên thẻ đơn, toast, decor | Prefab một phần tử, instantiate theo dữ liệu; thứ xuất hiện thường xuyên (toast) dùng pool |
+
+Vải, node, cạnh, ghim, điểm sáng **không phải UI**: là sprite và mesh trong không gian thế giới (`Gameplay/View`, `Visuals`), không đặt trên Canvas.
+
+**View và Presenter (MVP):**
+
+- **View:** `MonoBehaviour` trên prefab, chỉ giữ `[SerializeField]` tới phần tử (`TMP_Text`, `Button`, `Image`), có hàm hiển thị (`Show(...)`, `SetMatch(float)`) và phát sự kiện (`StartClicked`). Không biết save, booster, level. View script và các ô tham chiếu là hợp đồng giữa prefab của người dùng và code.
+- **Presenter:** lớp C# thường trong `Meta` hoặc `Gameplay`, nhận dữ liệu và dịch vụ qua hàm khởi tạo, ra lệnh cho View và nghe sự kiện của View. Test được không cần scene.
+- Không `GameObject.Find`, không singleton, không `Resources.Load`. Prefab được tham chiếu `[SerializeField]` ở lớp nối của scene trong `App/Scopes`, truyền vào `ScreenNavigator` (`UI/Framework`).
+- `ScreenNavigator` giữ ngăn xếp popup, mở đóng bằng UniTask kèm token; tween có `SetLink`. Giao diện sống qua lúc đổi scene (lớp phủ chuyển cảnh, toast) thuộc phạm vi App.
+
+**Thiết lập Canvas (đã chốt):**
+
+| Thông số | Giá trị | Lý do |
+| --- | --- | --- |
+| UI Scale Mode | Scale With Screen Size | Giao diện co giãn theo màn hình |
+| Reference Resolution | 1170 × 2532 | Wireframe 390 × 844 pt nhân 3: 1 pt = 3 px, vùng chạm 44 pt = 132 px; art xuất @3x, Set Native Size là đúng cỡ |
+| Screen Match Mode | Expand | Khung 390 × 844 luôn nằm trọn trong màn hình; màn thừa chiều nào thì có vùng trống chiều đó (máy tính bảng thừa hai bên, máy 9:21 thừa trên dưới) |
+| Reference Pixels Per Unit | 100 | Mặc định; sprite UI để PPU 100 |
+
+- **Tách Canvas theo tần suất đổi:** phần tử đổi liên tục (thanh khớp khi kéo) nằm trên Canvas con riêng, để không dựng lại mesh của cả HUD.
+- **Neo theo % như wireframe:** các vùng của Home dùng anchor min/max theo trục dọc đúng tỉ lệ ở bảng vị trí trong đặc tả; phần tử cỡ cố định neo vào vùng chứa nó.
+- **Safe area:** một component trên root co vùng nội dung tránh tai thỏ. Nội dung quan trọng nằm trong khung 390 × 844 và trong safe area.
+- **Ảnh nền vẽ tràn:** tường, sàn, trần rộng tới khoảng tỉ lệ 3:4 và cao tới khoảng 9:21, để vùng thừa do Expand là phần tiếp của căn phòng.
+- **Vùng chạm** tối thiểu 44 pt (132 px), có thể lớn hơn hình vẽ.
+
+**Luồng làm một màn hình:** người dùng dựng prefab trong `Prefabs/UI/` → Claude viết View script với các ô `[SerializeField]` theo tên phần tử trong prefab → người dùng nối tham chiếu (hoặc Claude nối qua MCP rồi kiểm tra) → Claude viết Presenter, test và nối vào scope của scene.
+
 ---
 
 ## 6. Sẵn sàng cho meta loop
@@ -403,9 +445,9 @@ Tiền công, nâng cấp tiệm, lookbook, vải, câu chuyện khách, sự ki
 
 - [x] Thêm Newtonsoft Json làm phụ thuộc chính thức (đã cài 3.2.2).
 - [ ] Tiêm phụ thuộc: đề xuất nối thủ công qua hàm khởi tạo tới M3, xem lại VContainer trước meta mở rộng.
-- [ ] Bật define `UNITASK_DOTWEEN_SUPPORT`.
-- [ ] Gỡ gói Visual Scripting.
+- [ ] Bật define `UNITASK_DOTWEEN_SUPPORT`. Đã tạo asmdef `DOTween.Modules`; define đã có cho Android (assembly `UniTask.DOTween` đã biên dịch), còn thiếu iOS và chưa lưu xuống `ProjectSettings.asset`.
+- [x] Gỡ gói Visual Scripting (đã gỡ khỏi `manifest.json` và `packages-lock.json`, Console không lỗi).
 - [ ] Chọn CI (đề xuất GitHub Actions với GameCI) và nhà cung cấp telemetry, crash.
 - [ ] Android min SDK và vài máy phổ biến để kiểm tra 60 fps.
 - [ ] Ghim gói MCP for Unity vào một tag hoặc commit thay cho `#main`.
-- [ ] ProjectSettings: khóa màn hình dọc (đang cho tự xoay 4 hướng), đặt tên công ty và bundle id (đang `DefaultCompany`, chưa có id). Android đã đúng: IL2CPP, ARMv7 + ARM64 (đã chốt giữ cả hai, ưu tiên ARM64; xem mục Build và phát hành trong đặc tả).
+- [ ] ProjectSettings: khóa màn hình dọc (đang cho tự xoay 4 hướng); bundle id iOS (chưa đặt). Đã xong: tên công ty `XGames`, bundle id Android `com.XGames.GraphNodePuzzle`. Android đã đúng: IL2CPP, ARMv7 + ARM64 (đã chốt giữ cả hai, ưu tiên ARM64; xem mục Build và phát hành trong đặc tả).
