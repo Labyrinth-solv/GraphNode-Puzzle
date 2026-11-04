@@ -12,7 +12,8 @@
   var FX = 33, FY = 270, FS = 324;                 // tấm vải vuông trong thẻ trắng
   var THR_DEFAULT = 0.92, M1 = 0.70, M2 = 0.85;     // ngưỡng mặc định của đặc tả và hai mốc màu; ngưỡng thật lấy theo level
   var RUN_SPEED = 0.68;                              // bề rộng vải mỗi giây
-  var WIN_RUN_MULT = 1.5;                            // cảnh cắt khi thắng chạy nhanh hơn tốc độ thường (tạm, khoảng 1,25–1,5)
+  // Cảnh cắt khi thắng: hệ số tốc độ theo chu vi để cắt hết trong khoảng CUT_TARGET giây, kẹp trong [MIN, MAX] (giá trị tạm).
+  var CUT_TARGET = 1.5, CUT_MULT_MIN = 1.6, CUT_MULT_MAX = 2.5;
   var PICK_MIN = 0.071, PICK_MAX = 0.19, MOVE_EPS = 0.016;
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -257,8 +258,8 @@
     return best;
   }
   function edgeLen(path, k, n) { return (k + 1 < n ? path.nodeD[k + 1] : path.total) - path.nodeD[k]; }
-  // Thời gian cảnh cắt theo chu vi viền mẫu, để kéo chạy đúng WIN_RUN_MULT lần tốc độ thường.
-  function cutDur(lv) { return lv.solPath.total / (RUN_SPEED * WIN_RUN_MULT); }
+  function cutMult(lv) { return clamp(lv.solPath.total / (RUN_SPEED * CUT_TARGET), CUT_MULT_MIN, CUT_MULT_MAX); }
+  function cutDur(lv) { return lv.solPath.total / (RUN_SPEED * cutMult(lv)); }
   function runnerStep(dt) {
     var lv = LV[S.li].def, n = lv.ring.length, ver = false;
     S.path = GN.ringPath(lv, S.pos, 20);
@@ -990,6 +991,15 @@
   }
   function eye(p, k) { ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(k, k); ctx.beginPath(); ctx.arc(0, 0, 4.6, 0, 7); ctx.fillStyle = C.ink; ctx.fill(); ctx.beginPath(); ctx.arc(1.4, -1.6, 1.5, 0, 7); ctx.fillStyle = '#fff'; ctx.fill(); ctx.restore(); }
 
+  // Viền gợi ý chỗ đặt mảnh: nét trắng lót dưới nét đứt đậm để nổi trên cả nền lẫn mảnh đã ghép.
+  function drawSlotHint(i, alpha) {
+    var tf = placeOf(i), pulse = 0.75 + 0.25 * Math.sin(clock * 4);
+    ctx.save(); ctx.globalAlpha = alpha;
+    outlinePath(LV[i].outline, tf.ox, tf.oy, tf.s);
+    ctx.lineJoin = 'round'; ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(255,255,255,' + 0.85 * pulse + ')'; ctx.stroke();
+    ctx.setLineDash([7, 6]); ctx.lineDashOffset = -clock * 12; ctx.lineWidth = 2.2; ctx.strokeStyle = rgba(C.ink, 0.65 * pulse); ctx.stroke();
+    ctx.restore();
+  }
   function drawReward() {
     var enter = clamp(R.t / 0.6, 0, 1), a = R.phase === 'enter' ? easeOut(enter) : 1;
     ctx.save(); ctx.globalAlpha = a;
@@ -997,8 +1007,9 @@
     var deep = R.phase === 'reveal' || R.phase === 'decor' || R.phase === 'done';
     ctx.beginPath(); ctx.arc(195, 395, 165, 0, 7); ctx.fillStyle = C.base; ctx.fill();
     ctx.beginPath(); ctx.arc(195, 395, 155, 0, 7); ctx.setLineDash([6, 5]); ctx.lineWidth = 1.8; ctx.strokeStyle = rgba(C.thread, 0.8); ctx.stroke(); ctx.setLineDash([]);
-    // ô mờ của từng mảnh trên khung
+    // ô mờ của từng mảnh trên khung; mảnh đã ghép thì bỏ ô của nó
     product().levels.forEach(function (i) {
+      if (R.pieces.some(function (pc) { return pc.i === i && pc.placed; })) return;
       var tf = placeOf(i);
       outlinePath(LV[i].outline, tf.ox, tf.oy, tf.s); ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.fill();
       ctx.setLineDash([7, 6]); ctx.lineWidth = 2; ctx.strokeStyle = rgba(C.ink, 0.3); ctx.stroke(); ctx.setLineDash([]);
@@ -1011,10 +1022,17 @@
     var order = R.phase === 'place' || R.phase === 'enter' ? R.pieces : backToFront().map(function (li) { return R.pieces.filter(function (p) { return p.i === li; })[0]; });
     var placing = R.phase === 'place' || R.phase === 'enter';
     ctx.save(); if (!placing) productTf();
-    order.forEach(function (pc) {
+    function drawPc(pc) {
       var lv = LV[pc.i], s = pc.tf.s * pc.sc, dragging = R.drag && R.drag.pc === pc;
       drawPiece(pc.i, pc.x - lv.cen[0] * s, pc.y - lv.cen[1] * s, s, 1, dragging, 0.6, 0);
-    });
+    }
+    if (placing) {
+      // Mảnh đã ghép vẽ trước, rồi viền gợi ý của mảnh chưa ghép đè lên để vẫn thấy chỗ đặt,
+      // cuối cùng là mảnh còn trong khay hoặc đang cầm, nằm trên cùng.
+      order.forEach(function (pc) { if (pc.placed) drawPc(pc); });
+      order.forEach(function (pc) { if (!pc.placed) drawSlotHint(pc.i, a); });
+      order.forEach(function (pc) { if (!pc.placed) drawPc(pc); });
+    } else order.forEach(drawPc);
     if (R.phase === 'stitch' || R.phase === 'tapReady') {
       drawSeam(R.stitch);
       if (R.stitch > 0 && R.stitch < 1) { var sn = seamPoint(R.stitch); drawNeedle(sn[0], sn[1] - 2 * Math.abs(Math.sin(clock * 22)), sn[2]); }

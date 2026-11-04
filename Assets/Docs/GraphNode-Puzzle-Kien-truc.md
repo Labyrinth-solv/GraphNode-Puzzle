@@ -260,7 +260,7 @@ stateDiagram-v2
 | `RegionMask` | Vẽ cạnh lên lưới 200×200, tô loang từ biên, ra mặt nạ vùng tô; tham số theo bảng Tham số mặt nạ trong đặc tả | Hàm `region` |
 | `MatchScorer` | Giao chia hợp giữa mặt nạ người chơi và mặt nạ dựng từ đồ thị ở vị trí lời giải; sau này thêm độ lệch viền | Hàm `iou` |
 | `SolutionOutline` | Viền lời giải dựng một lần lúc vào màn (24 đoạn mỗi cạnh): sinh `targetShape`, vị trí ghim, số thứ tự ghim số, đường cho cảnh cắt | Hàm `ringPolyline`, `buildGeo` |
-| `RunnerSimulator` | Điểm sáng gắn với cạnh và vị trí tỉ lệ trên cạnh; tốc độ đều khi qua node; cảnh cắt khi thắng chạy theo hệ số tốc độ; hai chiều | `runnerStep` |
+| `RunnerSimulator` | Điểm sáng gắn với cạnh và vị trí tỉ lệ trên cạnh; tốc độ đều khi qua node; cảnh cắt khi thắng chạy theo hệ số tốc độ tính từ chu vi; hai chiều | `runnerStep` |
 | `PinChecker` | Chỉ khi level có ghim: lúc thả tay kiểm tra tức thì từng ghim bằng `IPinRule` (khoảng cách tới viền ngoài, thứ tự dọc viền). Thay cho vòng kiểm tra bằng điểm sáng đã bỏ | Ghim tròn, ghim số |
 | `IPinRule` | Luật của một loại ghim: "đi qua là sáng", "theo thứ tự"; thêm loại mới (theo nhịp…) bằng một lớp mới | Ghim tròn, ghim số |
 | `IRunnerRule` | Quyết định tốc độ và chiều của điểm sáng; thêm hai điểm sáng hay nhảy cổng bằng lớp mới | Tốc độ, đảo chiều |
@@ -315,7 +315,7 @@ Yêu cầu: API không cấp phát khi đang chơi (bộ đệm dựng một l�
 
 ### 5.10 Cấu hình cân bằng
 
-- Mọi số trong đặc tả (ngưỡng 92%, tốc độ điểm sáng 68% bề rộng vải mỗi giây, hệ số tốc độ cảnh cắt khi thắng 1,5 lần (tạm, khoảng 1,25–1,5); dung sai ghim 4,3% nếu dùng ghim; vùng chọn 7,1% tới 19%, thời lượng trình diễn) nằm trong asset cấu hình, theo đơn vị bề rộng vải.
+- Mọi số trong đặc tả (ngưỡng 92%, tốc độ điểm sáng 68% bề rộng vải mỗi giây, cảnh cắt khi thắng nhắm 1,5 s, hệ số tốc độ theo chu vi kẹp 1,6–2,5 lần; dung sai ghim 4,3% nếu dùng ghim; vùng chọn 7,1% tới 19%, thời lượng trình diễn) nằm trong asset cấu hình, theo đơn vị bề rộng vải.
 - Sau này có thể ghi đè từ remote config qua interface, không đổi nơi đọc.
 
 ### 5.11 Chuyển cảnh giữa Home và màn chơi

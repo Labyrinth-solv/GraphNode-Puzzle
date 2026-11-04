@@ -122,12 +122,12 @@ Khi thắng, mỗi node không khóa trượt tới **điểm gần nhất trên
 | Bước | Thời lượng | Diễn ra |
 | --- | --- | --- |
 | Snap | 0,3 s | Khóa thao tác, đường cắt biến về viền hình mẫu, node mờ đi |
-| Cắt | Theo chu vi viền mẫu (bản thử 2,0–3,6 s) | Kéo chạy dọc viền ở 1,5 lần tốc độ thường (tạm, khoảng 1,25–1,5), phần đã cắt thành nét liền |
+| Cắt | Nhắm 1,5 s, theo chu vi (bản thử 1,5–2,2 s) | Kéo chạy dọc viền ở 1,6–2,5 lần tốc độ thường tùy chu vi, phần đã cắt thành nét liền |
 | Nhấc lên | 0,4 s | Miếng vải nảy lên, đổ bóng, để lại lỗ trên vải |
 | Đổ màu | 0,6 s | Màu hoặc hoa văn chạy từ dưới lên, hiện đường chỉ khâu |
 | Ghép | 0,6 s | Mảnh bay vào sản phẩm, thanh tiến độ sản phẩm tăng |
 
-Tổng khoảng 4 tới 5,5 giây tùy chu vi mảnh (bản thử: mảnh nhỏ khoảng 4 giây, thân áo cardigan dài nhất khoảng 5,5 giây); chạm màn hình để tua nhanh.
+Tổng khoảng 3,5 tới 4,2 giây (bản thử: đa số mảnh khoảng 3,5 giây, thân áo cardigan khoảng 4,2 giây); chạm màn hình để tua nhanh.
 
 ### Điểm chạy dọc viền và nốt nhạc
 
@@ -135,7 +135,8 @@ Một điểm sáng có đuôi chạy theo vòng node của level (trường `ri
 
 - **Chuyển động:** tốc độ thường 250 px mỗi giây (khung vải 368 px, tức 68% bề rộng vải mỗi giây), kể cả khi người chơi đang kéo.
 - **Tốc độ đều, không nảy (đã chốt 2026-11-04):** điểm sáng giữ một tốc độ khi đi qua node, không vọt lên rồi chậm dần. Đã thử nảy nhẹ khi qua node trên viền và bỏ.
-- **Tăng tốc khi thắng (đã chốt hướng, số tạm):** trong cảnh cắt của chuỗi hoàn thành, đầu kéo chạy dọc viền hình mẫu ở khoảng 1,25 tới 1,5 lần tốc độ thường; bản thử để 1,5 lần. Thời lượng cảnh cắt vì vậy tính theo chu vi viền mẫu (chu vi chia cho tốc độ đó), không cố định. Hệ số đặt trong ScriptableObject cấu hình, chốt sau khi thử trên máy.
+- **Tăng tốc khi thắng theo chu vi (đã chốt 2026-11-04, số tạm):** trong cảnh cắt của chuỗi hoàn thành, đầu kéo chạy nhanh hơn tốc độ thường theo hệ số tính từ chu vi viền mẫu: `hệ số = kẹp(chu vi / (tốc độ thường × 1,5 s), 1,6, 2,5)`, thời gian cắt = chu vi / (tốc độ thường × hệ số). Mảnh cỡ vừa cắt hết đúng 1,5 giây; mảnh nhỏ không chậm hơn 1,6 lần nên xong sớm hơn chút; mảnh rất to không vọt quá 2,5 lần nên lâu hơn chút. Lý do: hệ số cố định làm mảnh to cắt quá lâu (thân áo 3,6 s ở 1,5 lần), còn thời gian cố định 1,2 s cũ làm kéo chạy nhanh gấp 2,4–4,5 lần lúc chơi, trông như vật khác. Đã thử nhắm 2,2 s (kẹp 1,25–1,8) và thấy chậm, rút xuống 1,5 s. Ba số 1,5 s, 1,6, 2,5 đặt trong ScriptableObject cấu hình, chốt sau khi thử trên máy (chưa kiểm chứng 2,5 lần có gắt không, giai điệu 6–7 nốt trong 1,5 s có dồn quá không).
+  - **Số đối chiếu bản thử** (chu vi theo bề rộng vải): thân nấm 2,00 → 1,96 lần, 1,5 s; viên kem 2,17 → 2,13 lần; ốc quế 2,20 → 2,16 lần; mũ nấm 2,26 → 2,22 lần; áo lót trong 2,31 → 2,27 lần; cổ áo 2,47 → 2,42 lần (đều 1,5 s); thân áo khoác 3,67 → 2,5 lần (chạm trần), 2,16 s.
 -Điểm gắn với một cạnh và một vị trí tỷ lệ trên cạnh đó, nên khi node bị kéo làm cạnh dài ra hay co lại, điểm đi theo cạnh liên tục. Cách đầu tiên tính theo tỷ lệ cả vòng làm điểm nhảy giật mỗi khi chu vi đổi, đã bỏ.
 - **Nốt nhạc:** khi điểm tới một node nằm trên viền ngoài thì phát một nốt thang ngũ cung (đô, rê, mi, sol, la). Mỗi node một nốt cố định. Node nảy to 1,3 lần và có vòng sóng vàng lan ra trong 0,45 giây. Node nằm lọt trong vùng tô thì im lặng. Node được coi là trên viền nếu trong ô 7×7 của mặt nạ quanh nó có một ô nằm ngoài vùng.
 - **Phản hồi theo độ khớp:** độ khớp thấp thì nốt nhỏ và lệch tông tối đa 30 cent, độ khớp cao thì đầy và đúng tông. Khi đang kéo, âm lượng giảm còn khoảng 45% để không lấn tiếng chạm node.
@@ -293,6 +294,7 @@ Sản phẩm là thứ khách đặt: quần áo, tranh vải, gối, túi… M�
   - Người chơi không xoay mảnh (đã chốt). Góc xoay của mảnh trên khung do người thiết kế level đặt cho từng ô; mảnh xuất hiện đã xoay sẵn đúng góc đó, người chơi chỉ kéo vào chỗ.
   - Không cho chọn màu (đã chốt): màu hoàn thiện do người thiết kế level đặt trong đơn.
   - Sản phẩm nào cũng có khung, hiện ô viền mờ cho từng mảnh. Người chơi kéo mảnh vào, đặt gần đúng thì mảnh tự hút vào ô (cách A, đã chốt).
+  - **Viền gợi ý đè lên mảnh đã ghép (đã chốt 2026-11-04, đã thử trên bản web):** khi chưa ghép hết, viền ô của mỗi mảnh còn lại vẽ đè lên trên các mảnh đã ghép, để người chơi vẫn thấy chỗ đặt dù ô bị mảnh khác che (rõ nhất ở sản phẩm nhiều mảnh chồng nhau như cardigan). Mảnh nào ghép xong thì xóa viền gợi ý và ô mờ của mảnh đó ngay. Thứ tự vẽ: mảnh đã ghép, rồi viền gợi ý, trên cùng là mảnh trong khay và mảnh đang cầm (viền không đè lên mảnh trên tay). Bản thử vẽ viền bằng nét đứt màu mực trên một nét trắng lót để nổi trên cả nền lẫn mảnh, nhấp nháy nhẹ và nét đứt chạy chậm dọc viền; cách thể hiện trong bản chính do người dùng chốt khi làm giao diện.
   - Sản phẩm nhiều mảnh: các mảnh ghép với nhau trên khung, cách ghép phụ thuộc từng sản phẩm và từng mảnh. Đủ mảnh thì chạy hoạt ảnh đường chỉ khâu dọc các mép giáp nhau. Sản phẩm một mảnh: chỉ khâu chạy quanh mép mảnh.
   - Hình mảnh là `targetShape` của level đã cắt (auto-snap đã đưa đường cắt về đúng viền mẫu), co giãn đúng tỉ lệ ô. Một ngón; vùng chạm của mảnh không nhỏ hơn 44 pt dù mảnh nhỏ.
   - Với sản phẩm một mảnh, bước này chạy sau mỗi màn, nên phải rất ngắn: vùng hút rộng, kéo một lần là vào chỗ.
