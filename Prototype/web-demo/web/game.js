@@ -13,6 +13,7 @@
   var THR_DEFAULT = 0.92, M1 = 0.70, M2 = 0.85;     // ngưỡng mặc định của đặc tả và hai mốc màu; ngưỡng thật lấy theo level
   var RUN_SPEED = 0.68;                              // bề rộng vải mỗi giây
   // Cảnh cắt khi thắng: hệ số tốc độ theo chu vi để cắt hết trong khoảng CUT_TARGET giây, kẹp trong [MIN, MAX] (giá trị tạm).
+  var CUT_NODE_SIZE = 0.75;                          // node thu nhỏ trong chuỗi hoàn thành để không che đường cắt
   var CUT_TARGET = 1.5, CUT_MULT_MIN = 1.6, CUT_MULT_MAX = 2.5;
   var PICK_MIN = 0.071, PICK_MAX = 0.19, MOVE_EPS = 0.016;
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -260,6 +261,24 @@
     return best;
   }
   function edgeLen(path, k, n) { return (k + 1 < n ? path.nodeD[k + 1] : path.total) - path.nodeD[k]; }
+  // Khoảng cách dọc đường cắt tới chỗ gần nhất của từng node đã snap, kèm thứ hạng theo thứ tự kéo đi qua.
+  function cutNodeDists(lv) {
+    var pts = lv.solPath.pts, cum = lv.solPath.cum, m = cum.length, out = [];
+    for (var i = 0; i < S.pos.length; i++) {
+      var px = S.pos[i][0], py = S.pos[i][1], best = 1e9, bd = 0;
+      for (var k = 0; k < m; k++) {
+        var k2 = (k + 1) % m, ax = pts[k * 2], ay = pts[k * 2 + 1], bx = pts[k2 * 2], by = pts[k2 * 2 + 1];
+        var dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy, u = l2 > 0 ? clamp(((px - ax) * dx + (py - ay) * dy) / l2, 0, 1) : 0;
+        var qx = ax + dx * u - px, qy = ay + dy * u - py, dd = qx * qx + qy * qy;
+        if (dd < best) { best = dd; bd = cum[k] + u * Math.sqrt(l2); }
+      }
+      // điểm đầu đường cắt cũng là điểm cuối: node nằm ở đó tính là chạm đầu tiên
+      if (bd > lv.solPath.total - 1e-4) bd = 0;
+      out.push({ i: i, d: bd });
+    }
+    out.slice().sort(function (a, b) { return a.d - b.d; }).forEach(function (o, r) { o.rank = r; });
+    return out;
+  }
   function cutMult(lv) { return clamp(lv.solPath.total / (RUN_SPEED * CUT_TARGET), CUT_MULT_MIN, CUT_MULT_MAX); }
   function cutDur(lv) { return lv.solPath.total / (RUN_SPEED * cutMult(lv)); }
   function runnerStep(dt) {
@@ -319,12 +338,17 @@
       var p = easeInOut(S.t / 0.35);
       for (var k = 0; k < S.pos.length; k++) S.pos[k] = [lerp(S.snapFrom[k][0], S.snapTo[k][0], p), lerp(S.snapFrom[k][1], S.snapTo[k][1], p)];
       recompute(); S.dv += (1 - S.dv) * Math.min(1, dt * 12);
-      if (S.t >= 0.35) { setPhase('cut'); S.cutLast = -1; S.snipT = 0; }
+      if (S.t >= 0.35) { setPhase('cut'); S.cutLast = -1; S.snipT = 0; S.cutHit = []; S.cutD = cutNodeDists(lv); }
     } else if (S.phase === 'cut') {
       var L = lv.solPath.total * clamp(S.t / cutDur(lv), 0, 1);
-      for (var q = 0; q < lv.def.ring.length; q++) {
-        var nd = lv.solPath.nodeD[q];
-        if (S.cutLast < nd && nd <= L) { pop(risingF(q), 0.07, 0, 0.3); var nn = lv.def.ring[q]; S.ripples.push({ x: X(S.snapTo[nn][0]), y: Y(S.snapTo[nn][1]), t0: now(), c: C.mustard }); }
+      // Kéo chạm node nào (theo vị trí node đã snap dọc đường cắt) thì node đó sáng lên và phát nốt;
+      // nốt theo thứ hạng chạm nên luôn tăng dần, hai node chạm cùng khung thì phát cùng lúc.
+      for (var q = 0; q < S.cutD.length; q++) {
+        var cd = S.cutD[q];
+        if (S.cutLast < cd.d && cd.d <= L) {
+          pop(risingF(cd.rank), 0.07, 0, 0.3); S.cutHit[cd.i] = now(); S.pl[cd.i] = 1;
+          S.ripples.push({ x: X(S.pos[cd.i][0]), y: Y(S.pos[cd.i][1]), t0: now(), c: C.mustard });
+        }
       }
       var ch = runnerHead(lv.solPath, L);
       advanceSnip(SNIP_RATE * 1.4 * dt * sp, ch.x, ch.y, ch.ang, true);
@@ -511,8 +535,8 @@
       ctx.stroke(); ctx.setLineDash([]);
     }
   }
-  function drawNode(i, alpha) {
-    var lv = LV[S.li].def, x = X(S.pos[i][0]), y = Y(S.pos[i][1]), s = S.sc[i] * (1 + 0.3 * S.pl[i]), lk = locked(i);
+  function drawNode(i, alpha, size) {
+    var lv = LV[S.li].def, x = X(S.pos[i][0]), y = Y(S.pos[i][1]), s = S.sc[i] * (size || 1) * (1 + 0.3 * S.pl[i]), lk = locked(i);
     var st = now() - S.shake[i]; if (st >= 0 && st < 0.35) x += Math.sin(st * 60) * 4 * (1 - st / 0.35);
     if (s < 0.02) return;
     ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y); ctx.scale(s, s);
@@ -752,10 +776,11 @@
       ctx.imageSmoothingEnabled = true;
       ctx.drawImage(maskCanvas, X(GN.LO), Y(GN.LO), (GN.HI - GN.LO) * FS, (GN.HI - GN.LO) * FS);
       drawCut(intro);
-      var na = ph === 'verify' ? 0.35 : (ph === 'snap' ? 0.35 * (1 - clamp(t / 0.35, 0, 1)) : 1);
+      var snapK = ph === 'snap' ? clamp(t / 0.35, 0, 1) : 0;
+      var na = ph === 'verify' ? 0.35 : 1 - 0.65 * snapK;
       drawEdges(na * intro);
       if (ph !== 'snap') drawStartCue();
-      for (var i = 0; i < S.pos.length; i++) drawNode(i, ph === 'verify' && S.lit[i] ? 1 : na);
+      for (var i = 0; i < S.pos.length; i++) drawNode(i, ph === 'verify' && S.lit[i] ? 1 : na, 1 - (1 - CUT_NODE_SIZE) * snapK);
       drawHint();
       if (S.path && ph !== 'snap') drawRunner(S.path, S.runDist, 17);
       drawWire();
@@ -767,7 +792,7 @@
       for (var k = 1; k < cum.length && cum[k] <= L; k++) ctx.lineTo(X(pts[k * 2]), Y(pts[k * 2 + 1]));
       GN.pointAt(lv.solPath, L, tmpA); ctx.lineTo(X(tmpA[0]), Y(tmpA[1]));
       ctx.lineWidth = 3.2; ctx.strokeStyle = C.ink; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
-      S.snapTo.forEach(function (p) { ctx.beginPath(); ctx.arc(X(p[0]), Y(p[1]), 3.5, 0, 7); ctx.fillStyle = rgba(C.mustard, 0.9); ctx.fill(); });
+      for (var ci = 0; ci < S.pos.length; ci++) drawNode(ci, S.cutHit[ci] !== undefined ? 1 : 0.35, CUT_NODE_SIZE);
       drawRunner(lv.solPath, L, 20, true);
     } else {
       ctx.save(); ctx.globalAlpha = gone;

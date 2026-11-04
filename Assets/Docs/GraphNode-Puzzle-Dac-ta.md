@@ -119,11 +119,11 @@ Vùng bên trong viền ngoài được tô hồng nhạt khi kéo, để ngư�
 
 ### Auto-snap và chuỗi hoàn thành
 
-Khi thắng, mỗi node không khóa trượt tới **điểm gần nhất trên viền hình mẫu** tính từ chỗ người chơi đặt nó, không về vị trí lời giải lưu sẵn (đã chốt 2026-11-04). Node khóa đứng yên. Nhờ vậy bố cục người chơi tự xếp được giữ, chỉ được "hút" gọn vào viền; cách này đúng với mọi lời giải, không phụ thuộc một lời giải lưu sẵn. Cảnh cắt sau đó chạy dọc viền hình mẫu. Các node và cạnh bên trong mờ dần.
+Khi thắng, mỗi node không khóa trượt tới **điểm gần nhất trên viền hình mẫu** tính từ chỗ người chơi đặt nó, không về vị trí lời giải lưu sẵn (đã chốt 2026-11-04). Node khóa đứng yên. Nhờ vậy bố cục người chơi tự xếp được giữ, chỉ được "hút" gọn vào viền; cách này đúng với mọi lời giải, không phụ thuộc một lời giải lưu sẵn. Cảnh cắt sau đó chạy dọc viền hình mẫu. Cạnh mờ dần; node giữ lại ở dạng mờ để sáng lên khi kéo chạy tới (mục Node sáng theo kéo).
 
 | Bước | Thời lượng | Diễn ra |
 | --- | --- | --- |
-| Snap | 0,3 s | Khóa thao tác, đường cắt biến về viền hình mẫu, node mờ đi |
+| Snap | 0,3 s | Khóa thao tác, đường cắt biến về viền hình mẫu, node mờ còn 35% và thu nhỏ còn 75% |
 | Cắt | Nhắm 1,5 s, theo chu vi (bản thử 1,5–2,2 s) | Kéo chạy dọc viền ở 1,6–2,5 lần tốc độ thường tùy chu vi, phần đã cắt thành nét liền |
 | Nhấc lên | 0,4 s | Miếng vải nảy lên, đổ bóng, để lại lỗ trên vải |
 | Đổ màu | 0,6 s | Màu hoặc hoa văn chạy từ dưới lên, hiện đường chỉ khâu |
@@ -143,6 +143,9 @@ Một điểm sáng có đuôi chạy theo vòng node của level (trường `ri
 - **Nốt nhạc (đã chốt 2026-11-04):** **mọi node** điểm sáng đi qua đều phát một nốt thang ngũ cung (đô, rê, mi, sol, la), kể cả node khóa và node nằm lọt trong vùng tô; không node nào im lặng. Mỗi node một nốt cố định. Node nảy to 1,3 lần và có vòng sóng vàng lan ra trong 0,45 giây. Hai node sát nhau mà điểm sáng qua trong cùng một khung hình thì phát đồng thời cả hai nốt, không bỏ nốt nào. Trước đây node nằm lọt trong vùng tô im lặng (để báo node nào trên viền); đã bỏ vì người chơi thấy như bị mất tiếng.
 - **Phản hồi theo độ khớp:** độ khớp thấp thì nốt nhỏ hơn và lệch tông tối đa 30 cent, độ khớp cao thì đầy và đúng tông. Âm lượng có sàn: lúc độ khớp thấp nhất vẫn bằng một nửa lúc cao nhất. Khi đang kéo, âm lượng giảm còn khoảng 60% để không lấn tiếng chạm node. Bản thử: âm lượng = (0,045 + 0,045 × thanh độ khớp) × 0,6 khi đang kéo; trước đây (0,03 + 0,06 × thanh) × 0,45 làm nốt lúc khớp thấp mà đang kéo gần như không nghe thấy. Các hệ số đặt trong ScriptableObject cấu hình (số tạm).
 - **Cảnh cắt:** đầu kéo chạy dọc viền hình mẫu và phát một nốt ở mỗi node, thành một giai điệu ngắn.
+  - **Node sáng theo kéo (đã chốt 2026-11-04, đã thử trên bản web):** không vẽ dấu hiệu mới cho node trong cảnh cắt. Giữ chính các node người chơi đã xếp (hình tròn, tam giác, ghim kim của node khóa), lúc snap mờ dần còn 35% độ đậm và thu nhỏ còn 75% kích thước để không che đường cắt. Kéo chạm node nào thì node đó sáng lại đủ màu, nảy to 1,3 lần rồi về cỡ thu nhỏ, có vòng sóng vàng và phát nốt cùng lúc; node đã qua giữ sáng tới khi miếng vải nhấc lên. Nhờ vậy người chơi thấy rõ âm thanh phát ra từ chính các node của mình.
+  - **Thời điểm chạm:** sau snap, node nằm trên viền mẫu nhưng không trùng điểm node của đường cắt. Lúc vào cảnh cắt, tính cho mỗi node khoảng cách dọc đường cắt tới điểm gần nó nhất (node nằm ở điểm đầu đường cắt tính là chạm đầu tiên). Node sáng và phát nốt khi đầu kéo đi qua khoảng cách đó; thứ hạng chạm quyết định cao độ nên nốt luôn tăng dần; hai node chạm trong cùng một khung hình thì sáng và phát cùng lúc.
+  - **Số tạm trong ScriptableObject cấu hình:** độ mờ 35%, cỡ thu nhỏ 75%.
   - **Cao độ luôn tăng dần (đã chốt 2026-11-04):** trong cảnh cắt, mỗi nốt phải cao hơn nốt trước, không bao giờ đang lên cao thì tụt trầm. Nốt thứ k (đếm từ 0 theo thứ tự đầu kéo đi qua) lấy bậc k của thang ngũ cung leo liên tục qua các quãng tám: bậc 0–4 là đô, rê, mi, sol, la; bậc 5–9 lặp lại một quãng tám cao hơn, cứ thế. Không dùng phép lấy dư để vòng về nốt đầu (bản thử cũ vòng sau 10 bậc nên thân áo 10 node bị tụt từ la cao về đô). Bản thử bắt đầu từ đô 5 (523 Hz); mảnh 10 node lên tới la 6 (1760 Hz). Hai node qua cùng khung thì phát đồng thời, vẫn theo thứ tự tăng. Nốt gốc đặt trong ScriptableObject cấu hình; nếu sau này có mảnh rất nhiều node làm nốt cuối quá chói thì hạ nốt gốc theo số node, không vòng nốt.
 - **Công tắc:** bật hoặc tắt trong phần thiết lập bản thử. Cần thử với người chơi xem có gây mệt khi nghĩ lâu không.
 
