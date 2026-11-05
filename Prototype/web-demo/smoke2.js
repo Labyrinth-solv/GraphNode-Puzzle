@@ -19,17 +19,21 @@ vm.createContext(sb); for (const f of ['core.js', 'levels.js', 'game.js']) vm.ru
 let t = 0; const step = (n) => { for (let i = 0; i < n; i++) { const f = raf; raf = null; t += 16.7; f(t); } };
 const ev = (x, y) => ({ clientX: x, clientY: y, pointerId: 1 });
 const FX = 33, FY = 270, FS = 324, LV = sb.LEVELS, P = sb.PRODUCTS;
-function solve(li) { const lv = LV[li]; for (let i = 0; i < lv.sol.length; i++) { if (lv.locked.includes(i)) continue;
-  const s = lv.start[i], g = lv.sol[i], sx = FX + s[0] * FS, sy = FY + s[1] * FS, gx = sx + (g[0] - s[0]) * FS, gy = sy + (g[1] - s[1]) * FS;
+function solve(li) { const lv = LV[li]; const fd = lv.fold, onF = i => fd && fd.chains.some(c => c[0] === i || c[1] === i);
+  if (fd) { const nx = FX + fd.startX * FS, ny = FY + 0.99 * FS, tx = FX + fd.solX * FS; L.pointerdown(ev(nx, ny)); step(1); L.pointermove(ev(tx, ny)); step(2); L.pointerup(ev(tx, ny)); step(2); }
+  for (let i = 0; i < lv.sol.length; i++) { if (lv.locked.includes(i)) continue;
+  const s = onF(i) ? [fd.solX, lv.start[i][1]] : lv.start[i], g = lv.sol[i], sx = FX + s[0] * FS, sy = FY + s[1] * FS, gx = sx + (g[0] - s[0]) * FS, gy = sy + (g[1] - s[1]) * FS;
   L.pointerdown(ev(sx, sy)); step(1); L.pointermove(ev(gx, gy)); step(2); L.pointerup(ev(gx, gy)); step(2); } }
 const GN = sb.GN;
-function cen(li) { const sp = GN.ringPath(LV[li], LV[li].sol, 24); let x = 0, y = 0, n = sp.pts.length / 2; for (let i = 0; i < sp.pts.length; i += 2) { x += sp.pts[i]; y += sp.pts[i + 1]; } return [x / n, y / n]; }
-function reward(p) { const homes = p.levels.length === 3 ? [[78, 704], [195, 704], [312, 704]] : [[118, 704], [292, 704]];
+function cen(li) { const sp = GN.ringPath(LV[li], LV[li].sol, 24); let x = 0, y = 0, n = sp.pts.length / 2; for (let i = 0; i < sp.pts.length; i += 2) { x += sp.pts[i]; y += sp.pts[i + 1]; } return LV[li].fold ? [LV[li].fold.solX, y / n] : [x / n, y / n]; }
+function reward(p) { const homes = p.levels.length === 3 ? [[78, 704], [195, 704], [312, 704]] : p.levels.length === 1 ? [[195, 704]] : [[118, 704], [292, 704]];
   p.levels.forEach((li, k) => { const c = cen(li), pl = p.place[li]; const sc = pl[2] || 250, tx = pl[0] + c[0] * sc, ty = pl[1] + c[1] * sc;
     L.pointerdown(ev(homes[k][0], homes[k][1])); L.pointermove(ev(tx, ty)); step(3); L.pointerup(ev(tx, ty)); step(30); });
   step(200); L.pointerdown(ev(195, 400)); L.pointerup(ev(195, 400)); step(400); }
 step(70);
-for (const p of P) { for (const li of p.levels) { solve(li); step(400); } step(150); reward(p);
+for (const p of P) {
+  if (p.standalone) { const row = sb.PRODUCTS.slice(0, P.indexOf(p)).reduce((a, q) => a + q.levels.length + 1, 0); L.pointerdown(ev(40, 38)); L.pointerup(ev(40, 38)); step(5); L.pointerdown(ev(100, 62 + 6 + row * 44 + 22)); L.pointerup(ev(100, 62 + 6 + row * 44 + 22)); step(70); }
+  for (const li of p.levels) { solve(li); step(400); } step(150); reward(p);
   console.log(p.id, 'texts:', [...texts].join(' | ')); texts.clear();
   if (p !== P[P.length - 1]) { L.pointerdown(ev(195, 761)); L.pointerup(ev(195, 761)); step(70); } }
 console.log('ok frames', Math.round(t / 16.7));

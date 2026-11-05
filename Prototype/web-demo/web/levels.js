@@ -56,6 +56,32 @@
       ring: [0, 1, 2, 3, 4, 5], inner: [], locked: [],
       sol:   [[0.20, 0.10], [0.36, 0.10], [0.50, 0.46], [0.64, 0.10], [0.80, 0.10], [0.50, 0.72]],
       start: [[0.20, 0.10], [0.60, 0.50], [0.30, 0.60], [0.80, 0.30], [0.50, 0.20], [0.70, 0.80]]
+    },
+    {
+      // Gấp đôi vải: người chơi chỉ xếp nửa trái; mở ra là nửa trái cộng bản soi gương qua cây kim (mép gấp).
+      // Vòng là nửa hình, khép lại dọc mép gấp. chains = các đoạn vòng kéo phải cắt (đầu và cuối mỗi đoạn nằm trên mép gấp).
+      // Kim bắt đầu lệch (startX), lời giải ở solX: người chơi phải đẩy kim về đúng trục.
+      id: 'heart', name: 'Trái tim gấp đôi', winThreshold: 0.92,
+      pattern: { kind: 'dots', base: '#F2D7C9', deep: '#E6BFAE', accent: '#E3A6A1' },
+      types: ['s', 'c', 'c', 's'],
+      ring: [0, 1, 2, 3], inner: [], locked: [],
+      fold: { solX: 0.50, startX: 0.42, chains: [[0, 3]] },
+      sol:   [[0.5, 0.3], [0.27, 0.12], [0.08, 0.42], [0.5, 0.9]],
+      start: [[0.42, 0.52], [0.16, 0.24], [0.3, 0.7], [0.42, 0.8]]
+    },
+    {
+      // Trái tim khoét lỗ trái tim: nửa vòng đi viền ngoài (0–3) rồi vòng vào vết lõm (4–7) chạm lại mép gấp.
+      // Không có luật lỗ riêng: kéo các node vết lõm lùi ra chạm mép gấp, mở vải ra thì vết lõm và bản gương thành lỗ kín.
+      // Lỗ là bản thu nhỏ 0,42 lần đúng hình trái tim mảnh trước, để mảnh đó xếp vừa khít lỗ ở màn thưởng.
+      // Khóa: viền ngoài (1, 2) làm mốc tìm trục; hai node tam giác đầu và cuối vòng (0, 7) ghim trên mép gấp,
+      // đứng yên theo chiều dọc mép nhưng vẫn chạy theo cây kim. Node mép gấp giữ thứ tự dọc mép, không kéo qua đoạn lỗ.
+      id: 'heartHole', name: 'Trái tim khoét lỗ', winThreshold: 0.92,
+      pattern: { kind: 'gingham', base: '#E3A6A1', deep: '#D48E89', accent: '#FFFFFF' },
+      types: ['s', 'c', 'c', 's', 's', 'c', 'c', 's'],
+      ring: [0, 1, 2, 3, 4, 5, 6, 7], inner: [], locked: [0, 1, 2, 7],
+      fold: { solX: 0.55, startX: 0.50, chains: [[0, 3], [4, 7]] },
+      sol:   [[0.55, 0.3], [0.32, 0.12], [0.13, 0.42], [0.55, 0.9], [0.55, 0.688], [0.374, 0.486], [0.453, 0.36], [0.55, 0.436]],
+      start: [[0.5, 0.3], [0.32, 0.12], [0.13, 0.42], [0.5, 0.82], [0.5, 0.52], [0.26, 0.74], [0.4, 0.22], [0.5, 0.436]]
     }
   ];
   // Sản phẩm: các mảnh theo thứ tự chơi; order = thứ tự vẽ ở màn thưởng (sau cùng nằm trên);
@@ -66,7 +92,11 @@
     { id: 'icecream', label: 'Màn 2', levels: [2, 3], order: [3, 2], seams: [[2, 4, 0]],
       place: { 2: [70, 210, 250], 3: [70, 315, 250] } },
     { id: 'cardigan', label: 'Màn 3', levels: [4, 5, 6], order: [4, 5, 6], seams: [[5, 2, 3], [5, 5, 0], [6, 4, 0]],
-      place: { 4: [65, 258, 260], 5: [95, 288, 200], 6: [110, 275, 170] } }
+      place: { 4: [65, 258, 260], 5: [95, 288, 200], 6: [110, 275, 170] } },
+    // màn thử cơ chế gấp đôi vải, tách riêng: không nằm trong chuỗi Màn tiếp, chọn từ danh sách màn
+    { id: 'heart', label: 'Màn 4', standalone: true, levels: [7, 8], order: [8, 7], seams: [[8, 0, 0]],
+      // mảnh 1 thu nhỏ đúng tỉ lệ lỗ (0,42) và đặt trùng vị trí lỗ của mảnh 2
+      place: { 8: [41.0, 252.2, 280], 7: [136.2, 338.9, 117.6] } }
   ];
   if (typeof module !== 'undefined' && module.exports) module.exports = { LEVELS: LEVELS, PRODUCTS: PRODUCTS };
   else { root.LEVELS = LEVELS; root.PRODUCTS = PRODUCTS; }

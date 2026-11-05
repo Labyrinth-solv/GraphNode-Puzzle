@@ -117,19 +117,30 @@ Vùng bên trong viền ngoài được tô hồng nhạt khi kéo, để ngư�
   - **Hủy kéo không phải thả tay:** mất focus hủy thao tác kéo và không kiểm tra thắng; lần thả tay kế tiếp mới kiểm tra.
   - **Rủi ro cần đo trên máy:** lúc nhấc ngón tay, vị trí chạm có thể trượt nhẹ làm độ khớp tụt ngay dưới ngưỡng. Nếu gặp, lấy vị trí của lần di chuyển cuối trước khi nhấc tay.
 
+### Hút nhẹ về viền khi kéo (đã chốt 2026-11-05)
+
+Khi kéo, node ở gần viền hình mẫu bị hút nhẹ về viền để người chơi thấy node "ăn" vào chỗ, nhưng không tự giải hộ. Đã thử trên bản web: cảm giác kéo tốt, giữ cho bản chính.
+
+- **Luật:** trong bán kính hút quanh viền hình mẫu, node lệch về điểm gần nhất trên viền theo tỉ lệ tăng dần khi càng gần (tối đa một nửa khoảng cách còn lại). Thả tay khi đang trong bán kính thì node đặt hẳn lên viền; ngoài bán kính thì giữ nguyên chỗ thả. Chỉ hút theo hướng vuông góc với viền: vị trí dọc theo viền vẫn hoàn toàn do người chơi, nên xếp sai thứ tự hay lệch dọc viền vẫn bị chấm thấp. Node khóa không bị ảnh hưởng.
+- **Phản hồi:** lúc node vừa lọt vào bán kính hút phát một tiếng tick rất nhỏ và rung rất ngắn, mỗi lần lọt vào một lần.
+- **Đặt hẳn khi thả tay:** điểm khớp chấm ngay theo vị trí đã đặt lên viền, nhưng hình vẽ trượt mượt tới đó trong 0,12 s (số tạm), không nhảy tức thời (nhảy tức thời trông như giật). Cây kim mép gấp cũng vậy. Chạm kéo tiếp giữa chừng thì hoàn tất ngay chỗ đặt.
+- **Số tạm (ScriptableObject cấu hình):** bán kính hút 3,5% bề rộng vải (khoảng 13 px trên khung 368 px), lực hút tối đa 0,5. Tiếng tick và độ rung đi qua dịch vụ âm thanh và rung.
+- **Cài đặt trong bản chính:** lực hút là một `INodeConstraint` áp lên vị trí kéo trước khi cập nhật node, tính bằng điểm gần nhất trên đường viền mẫu (cùng hàm với auto-snap). Không cấp phát trong lúc kéo; tra điểm gần nhất trên polyline viền mẫu đã lấy mẫu sẵn khi nạp level.
+- **Ảnh hưởng tới ngưỡng thắng (đo trên bản web 2026-11-05):** hút làm sai số vuông góc với viền gần như về 0, nên độ khớp khi xếp gần đúng tăng 3–6 điểm (mảnh mảnh như cổ áo tăng tới 9 điểm). Sai số còn lại chủ yếu là lệch dọc viền. Ngưỡng thấp đang dùng (85%, 80%, 72%) vì vậy quá dễ: ví dụ mũ nấm xếp đúng viền nhưng mỗi node trượt dọc viền khoảng 12% bề rộng vải vẫn đạt khoảng 87%, qua ngưỡng 85%. Đề xuất nếu giữ hút: mảnh đặc (mũ nấm, thân nấm, viên kem, ốc quế, thân áo khoác) 92% như ngưỡng mặc định; áo lót trong 90%; cổ áo 85%. Ở các mức này, người chơi đặt node lệch tới 3% bề rộng vải vẫn qua gần như 100% lần, còn trượt dọc viền 8% trở lên thì không qua (trừ cổ áo ở 4%). Ngưỡng từng level do người dùng tự chỉnh tay theo cảm giác (qua bảng ngưỡng của bản web), bảng trên chỉ là điểm xuất phát; khi chốt số thì ghi vào dữ liệu level.
+
 ### Auto-snap và chuỗi hoàn thành
 
-Khi thắng, mỗi node không khóa trượt tới **điểm gần nhất trên viền hình mẫu** tính từ chỗ người chơi đặt nó, không về vị trí lời giải lưu sẵn (đã chốt 2026-11-04). Node khóa đứng yên. Nhờ vậy bố cục người chơi tự xếp được giữ, chỉ được "hút" gọn vào viền; cách này đúng với mọi lời giải, không phụ thuộc một lời giải lưu sẵn. Cảnh cắt sau đó chạy dọc viền hình mẫu. Cạnh mờ dần; node giữ lại ở dạng mờ để sáng lên khi kéo chạy tới (mục Node sáng theo kéo).
+Khi thắng, mỗi node không khóa trượt tới **điểm gần nhất trên viền hình mẫu** tính từ chỗ người chơi đặt nó, không về vị trí lời giải lưu sẵn (đã chốt 2026-11-04). Node khóa đứng yên. **Tốc độ cố định (đã chốt 2026-11-05):** mọi node di chuyển cùng một tốc độ, đi thẳng một mạch không tăng giảm tốc, nên node gần tới trước, node xa tới sau; không dùng thời lượng cố định với đường cong ease (cách cũ làm node xa lao nhanh, node gần bò chậm, nhìn không đều). Bản thử: 0,4 bề rộng vải mỗi giây; phase dài theo node xa nhất, tối thiểu 0,2 s, tối đa 0,5 s (xa quá thì cả nhóm cùng nhanh lên một tốc độ chung); số tạm. Nhờ vậy bố cục người chơi tự xếp được giữ, chỉ được "hút" gọn vào viền; cách này đúng với mọi lời giải, không phụ thuộc một lời giải lưu sẵn. Cảnh cắt sau đó chạy dọc viền hình mẫu. Cạnh mờ dần; node giữ lại ở dạng mờ để sáng lên khi kéo chạy tới (mục Node sáng theo kéo).
 
 | Bước | Thời lượng | Diễn ra |
 | --- | --- | --- |
-| Snap | 0,3 s | Khóa thao tác, đường cắt biến về viền hình mẫu, node mờ còn 35% và thu nhỏ còn 75% |
+| Snap | 0,2–0,5 s theo node xa nhất | Khóa thao tác, mọi node đi cùng một tốc độ cố định về viền mẫu, đường cắt biến theo; node mờ còn 35% và thu nhỏ còn 75% |
 | Cắt | Nhắm 1,5 s, theo chu vi (bản thử 1,5–2,2 s) | Kéo chạy dọc viền ở 1,6–2,5 lần tốc độ thường tùy chu vi, phần đã cắt thành nét liền |
 | Nhấc lên | 0,4 s | Miếng vải nảy lên, đổ bóng, để lại lỗ trên vải |
 | Đổ màu | 0,6 s | Màu hoặc hoa văn chạy từ dưới lên, hiện đường chỉ khâu |
 | Ghép | 0,6 s | Mảnh bay vào sản phẩm, thanh tiến độ sản phẩm tăng |
 
-Tổng khoảng 3,5 tới 4,2 giây (bản thử: đa số mảnh khoảng 3,5 giây, thân áo cardigan khoảng 4,2 giây); chạm màn hình để tua nhanh.
+Tổng khoảng 3,4 tới 4,3 giây (bản thử: đa số mảnh khoảng 3,5 giây, thân áo cardigan khoảng 4,2 giây); chạm màn hình để tua nhanh; tốc độ tua tăng dần trong khoảng 0,2 s chứ không nhảy vọt (nhảy ngay lên 3 lần làm node và kéo giật, lỗi tìm thấy 2026-11-05).
 
 ### Điểm chạy dọc viền và nốt nhạc
 
@@ -372,6 +383,7 @@ Bảng dưới là hướng màu cho phong cách mới; mã màu là giá trị 
 | Mù tạt | #E9C46A | Phần thưởng, hiệu ứng hoàn thành |
 | Xanh xám | #9DB8C9 | Điểm nhấn lạnh |
 | Vải | chốt theo `FabricDefinition` | Tấm vải mặc định |
+| Vùng tô (hình sau khi cắt) | #E996A0 (hồng phấn), độ đậm 20% khi kéo, 30% lúc snap (đã chốt 2026-11-05, người dùng chọn bằng bảng màu trên bản web) | Phần vải sẽ còn lại sau khi cắt. Tương phản rõ với màu vải nhưng đủ trong để không lấp viền hình mẫu; viền hình mẫu (nét đứt) vẽ lại phía trên vùng tô. Lịch sử 2026-11-05: kem trắng mờ quá gần nền vải; kem bơ đậm rõ nhưng không hợp không khí cozy. Nếu vải có màu gần vùng tô thì đổi theo `FabricDefinition`. Bảng chọn màu và độ đậm trên bản web chỉ là công cụ thiết kế để thử, không phải tính năng trong game |
 | Thanh khớp: còn xa / gần khớp / gần xong | chốt khi làm art | Ba đoạn màu của thanh khớp (mục Thanh khớp). Giữ đoạn gần xong là màu xanh sáng, dễ nhận ra; ba màu phải khác nhau cả độ sáng, không chỉ khác sắc |
 
 Bảng màu cũ của bản minh họa (#FFF1E8, #3A2340, #C7385F, #E2557A, #F9D3CF, #B8576E, #FFC94D, #3DBE7A) không còn là chuẩn; các mã màu cụ thể ghi ở mục khác (như bảng màu của thanh khớp) là giá trị tạm theo bảng cũ, sẽ đổi theo bảng này khi chốt art.
@@ -654,3 +666,67 @@ Dùng cạnh trong làm đường nét ở giữa hình mẫu (đường may gi�
 - **Cách đề xuất:** thêm một lớp chấm riêng cho nét. Hình mẫu lưu thêm danh sách nét trong, mỗi nét gắn với một cạnh trong. Lúc thả tay, ngoài độ khớp vùng còn đo độ khớp nét: dựng mặt nạ nét (chỉ vẽ nét, cùng bán kính bút 1,35 ô như mặt nạ vùng) cho cạnh trong hiện tại và cho nét mẫu, rồi tính IoU giữa hai mặt nạ nét. Thắng khi cả hai đạt ngưỡng. Làm thành một `IWinCondition` mới, level bật bằng trường `kind`, không sửa luật cũ.
 - **Hiển thị:** nét mẫu vẽ trên hình mẫu bằng nét đứt; cạnh trong của level loại này vẽ rõ như cạnh vòng chứ không mờ; thanh độ khớp có thể chia hai phần hoặc lấy giá trị thấp hơn.
 - **Cần chốt:** ngưỡng khớp nét (đo độ nhạy như với vùng); cạnh trong là thẳng hay theo loại node; có phát nốt khi điểm sáng chạy qua nét trong không; số nét tối đa mỗi mảnh.
+
+### Ý tưởng mở rộng: âm thanh theo chất liệu vải (chờ assets)
+
+Mỗi loại vải (nỉ, bò, lụa…) có tiếng kéo cắt, tiếng nhấc vải và màu nốt riêng, để đổi cảm giác giữa các màn mà không thêm luật. Chưa đưa vào bản web vì chưa có assets.
+
+- **Dữ liệu:** định nghĩa vải (ScriptableObject) thêm bộ âm: tiếng cắt lặp, tiếng nhấc, âm sắc nốt (ví dụ lụa trong và ngân, nỉ ấm và ngắn, bò khô và đanh). Level trỏ tới vải bằng id như hiện có, không sửa code khi thêm vải.
+- **Giữ nguyên luật âm nhạc:** thang ngũ cung, mọi node phát nốt, cảnh cắt nốt tăng dần; chất liệu chỉ đổi âm sắc và độ vang, không đổi cao độ.
+- **Cần chốt:** danh sách chất liệu bản đầu; âm sắc từng loại; âm lượng chuẩn hóa giữa các bộ để không loại nào lấn loại nào.
+
+### Ý tưởng mở rộng: phản ứng của khách theo độ khớp
+
+Nhân vật khách đặt đơn đứng cạnh khung vải, nhìn mảnh vải đang khớp dần và đổi nét mặt theo thanh độ khớp, để phản hồi bằng cảm xúc thay vì con số. Chưa làm trên bản web.
+
+- **Trạng thái gợi ý:** tò mò (độ khớp thấp), mong chờ (vượt mốc giữa), hào hứng (gần ngưỡng), vui mừng khi thắng; dùng cùng mốc màu của thanh độ khớp để không có hai hệ mốc khác nhau.
+- **Nhịp đổi:** chỉ đổi trạng thái khi vượt mốc và giữ trạng thái tối thiểu một khoảng ngắn, để kéo qua lại quanh mốc không làm mặt khách nhấp nháy. Không có trạng thái buồn hay giận, đúng tinh thần không có thua.
+- **Phối hợp:** nhân vật nằm trong `GraphNode.Visuals` (dùng chung với tiệm may), nghe sự kiện độ khớp qua message bus, không đọc thẳng dữ liệu màn chơi. Vị trí trên màn hình do người dùng chốt khi làm giao diện.
+- **Cần chốt:** số trạng thái, thời gian giữ tối thiểu, có tiếng hay chỉ hình.
+
+### Cơ chế gấp đôi vải (đã chốt 2026-11-05; thử trên bản web, màn 4)
+
+**Trạng thái:** ý tưởng và luật chơi đã chốt sau khi người dùng thử trên bản web. Hiệu ứng (VFX, âm thanh) và các số tạm (thời lượng, bán kính hút, độ đậm…) sẽ chỉnh khi làm bản hoàn thiện, không cần giữ đúng số của bản thử.
+
+Tấm vải gấp đôi qua một cây kim làm mép gấp; người chơi chỉ xếp nửa đồ thị, nửa kia là bản soi gương qua cây kim. Thắng thì một nhát kéo cắt cả hai lớp, rồi lật bung ra thấy cả hình. Bản web có màn 4 riêng (chọn trong danh sách màn), không nằm trong chuỗi Màn tiếp; gồm hai mảnh: trái tim thường và trái tim khoét lỗ trái tim ở giữa. Lỗ là bản thu nhỏ đúng hình trái tim thường, nên ở màn thưởng trái tim thường xếp vừa khít vào lỗ.
+
+- **Dữ liệu level:** vòng (`ring`) là **nửa hình**, khép lại dọc mép gấp. Trường `fold` gồm vị trí kim lúc đầu, vị trí trục của lời giải, và danh sách đoạn cắt (`chains`): mỗi đoạn là một khúc vòng mà đầu và cuối nằm trên mép gấp. Hình mở ra = vùng tô của nửa vòng hợp với vùng tô bản soi gương của nó (cùng luật mặt nạ, chỉ tính hai lần rồi gộp). Điểm khớp so như mọi màn.
+- **Vùng tô là hình sẽ có sau khi cắt (đã chốt 2026-11-05):** cũng như mọi màn, vùng tô hiện phần vải còn lại sau khi cắt và mở ra; lỗ là chỗ trống không tô. Kiểu mặt nạ hiện phần bị cắt bỏ để ở mục ý tưởng riêng, cho một cơ chế khác.
+- **Khoét lỗ, không có luật mới (đã chốt 2026-11-05):** lỗ hình thành chỉ nhờ điều chỉnh node. Nửa vòng đi viền ngoài, chạm mép gấp, rồi vòng vào một vết lõm và chạm mép gấp lần nữa. Khi người chơi kéo các node vết lõm lùi ra chạm mép gấp, mở vải ra thì vết lõm và bản gương ghép thành lỗ kín ở giữa. Vì gộp hai nửa thay vì tô một vòng kín, lỗ không bị tô lấp. Hình mẫu có lỗ thì không khoét lỗ không thể đạt ngưỡng (bản thử: thiếu lỗ chỉ khoảng 86%, dưới ngưỡng 92%).
+- **Cây kim mép gấp (đã chốt hướng 2026-11-05):**
+  - Mép gấp vẽ thành cây kim (lỗ kim và sợi chỉ ở một đầu, mũi kim ở đầu kia), có hai mũi tên nhỏ báo hướng đi được.
+  - Kim chỉ đi theo chiều vuông góc với chính nó; hướng mũi kim quyết định chiều đi (kim dọc thì đi trái phải, kim ngang thì đi lên xuống, kim chéo thì đi theo đường chéo vuông góc). Bản đầu chỉ có kim dọc, không xoay.
+  - Kéo kim thì phần gương xem trước đổi ngay theo. Node trên mép gấp chạy theo kim. Kim không lấn qua các node phía trước (xem khoảng kim đi được).
+  - Vai trò giải đố: hình mẫu có thể lệch tâm, nên người chơi phải tìm đúng trục trước. Đặt kim sai trục thì không bao giờ đạt ngưỡng (bản thử: kim lệch 3% bề rộng vải tốt nhất chỉ khoảng 82–87%).
+  - **Thanh gạt dài (đã chốt hướng 2026-11-05):** ngoài khung vải, song song với chiều kim đi, có một thanh gạt dài; núm gạt luôn thẳng hàng với cây kim và nối lên mép vải bằng nét đứt. Người chơi vuốt thanh này để dời kim cho rõ, không phải chạm trúng cây kim mảnh trên vải. Chạm thẳng vào cây kim vẫn kéo được; chạm vào node được ưu tiên hơn chạm vào kim.
+  - **Hút nhẹ về đúng trục (đã chốt 2026-11-05):** khi kim tới gần trục lời giải thì bị hút nhẹ, có tiếng tick và rung ngắn lúc vừa lọt vào, núm gạt sáng chấm vàng ở chỗ trục; thả tay trong vùng hút thì kim đặt hẳn vào trục. Cái giá chấp nhận được: lộ vị trí trục khi quét kim qua, đổi lại không phải canh tay từng điểm phần trăm và cảm giác giống lực hút của node. Giữ công tắc trong cấu hình để màn khó có thể tắt.
+  - **Khoảng kim đi được (đã chốt 2026-11-05):** vải đang gấp nên kim không vuốt vượt quá nửa hình: kim dừng trước node xa nhất phía trước kim (cách 2% bề rộng vải), không đẩy node theo. Kim cũng không đi xa tới mức nửa gương lọt ra ngoài vải (bản gương của node xa nhất phải nằm trong 98% bề rộng vải); node thường cũng không kéo xa tới mức bản gương ra ngoài vải. Thanh gạt tô đậm đoạn kim đi được lúc đó.
+  - Bản thử: vùng chạm kim rộng 6,5% bề rộng vải mỗi bên (đủ 44 pt); thanh gạt cao 52 pt vùng chạm; kim đi trong khoảng 25–85% bề rộng vải, mỗi 2,5% phát tiếng tick nhỏ; hút trục bán kính 2,5% bề rộng vải, lực tối đa 0,6 (số tạm).
+- **Luật kéo node:** node chỉ nằm ở nửa vải phía trước kim. Node trên mép gấp khóa vào mép, chỉ trượt dọc mép (đã chốt 2026-11-05). Node khóa (ghim) nằm trên mép gấp thì đứng yên theo chiều dọc mép nhưng vẫn chạy theo kim, vì nó thuộc nếp gấp. Lực hút nhẹ áp cho mọi node kéo được, kể cả node trên mép gấp (đã chốt 2026-11-05): node mép gấp chỉ trượt dọc kim nên chỉ hút theo chiều dọc kim, về chỗ viền mẫu cắt ngang đường kim gần nhất; cùng bán kính, lực, tiếng tick và cách đặt hẳn khi thả tay như node thường. Node trên mép gấp nằm trong phạm vi cây kim (từ lỗ kim tới mũi kim), trùng với đường chỉ viền của tấm vải.
+  - **Node mép gấp kéo tự do dọc kim (2026-11-05):** đã thử giới hạn node mép gấp theo thứ tự dọc kim (không kéo xuyên qua đoạn lỗ) và bỏ; node mép gấp đi tự do trong phạm vi cây kim như node thường.
+  - **Vị trí đầu:** node mép gấp của viền ngoài không được spawn trong đoạn lỗ của lời giải. Trình kiểm tra hàng loạt báo lỗi nếu vi phạm.
+- **Hiển thị khi chơi:** nửa vải sau kim phủ lớp mờ (nửa đang gấp). Cạnh, node và vùng tô bản gương vẽ dưới lớp mờ để người chơi thấy nửa mình xếp sẽ thành gì. Điểm sáng chạy theo nửa vòng, không có bản gương.
+- **Chuỗi hoàn thành (đã chốt 2026-11-05):**
+  - **Snap:** node thường hút về viền mẫu phía trước trục; kim trượt về đúng trục lời giải; node trên mép gấp chạy theo kim và về đúng chỗ viền mẫu cắt ngang mép gấp gần nhất (đã chốt 2026-11-05), để đường cắt không bị lệch ở nếp gấp; node mép gấp đã khóa giữ nguyên chỗ dọc mép. Kim và node đi cùng tốc độ cố định như mọi màn.
+  - **Cắt hai lớp cùng lúc:** kéo chạy lần lượt các đoạn cắt (nhảy qua phần nằm trên mép gấp, vì đó là nếp gấp không cần cắt); dưới lớp mờ có đường cắt gương và **cây kéo gương** chạy đối xứng, nhạt hơn kéo chính. Kéo chạm node nào thì node đó và node gương sáng cùng lúc; node gương phát thêm nốt cao hơn một quãng tám, nhỏ hơn; node trên mép gấp chỉ một nốt. Nốt vẫn tăng dần. Hết đoạn cắt cuối, mọi node đã sáng, kết bằng một hợp âm chốt nhẹ.
+  - **Lật bung:** nửa gấp xoay quanh kim từ úp ra mở hẳn, mặt trái vải tối hơn khi còn úp, kèm tiếng sột soạt. **Không vẽ node** trong lúc lật (đã chốt 2026-11-05): cắt xong thì node biến mất, chỉ còn miếng vải, đồng nhất với chuỗi thắng của màn thường. Trong lúc lật, mảnh nhấc dần lên đúng tư thế đầu bước đổ màu (cao hơn và to hơn một chút như bước nhấc của màn thường).
+  - **Nối sang đổ màu (đã chốt 2026-11-05):** mở hẳn thì lấp lánh nhẹ (ít hạt hơn bước đổ màu, một nốt cao nhỏ, rung rất ngắn) và dừng một nhịp ngắn để người chơi kịp thấy cả hình vừa mở, rồi sang bước đổ màu và bay vào ô như màn thường. Bước nhấc lên riêng được gộp vào nhịp lật. Bản thử: lật 0,9 s, dừng 0,3 s (số tạm). Đã thử bỏ hẳn nhịp dừng và lấp lánh: chuyển quá nhanh, người chơi không kịp hiểu vừa có chuyện gì.
+- **Màn thưởng:** ghép **mảnh đã mở** (đã chốt 2026-11-05); chỉ khâu chạy theo cả viền ngoài và viền lỗ.
+- **Số liệu bản thử:** trái tim thường 4 node (2 node tròn, 2 node tam giác trên mép gấp), kim đầu ở 42%, trục 50%, khớp ban đầu 35%; trái tim khoét lỗ 8 node (4 trên mép gấp; khóa 2 node tròn viền ngoài làm mốc và 2 node tam giác đầu, cuối vòng ghim trên mép gấp; 4 node kéo được), lỗ thu nhỏ 0,42 lần hình trái tim thường, kim đầu ở 50%, trục lệch tâm 55%, khớp ban đầu 56%, thiếu lỗ chỉ khoảng 86%; cả hai ngưỡng 92%. Mỗi nửa trái tim chỉ cần 2 node tròn (đỉnh thùy, sườn) là đủ ra hình, node tròn thứ ba đã bỏ vì thừa.
+- **Cần chốt:** gấp vải xuất hiện từ màn nào và cách dạy lần đầu (quyết khi dựng chuỗi màn thật). Ngưỡng từng mảnh người dùng còn đang chỉnh trên bản web.
+
+### Ý tưởng chưa hoàn thiện: mặt nạ phần bị cắt bỏ
+
+Một cơ chế khác, chưa thiết kế xong: thay vì tô phần vải còn lại, mặt nạ hiện phần vải bị cắt bỏ (miếng vụn rơi ra). Người chơi xếp node để phần bị cắt bỏ khớp một hình mẫu âm, ví dụ cắt bỏ đúng hình ngôi sao để lại khung vải có lỗ sao. Có thể dùng cho đồ ren, khung tranh, hoa văn đục lỗ. Cần chốt: cách chấm (so phần bị bỏ hay phần còn lại), cách hiển thị để người chơi không nhầm với màn thường, có kết hợp với gấp vải không.
+
+### Tiềm năng phát triển sau
+
+Các hướng có thể phát triển, chưa làm trong bản đầu.
+
+- **Người chơi tự chọn màu vùng tô:** một mục trong Cài đặt cho chọn màu vùng tô trong bảng màu cozy và chỉnh độ đậm, lưu theo người chơi. Bản web có bảng chọn màu tương tự nhưng chỉ là công cụ thiết kế để thử; bản đầu dùng màu mặc định đã chốt ở bảng màu. Cần chốt: có mở cho người chơi không, bảng màu nào, ảnh hưởng tới tương phản trên từng loại vải.
+
+Hai cơ chế gấp vải khó, chưa làm trong màn 4, để dành cho các màn về sau:
+
+- **Xoay mũi kim:** người chơi xoay được cây kim, nên phải tìm cả góc lẫn vị trí của trục đối xứng. Hướng đi của kim vẫn theo luật chung: luôn vuông góc với hướng mũi kim. Hình mẫu đối xứng qua trục chéo hoặc trục khó nhận ra. Cần chốt: xoay tự do hay theo bậc góc; cách điều khiển xoay bằng một ngón (ví dụ kéo đầu lỗ kim).
+- **Gấp hai lần:** vải gấp tư, người chơi chỉ xếp một phần tư; mở ra thành hình đối xứng bốn phía (bông tuyết, hoa bốn cánh). Kết hợp với khoét lỗ ở mép gấp để ra hoa văn ren. Hình mở ra = gộp bốn bản soi gương.
+- **Gấp chéo:** kim nằm chéo; người chơi phải xoay hình trong đầu. Cùng nền với xoay mũi kim.
