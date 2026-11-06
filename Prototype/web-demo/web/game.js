@@ -701,7 +701,7 @@
     var gH = ctx.createLinearGradient(xf, 0, xf + 10, 0); gH.addColorStop(0, 'rgba(255,255,255,0.7)'); gH.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.fillStyle = gH; ctx.fillRect(xf, FY, 10, FS);
     ctx.restore();
-    drawNeedle(xf, a);
+    drawFoldNeedle(xf, a);
     if (S.phase === 'play' || S.phase === 'intro') drawSlider(xf, a);
   }
   // Thanh gạt: rãnh dài dưới khung vải, núm gạt thẳng hàng với cây kim, nối lên mép vải bằng nét đứt.
@@ -720,7 +720,8 @@
     ctx.restore();
   }
   // Cây kim làm mép gấp: lỗ kim ở trên kèm sợi chỉ, mũi kim ở dưới. Hai mũi tên nhỏ báo kim đi được sang hai bên.
-  function drawNeedle(xf, a) {
+  // (trước đây trùng tên với kim khâu ở màn thưởng nên hàm này bị ghi đè, cây kim mép gấp không hiện)
+  function drawFoldNeedle(xf, a) {
     var y0 = FY + 10, y1 = FY + FS - 8, act = S.needle ? 1 : 0;
     ctx.save(); ctx.globalAlpha = a; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     ctx.beginPath(); ctx.moveTo(xf, y0 + 4); ctx.bezierCurveTo(xf - 26, y0 - 6, xf - 34, y0 + 30, xf - 58, y0 + 18);

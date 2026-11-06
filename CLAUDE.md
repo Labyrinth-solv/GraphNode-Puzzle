@@ -61,6 +61,7 @@ Game mobile Unity dạng giải đố: kéo node của một đồ thị cho vi�
 - Sau khi tạo hoặc sửa script, đọc console để xem lỗi biên dịch trước khi dùng kiểu mới. Chờ domain reload xong rồi mới thao tác tiếp.
 - Khi có nhiều Unity đang mở thì chọn đúng instance trước khi gọi tool.
 - Không sửa tay file `.unity`, `.prefab`, `.asset` (YAML). Dùng tool của Unity hoặc Editor. Không xóa hay tạo lại file `.meta`; commit `.meta` cùng asset.
+- Ngoại lệ: được sửa tay thiết lập import trong file `.meta` của texture UI (ví dụ viền cắt 9 phần `spriteBorder`) khi người dùng cho phép rõ cho việc đó. Chỉ đổi đúng trường cần đổi, giữ nguyên `guid`; sửa xong refresh Unity, đọc Console và kiểm tra lại giá trị.
 - Tạo prefab và asset qua MCP rồi kiểm tra lại trạng thái, không giả định thành công.
 
 ## Build và phát hành
