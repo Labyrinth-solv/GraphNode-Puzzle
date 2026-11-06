@@ -21,6 +21,7 @@
   // Snap khi thắng: mọi node (và cây kim) đi cùng một tốc độ cố định, đi thẳng một mạch không tăng giảm tốc.
   // Phase dài theo node xa nhất, kẹp trong [MIN, MAX]; xa quá thì cả nhóm cùng nhanh lên một tốc độ chung. (giá trị tạm)
   var SNAP_SPEED = 0.4, SNAP_MIN = 0.2, SNAP_MAX = 0.5, SETTLE_T = 0.12;
+  var SHOW_FOLD_NEEDLE = false;
   var NODE_HALO = 1.5, NODE_HALO_A = 0.7;           // viền sáng quanh node: mỏng và hơi trong, chỉ vừa đủ tách node khỏi nền
   var CUT_NODE_SIZE = 0.75;
   var UNFOLD_T = 0.9, UNFOLD_HOLD = 0.3;          // lật bung và nhịp dừng ngắn sau khi mở hẳn (giá trị tạm)
@@ -153,7 +154,9 @@
   };
   function product() { return PRODUCTS[S.pi]; }
   // Sản phẩm thử riêng (standalone) không nằm trong chuỗi Màn tiếp; chơi xong thì chơi lại chính nó.
-  function hasNext() { return !product().standalone && S.pi + 1 < PRODUCTS.length && !PRODUCTS[S.pi + 1].standalone; }
+  // Hết chuỗi màn chính (màn 3) thì nút cuối là "Tiếp tục", đưa sang màn thử riêng (màn 4) thay vì chơi lại từ đầu.
+  function hasNext() { return !product().standalone && S.pi + 1 < PRODUCTS.length; }
+  function nextLabel() { return PRODUCTS[S.pi + 1] && PRODUCTS[S.pi + 1].standalone ? 'Tiếp tục' : 'Màn tiếp'; }
   /* ---------- danh sách chọn màn để thử nhanh ---------- */
   var MENU = [];
   PRODUCTS.forEach(function (p, pi) {
@@ -701,7 +704,8 @@
     var gH = ctx.createLinearGradient(xf, 0, xf + 10, 0); gH.addColorStop(0, 'rgba(255,255,255,0.7)'); gH.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.fillStyle = gH; ctx.fillRect(xf, FY, 10, FS);
     ctx.restore();
-    drawFoldNeedle(xf, a);
+    // mép gấp chỉ thể hiện bằng nếp gấp có bóng (người dùng chọn kiểu này), không vẽ thân kim hay sợi chỉ
+    if (SHOW_FOLD_NEEDLE) drawFoldNeedle(xf, a);
     if (S.phase === 'play' || S.phase === 'intro') drawSlider(xf, a);
   }
   // Thanh gạt: rãnh dài dưới khung vải, núm gạt thẳng hàng với cây kim, nối lên mép vải bằng nét đứt.
@@ -1391,7 +1395,7 @@
       ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.6; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
       if (hasNext()) {
         ctx.beginPath(); ctx.moveTo(48, -8); ctx.lineTo(56, 0); ctx.lineTo(48, 8); ctx.stroke();
-        text('Màn tiếp', -6, 1, 19, 800, '#fff', 'center');
+        text(nextLabel(), -6, 1, 19, 800, '#fff', 'center');
       } else {
         ctx.beginPath(); ctx.arc(-46, 0, 9, -0.4, 4.6); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(-36, -9); ctx.lineTo(-37.5, -1); ctx.lineTo(-44, -6); ctx.stroke();

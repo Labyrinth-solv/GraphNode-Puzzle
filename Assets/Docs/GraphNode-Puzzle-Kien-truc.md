@@ -177,6 +177,7 @@ Assets/
 │   │   ├── Scopes/               Lớp nối của App, Home, Gameplay
 │   │   └── Flow/                 Máy trạng thái ứng dụng, nạp scene, lớp phủ chuyển cảnh
 │   └── Editor/                   GraphNode.Editor
+│       ├── Fonts/                FontAssetTool: tạo TMP Font Asset Baloo 2 (đã có)
 │       ├── LevelEditor/          Dựng graph, chọn mức độ khó và node kéo được, sinh vị trí ban đầu theo seed, ghi JSON
 │       ├── Validation/           Kiểm tra hàng loạt, dùng chung với CI
 │       └── Build/                Script build, chốt chặn gói MCP
@@ -380,6 +381,35 @@ Vải, node, cạnh, ghim, điểm sáng **không phải UI**: là sprite và me
 - **Safe area:** một component trên root co vùng nội dung tránh tai thỏ. Nội dung quan trọng nằm trong khung 390 × 844 và trong safe area.
 - **Ảnh nền vẽ tràn:** tường, sàn, trần rộng tới khoảng tỉ lệ 3:4 và cao tới khoảng 9:21, để vùng thừa do Expand là phần tiếp của căn phòng.
 - **Vùng chạm** tối thiểu 44 pt (132 px), có thể lớn hơn hình vẽ.
+
+**Hai Canvas cho màn chơi (đã dựng 2026-11-06 trong SampleScene):**
+
+| Canvas | Chế độ | Chứa | Lý do |
+| --- | --- | --- | --- |
+| `BGCanvas` | Screen Space - Camera (Main Camera), Sorting Layer `Background` | `bg` (nền kem), `SafeArea/FabricCard` (thẻ trắng sau tấm vải) | Nằm **sau** vải, node, điểm sáng vẽ trong không gian thế giới |
+| `UIRoot` | Screen Space - Overlay | Toàn bộ HUD, popup, toast | Nằm **trên** mọi thứ; `FabricArea` trong suốt, chỉ là khung neo để code biết vị trí tấm vải |
+
+Cả hai dùng cùng Canvas Scaler (1170 × 2532, Expand). Tọa độ bố cục lấy từ bản web nhân 3 (1 pt = 3 đơn vị), neo vào giữa mép trên.
+
+**Cây HUD màn chơi (hợp đồng tên với View script, đã dựng):**
+
+```text
+UIRoot/SafeArea
+├── HomeLayout                 (sẽ tách sang scene Home)
+├── GameplayHud
+│   ├── Topbar: LevelChip (LevelLabel, Arrow), Setting
+│   ├── InfoRow
+│   │   ├── TargetCard: TargetTitle, TargetPreview
+│   │   └── ProgressCard: MatchTitle, StatusText, MatchBar (Canvas con: Track, Fill, TickNear, TickGoal), SetTitle, SetSlots
+│   ├── FabricArea             vuông 1086, cách đỉnh 768; AspectRatioFitter Width Controls Height
+│   ├── FoldSlider: Track, Handle   (tắt sẵn, chỉ màn gấp bật)
+│   └── BoosterRow: HintButton (Icon, name, CountBadge/Count), Booster2, Booster3
+├── PopupLayer
+└── ToastLayer
+```
+
+- **Chữ:** TMP Font Asset động `Assets/Art/Fonts/Baloo2/TMP/Baloo2-Medium SDF` và `Baloo2-ExtraBold SDF`, tạo bằng menu **GraphNode → Fonts** (`Scripts/Editor/Fonts/FontAssetTool.cs`). Gần phát hành đổi sang atlas tĩnh có sẵn bộ chữ tiếng Việt. Trong `static/` còn hai font asset người dùng tự tạo (`Baloo2-Medium SDF`, `Baloo2-Bold SDF`); cần chọn giữ một bộ để tránh trùng.
+- **Ảnh tạm:** `Assets/Texture2D/Gen_assets` (gameplay) và `Gen_assets/UI` (giao diện, có viền 9-slice) xuất từ bản web để dựng và thử; art chính thức của người dùng sẽ thay.
 
 **Luồng làm một màn hình:** người dùng dựng prefab trong `Prefabs/UI/` → Claude viết View script với các ô `[SerializeField]` theo tên phần tử trong prefab → người dùng nối tham chiếu (hoặc Claude nối qua MCP rồi kiểm tra) → Claude viết Presenter, test và nối vào scope của scene.
 

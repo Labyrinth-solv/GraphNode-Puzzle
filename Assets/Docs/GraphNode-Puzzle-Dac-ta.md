@@ -544,7 +544,7 @@ Mọi khoảng cách và tốc độ trong bản chính thức tính theo bề r
 
 - **Giảm chuyển động:** tắt viền trôi, rút ngắn animation (bản thử đã có).
 - **Không chỉ dựa vào màu:** ghim tròn và ghim số khác hình dạng; vùng cấm có gạch chéo.
-- **Chữ:** Baloo 2 dùng TextMeshPro SDF, đủ bộ ký tự tiếng Việt. Mọi chuỗi đi qua bảng chuỗi, dù ban đầu chỉ có tiếng Việt, để thêm ngôn ngữ sau.
+- **Chữ:** Baloo 2 dùng TextMeshPro SDF, đủ bộ ký tự tiếng Việt (hiện dùng font asset động Medium và ExtraBold; trước khi phát hành đổi sang atlas tĩnh có sẵn bộ chữ tiếng Việt, cách làm ở tài liệu kiến trúc mục 5.13). Mọi chuỗi đi qua bảng chuỗi, dù ban đầu chỉ có tiếng Việt, để thêm ngôn ngữ sau.
 
 ### Telemetry
 
@@ -732,7 +732,7 @@ Tấm vải gấp đôi qua một cây kim làm mép gấp; người chơi chỉ
 - **Vùng tô là hình sẽ có sau khi cắt (đã chốt 2026-11-05):** cũng như mọi màn, vùng tô hiện phần vải còn lại sau khi cắt và mở ra; lỗ là chỗ trống không tô. Kiểu mặt nạ hiện phần bị cắt bỏ để ở mục ý tưởng riêng, cho một cơ chế khác.
 - **Khoét lỗ, không có luật mới (đã chốt 2026-11-05):** lỗ hình thành chỉ nhờ điều chỉnh node. Nửa vòng đi viền ngoài, chạm mép gấp, rồi vòng vào một vết lõm và chạm mép gấp lần nữa. Khi người chơi kéo các node vết lõm lùi ra chạm mép gấp, mở vải ra thì vết lõm và bản gương ghép thành lỗ kín ở giữa. Vì gộp hai nửa thay vì tô một vòng kín, lỗ không bị tô lấp. Hình mẫu có lỗ thì không khoét lỗ không thể đạt ngưỡng (bản thử: thiếu lỗ chỉ khoảng 86%, dưới ngưỡng 92%).
 - **Cây kim mép gấp (đã chốt hướng 2026-11-05):**
-  - Mép gấp vẽ thành cây kim (lỗ kim và sợi chỉ ở một đầu, mũi kim ở đầu kia), có hai mũi tên nhỏ báo hướng đi được.
+  - **Hình thức mép gấp (đã chốt 2026-11-06):** trên tấm vải, mép gấp chỉ thể hiện bằng nếp gấp có bóng (bóng tối nhẹ phía nửa vải đang có, viền sáng mảnh phía nửa gấp) cùng lớp mờ của nửa gấp; **không vẽ thân kim hay sợi chỉ** (đã thử, người dùng thấy kiểu nếp gấp đẹp hơn). "Cây kim" vẫn là tên của mép gấp điều khiển được: người chơi dời nó bằng thanh gạt dài, hoặc kéo ngay tại nếp gấp.
   - Kim chỉ đi theo chiều vuông góc với chính nó; hướng mũi kim quyết định chiều đi (kim dọc thì đi trái phải, kim ngang thì đi lên xuống, kim chéo thì đi theo đường chéo vuông góc). Bản đầu chỉ có kim dọc, không xoay.
   - Kéo kim thì phần gương xem trước đổi ngay theo. Node trên mép gấp chạy theo kim. Kim không lấn qua các node phía trước (xem khoảng kim đi được).
   - **Hình gấp đặt giữa khung (đã chốt 2026-11-05):** trục đối xứng của hình mẫu luôn trùng giữa khung vải theo chiều kim đi. Lý do: kim không vuốt quá nửa tấm vải (gấp đôi đúng giữa), nên chỉ khi hình ở giữa khung thì chỗ xa nhất kim đi được mới trùng trục của hình; hình lệch thì kim vượt qua giữa hình, nhìn như lỗi (đã thử với trục 47%). Kim bắt đầu lệch, người chơi kéo về giữa, lực hút báo khi khớp. Thử thách chính của màn gấp là xếp node và khoét lỗ; bước tìm trục để dành cho cơ chế kim xoay (mục Tiềm năng phát triển sau).
