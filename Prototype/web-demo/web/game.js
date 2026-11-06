@@ -5,11 +5,12 @@
   var C = {
     bg: '#F6EFE3', paper: '#FBF7EF', card: '#FFFDF8', ink: '#4A3B35', inkSoft: '#6B5B53', mute: '#9C8E86',
     rose: '#E3A6A1', roseDeep: '#D4837C', sage: '#A9C1A0', sageDeep: '#82A57C', mustard: '#E9C46A', mustardDeep: '#CF9F3A',
-    blue: '#9DB8C9', fabric: '#F3DED6', weave: '#E8CCC2', thread: '#C29C90', hole: '#E3C2B6', chip: '#F1E1CF',
+    blue: '#9DB8C9', halo: '#FFFAF0', fabric: '#F3DED6', weave: '#E8CCC2', thread: '#C29C90', hole: '#E3C2B6', chip: '#F1E1CF',
     barFar: '#EEB8B0', barMid: '#D88A74', barNear: '#5DB582', base: '#EEE2CB', baseDeep: '#F0CF83', cream: '#FFF7E8'
   };
   var FONT = '"Baloo 2", system-ui, -apple-system, "Segoe UI", sans-serif';
-  var FX = 33, FY = 270, FS = 324;                 // tấm vải vuông trong thẻ trắng
+  // Tấm vải vuông trong thẻ trắng, rộng gần hết chiều ngang màn hình (362/390 ≈ 93%) để node và viền dễ nhìn, dễ chạm.
+  var FX = 14, FY = 256, FS = 362;
   var THR_DEFAULT = 0.92, M1 = 0.70, M2 = 0.85;     // ngưỡng mặc định của đặc tả và hai mốc màu; ngưỡng thật lấy theo level
   var RUN_SPEED = 0.68;                              // bề rộng vải mỗi giây
   // Cảnh cắt khi thắng: hệ số tốc độ theo chu vi để cắt hết trong khoảng CUT_TARGET giây, kẹp trong [MIN, MAX] (giá trị tạm).
@@ -20,11 +21,12 @@
   // Snap khi thắng: mọi node (và cây kim) đi cùng một tốc độ cố định, đi thẳng một mạch không tăng giảm tốc.
   // Phase dài theo node xa nhất, kẹp trong [MIN, MAX]; xa quá thì cả nhóm cùng nhanh lên một tốc độ chung. (giá trị tạm)
   var SNAP_SPEED = 0.4, SNAP_MIN = 0.2, SNAP_MAX = 0.5, SETTLE_T = 0.12;
+  var NODE_HALO = 1.5, NODE_HALO_A = 0.7;           // viền sáng quanh node: mỏng và hơi trong, chỉ vừa đủ tách node khỏi nền
   var CUT_NODE_SIZE = 0.75;
   var UNFOLD_T = 0.9, UNFOLD_HOLD = 0.3;          // lật bung và nhịp dừng ngắn sau khi mở hẳn (giá trị tạm)
-  var NEEDLE_HIT = 0.065, NEEDLE_MIN = 0.25, NEEDLE_MAX = 0.85; // vùng chạm cây kim (>= 44 pt) và khoảng kim đi được
+  var NEEDLE_HIT = 0.065, NEEDLE_MIN = 0.25, NEEDLE_MAX = 0.5; // vùng chạm cây kim (>= 44 pt) và khoảng kim đi được
   // Thanh gạt dài bên dưới khung vải để kéo kim cho rõ; hút nhẹ kim về đúng trục (bật tắt để thử cảm giác).
-  var SLIDER_Y = 642, SLIDER_HIT = 26, NEEDLE_MAG_ON = true, NEEDLE_MAG_R = 0.025, NEEDLE_MAG_PULL = 0.6;                                // thời gian lật bung mảnh gấp đôi (giá trị tạm)                          // node thu nhỏ trong chuỗi hoàn thành để không che đường cắt
+  var SLIDER_Y = 656, SLIDER_HIT = 26, NEEDLE_MAG_ON = true, NEEDLE_MAG_R = 0.025, NEEDLE_MAG_PULL = 0.6;                                // thời gian lật bung mảnh gấp đôi (giá trị tạm)                          // node thu nhỏ trong chuỗi hoàn thành để không che đường cắt
   var CUT_TARGET = 1.5, CUT_MULT_MIN = 1.6, CUT_MULT_MAX = 2.5;
   var PICK_MIN = 0.071, PICK_MAX = 0.19, MOVE_EPS = 0.016;
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -310,7 +312,8 @@
     if (S.phase === 'intro' && S.t < 0.5) return;
     finishSettle();
     var fx = (p[0] - FX) / FS, fy = (p[1] - FY) / FS, best = -1, bd = 9;
-    if (foldOf() && Math.abs(p[1] - SLIDER_Y) < SLIDER_HIT && p[0] > X(NEEDLE_MIN) - 26 && p[0] < X(NEEDLE_MAX) + 26) {
+    var nrg = foldOf() ? needleRange() : null;
+    if (nrg && Math.abs(p[1] - SLIDER_Y) < SLIDER_HIT && p[0] > X(nrg[0]) - 26 && p[0] < X(nrg[1]) + 26) {
       if (S.phase === 'intro') setPhase('play');
       activeId = e.pointerId; try { cv.setPointerCapture(e.pointerId); } catch (er) {}
       S.needle = { sx: fx, x0: S.foldX, last: S.foldX, moved: false, bar: true }; S.firstTouch = true; S.hint = null;
@@ -680,7 +683,7 @@
     mctx.putImageData(mimg, 0, 0);
   }
   function drawFabric() {
-    rr(20, 252, 350, 360, 24); ctx.fillStyle = C.card; ctx.fill();
+    rr(FX - 8, FY - 12, FS + 16, FS + 24, 20); ctx.fillStyle = C.card; ctx.fill();
     rr(FX, FY, FS, FS, 14); ctx.fillStyle = C.fabric; ctx.fill(); ctx.fillStyle = weave(); ctx.fill();
     rr(FX + 7, FY + 7, FS - 14, FS - 14, 10); ctx.setLineDash([6, 5]); ctx.lineWidth = 1.6; ctx.strokeStyle = C.thread; ctx.stroke(); ctx.setLineDash([]);
   }
@@ -692,15 +695,21 @@
     ctx.beginPath(); ctx.rect(xf, FY, FX + FS - xf, FS); ctx.clip();
     rr(FX, FY, FS, FS, 14); ctx.fillStyle = 'rgba(246,239,227,0.62)'; ctx.fill();
     ctx.restore();
+    ctx.save(); ctx.globalAlpha = a; rr(FX, FY, FS, FS, 14); ctx.clip();
+    var gS = ctx.createLinearGradient(xf - 22, 0, xf, 0); gS.addColorStop(0, 'rgba(74,59,53,0)'); gS.addColorStop(1, 'rgba(74,59,53,0.16)');
+    ctx.fillStyle = gS; ctx.fillRect(xf - 22, FY, 22, FS);
+    var gH = ctx.createLinearGradient(xf, 0, xf + 10, 0); gH.addColorStop(0, 'rgba(255,255,255,0.7)'); gH.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = gH; ctx.fillRect(xf, FY, 10, FS);
+    ctx.restore();
     drawNeedle(xf, a);
     if (S.phase === 'play' || S.phase === 'intro') drawSlider(xf, a);
   }
   // Thanh gạt: rãnh dài dưới khung vải, núm gạt thẳng hàng với cây kim, nối lên mép vải bằng nét đứt.
   function drawSlider(xf, a) {
-    var x0 = X(NEEDLE_MIN), x1 = X(NEEDLE_MAX), y = SLIDER_Y, act = S.needle ? 1 : 0;
+    var y = SLIDER_Y, act = S.needle ? 1 : 0;
     ctx.save(); ctx.globalAlpha = a;
-    rr(x0 - 6, y - 5, x1 - x0 + 12, 10, 5); ctx.fillStyle = rgba(C.ink, 0.08); ctx.fill();
-    var rg = needleRange(); rr(X(rg[0]) - 5, y - 5, X(rg[1]) - X(rg[0]) + 10, 10, 5); ctx.fillStyle = rgba(C.ink, 0.22); ctx.fill();
+    // chỉ hiện đoạn kim đi được lúc này, hai đầu bo tròn như rãnh thật
+    var rg = needleRange(); rr(X(rg[0]) - 6, y - 5, X(rg[1]) - X(rg[0]) + 12, 10, 5); ctx.fillStyle = rgba(C.ink, 0.16); ctx.fill();
     var fo = foldOf(); if (S.needle && S.needle.inMag) { ctx.beginPath(); ctx.arc(X(fo.solX), y, 5, 0, 7); ctx.fillStyle = rgba(C.mustard, 0.9); ctx.fill(); }
     ctx.beginPath(); ctx.moveTo(xf, FY + FS + 4); ctx.lineTo(xf, y - 16); ctx.setLineDash([3, 4]); ctx.lineWidth = 1.6; ctx.strokeStyle = rgba(C.ink, 0.35); ctx.stroke(); ctx.setLineDash([]);
     ctx.save(); ctx.shadowColor = 'rgba(74,59,53,0.25)'; ctx.shadowBlur = act ? 10 : 5; ctx.shadowOffsetY = 2;
@@ -778,12 +787,13 @@
     if (s < 0.02) return;
     ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y); ctx.scale(s, s);
     if (S.phase === 'verify' && S.lit[i]) { ctx.beginPath(); ctx.arc(0, 0, 16, 0, 7); ctx.lineWidth = 3; ctx.strokeStyle = C.mustard; ctx.stroke(); }
-    ctx.lineWidth = 2.4; ctx.lineJoin = 'round'; ctx.strokeStyle = lk ? C.mute : C.ink;
-    if (lv.types[i] === 'c') { ctx.beginPath(); ctx.arc(0, 0, 10.5, 0, 7); ctx.fillStyle = lk ? '#E9E1D6' : C.rose; ctx.fill(); ctx.stroke(); }
-    else {
-      ctx.beginPath(); for (var k = 0; k < 3; k++) { var a = -Math.PI / 2 + k * Math.PI * 2 / 3; ctx.lineTo(Math.cos(a) * 13, Math.sin(a) * 13 + 2); }
-      ctx.closePath(); ctx.fillStyle = lk ? '#E9E1D6' : C.card; ctx.fill(); ctx.stroke();
-    }
+    ctx.lineJoin = 'round';
+    if (lv.types[i] === 'c') { ctx.beginPath(); ctx.arc(0, 0, 10.5, 0, 7); }
+    else { ctx.beginPath(); for (var k = 0; k < 3; k++) { var a = -Math.PI / 2 + k * Math.PI * 2 / 3; ctx.lineTo(Math.cos(a) * 13, Math.sin(a) * 13 + 2); } ctx.closePath(); }
+    // viền sáng 3 px bên ngoài nét mực: vẽ nét kem rộng trước, rồi tô và nét mực đè lên, node tách khỏi mọi nền
+    ctx.lineWidth = 2.4 + NODE_HALO * 2; ctx.strokeStyle = rgba(C.halo, NODE_HALO_A); ctx.stroke();
+    ctx.fillStyle = lk ? '#E9E1D6' : (lv.types[i] === 'c' ? C.rose : C.card); ctx.fill();
+    ctx.lineWidth = 2.4; ctx.strokeStyle = lk ? C.mute : C.ink; ctx.stroke();
     if (lk) {
       ctx.beginPath(); ctx.moveTo(2, -3); ctx.lineTo(9, -14); ctx.lineWidth = 2; ctx.strokeStyle = C.ink; ctx.stroke();
       ctx.beginPath(); ctx.arc(10, -16, 4.6, 0, 7); ctx.fillStyle = C.mustard; ctx.fill(); ctx.lineWidth = 1.8; ctx.stroke();
@@ -1220,9 +1230,9 @@
       { at: function () { return ptOf(7, 0.38, 0.42); }, draw: function (p, k) { eye(p, k * 0.6); } },
       { at: function () { return ptOf(7, 0.62, 0.42); }, draw: function (p, k) { eye(p, k * 0.6); } },
       { at: function () { return ptOf(7, 0.50, 0.55); }, draw: function (p, k) { smile(p, k, 14); } },
-      { at: function () { return ptOf(8, 0.34, 0.30); }, draw: function (p, k) { star(p, 7 * k, '#FFFFFF'); } },
-      { at: function () { return ptOf(8, 0.78, 0.30); }, draw: function (p, k) { star(p, 7 * k, '#FFFFFF'); } },
-      { at: function () { return ptOf(8, 0.56, 0.80); }, draw: function (p, k) { star(p, 5 * k, '#FFFFFF'); } }
+      { at: function () { return ptOf(8, 0.28, 0.30); }, draw: function (p, k) { star(p, 7 * k, '#FFFFFF'); } },
+      { at: function () { return ptOf(8, 0.72, 0.30); }, draw: function (p, k) { star(p, 7 * k, '#FFFFFF'); } },
+      { at: function () { return ptOf(8, 0.50, 0.80); }, draw: function (p, k) { star(p, 5 * k, '#FFFFFF'); } }
     ],
     mushroom: [
       { at: function () { return ptOf(0, 0.5, 0.12); }, draw: function (p, k) { ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(k, k); ctx.rotate(-0.5);

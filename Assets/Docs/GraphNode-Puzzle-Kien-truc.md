@@ -129,12 +129,14 @@ Assets/
 │   │   ├── Geometry/             Float2, đoạn, đường gấp khúc, giao điểm, cong Hermite
 │   │   ├── Graph/                NodeId, loại node, đồ thị, trạng thái vị trí
 │   │   ├── Shapes/               IEdgeShape: cạnh thẳng, cạnh cong
-│   │   ├── Constraints/          INodeConstraint: khóa, giới hạn khung vải
+│   │   ├── Constraints/          INodeConstraint: khóa, giới hạn khung vải, hút nhẹ về viền, mép gấp, khoảng kim
 │   │   ├── Outline/              Mặt nạ vùng tô, viền ngoài
 │   │   ├── Scoring/              Điểm khớp, độ lệch viền
 │   │   ├── Rules/                IWinCondition: ngưỡng khớp, vùng cấm
 │   │   ├── Runner/               Mô phỏng điểm sáng: chiều dài cung, chiều chạy, hệ số tốc độ khi thắng
 │   │   ├── Pins/                 Kiểm tra ghim tức thì lúc thả tay (khi level có ghim)
+│   │   ├── Fold/                 Gấp vải: nửa vòng, gộp mặt nạ hai nửa, vòng viền nhiều lớp (có lỗ), đoạn cắt, khoảng kim
+│   │   ├── Generation/           Sinh vị trí ban đầu theo mức độ khó, RNG có hạt giống (dùng bởi Level Editor)
 │   │   └── Levels/               Mô hình level lúc chạy, trình kiểm tra level
 │   ├── Foundation/               GraphNode.Foundation
 │   │   ├── Contracts/            LevelRequest, LevelResult, các thông điệp
@@ -144,7 +146,7 @@ Assets/
 │   │   └── Logging/              Log có thể loại bỏ khi build phát hành
 │   ├── Data/                     GraphNode.Data
 │   │   ├── Definitions/          LevelDefinition (đọc từ JSON), LevelCatalog, ChapterDefinition, ProductDefinition, PinDefinition, DepthProfile
-│   │   ├── Configs/              Cấu hình cân bằng, điểm sáng, input, âm thanh, trình diễn
+│   │   ├── Configs/              Cấu hình cân bằng, điểm sáng, input, âm thanh, trình diễn, DifficultyTierConfig
 │   │   └── Serialization/        DTO JSON, chuyển đổi phiên bản
 │   ├── Services/                 GraphNode.Services
 │   │   ├── Audio/                Mixer, SFX, NoteService (pool giọng)
@@ -175,7 +177,7 @@ Assets/
 │   │   ├── Scopes/               Lớp nối của App, Home, Gameplay
 │   │   └── Flow/                 Máy trạng thái ứng dụng, nạp scene, lớp phủ chuyển cảnh
 │   └── Editor/                   GraphNode.Editor
-│       ├── LevelEditor/
+│       ├── LevelEditor/          Dựng graph, chọn mức độ khó và node kéo được, sinh vị trí ban đầu theo seed, ghi JSON
 │       ├── Validation/           Kiểm tra hàng loạt, dùng chung với CI
 │       └── Build/                Script build, chốt chặn gói MCP
 ├── Tests/
@@ -236,7 +238,9 @@ stateDiagram-v2
     Intro --> Play
     Play --> Snap: thả tay khi khớp đạt ngưỡng (và ghim đạt, nếu level có ghim)
     Snap --> Cut
-    Cut --> Lift
+    Cut --> Lift: màn thường
+    Cut --> Unfold: màn gấp vải
+    Unfold --> Dye
     Lift --> Dye
     Dye --> Fly
     Fly --> Result
@@ -266,6 +270,9 @@ stateDiagram-v2
 | `IRunnerRule` | Quyết định tốc độ và chiều của điểm sáng; thêm hai điểm sáng hay nhảy cổng bằng lớp mới | Tốc độ, đảo chiều |
 | `IHintProvider` | Chọn node cần gợi ý (mặc định node xa lời giải nhất, hoặc theo `hintOrder`). Không giữ số booster: số đó đi vào qua `LevelRequest` | Nút Gợi ý |
 | `WinConditions` | Chuỗi điều kiện xét lúc thả tay: ngưỡng khớp, vùng cấm, rồi ghim (nếu có) | Luật thắng |
+| `OutlineMagnet` | `INodeConstraint` hút nhẹ node đang kéo về điểm gần nhất trên viền mẫu (node mép gấp chỉ hút dọc kim); thả tay trong vùng hút thì đặt hẳn lên viền | `nearestOnLoop`, `foldCross` |
+| `FoldGeometry` | Màn gấp: mặt nạ = nửa vòng hợp bản soi gương qua trục; vòng viền mở ra (viền ngoài và lỗ), đoạn cắt bỏ qua nếp gấp; khoảng kim đi được | `buildFold`, `unionRegion`, `needleRange` |
+| `StartPositionGenerator` | Sinh vị trí ban đầu theo mức độ khó từ seed, tất định, đọc tham số từ `DifficultyTierConfig` cộng phần ghi đè của level | `startgen.js` |
 | `LevelValidator` | Kiểm tra level cho Editor, CI và test | Mục "Kiểm tra hàng loạt" của đặc tả |
 
 Yêu cầu: API không cấp phát khi đang chơi (bộ đệm dựng một lần lúc vào màn); mọi hàm nhận `dt` và trạng thái, không đọc thời gian hệ thống, để test và phát lại được.
@@ -274,7 +281,8 @@ Yêu cầu: API không cấp phát khi đang chơi (bộ đệm dựng một l�
 
 - Một `PointerInput` đọc Input System, chỉ nhận một ngón, hủy kéo khi mất focus.
 - `NodePicker` chọn node theo vòng chọn theo mật độ (một nửa khoảng cách tới node gần nhất, kẹp 7,1% tới 19% bề rộng vải).
-- `RelativeDragController` di chuyển node đúng quãng ngón tay trượt, áp `INodeConstraint`.
+- `RelativeDragController` di chuyển node đúng quãng ngón tay trượt, áp `INodeConstraint` (gồm hút nhẹ về viền).
+- Màn gấp: `NeedleController` nhận kéo trên thanh gạt dài dưới khung vải (hoặc trên cây kim), dời kim theo chiều vuông góc với kim trong khoảng đi được, có hút nhẹ về trục.
 - `FabricSpace` quy đổi giữa toạ độ màn hình, toạ độ khung vải (0 tới 1) và đơn vị theo bề rộng vải (bảng Đơn vị đo trong đặc tả). Level chiều sâu kiểu camera nghiêng cũng chỉ thay `FabricSpace`.
 
 ### 5.5 Hiển thị
@@ -291,7 +299,7 @@ Yêu cầu: API không cấp phát khi đang chơi (bộ đệm dựng một l�
 
 ### 5.7 Dữ liệu và nội dung
 
-- **Level là file JSON (bản gốc)**, mỗi level một file trong `Content/Levels/`. Trường theo bảng "Dữ liệu một level" trong đặc tả: hình mẫu, node, `ring`, `innerEdges`, `markers`, ngưỡng, độ lệch tối đa (tùy chọn), vải, sản phẩm, thứ tự gợi ý (tùy chọn), `depthProfile`, `forbiddenZones` (sau), tags. Lúc chạy, JSON được đọc thành `LevelDefinition` (lớp C# thường, không phải ScriptableObject).
+- **Level là file JSON (bản gốc)**, mỗi level một file trong `Content/Levels/`. Trường theo bảng "Dữ liệu một level" trong đặc tả: hình mẫu, node, `ring`, `innerEdges`, `markers`, mức độ khó, `startSeed`, `startGenOverride`, `fold` (màn gấp), ngưỡng, độ lệch tối đa (tùy chọn), vải, sản phẩm, thứ tự gợi ý (tùy chọn), `depthProfile`, `forbiddenZones` (sau), tags. Lúc chạy, JSON được đọc thành `LevelDefinition` (lớp C# thường, không phải ScriptableObject).
 - Level Editor đọc và ghi thẳng JSON. Không có bản ScriptableObject song song, nên không có hai nguồn lệch nhau.
 - **Đưa JSON vào bản build mà không dùng `Resources`:** `LevelCatalog` (một ScriptableObject) giữ danh sách id kèm tham chiếu `TextAsset` tới từng file, do công cụ trong Editor sinh lại tự động. Lớp nối của App giữ tham chiếu tới catalog (gán trong scene Boot), nên Unity đưa các file vào build theo chuỗi tham chiếu. Các ScriptableObject cấu hình cũng đi theo cách này.
 - **IL2CPP:** thêm `link.xml` giữ các kiểu DTO và bộ chuyển đổi JSON, để bước cắt code không xóa hàm khởi tạo mà Newtonsoft gọi qua reflection.
@@ -315,7 +323,8 @@ Yêu cầu: API không cấp phát khi đang chơi (bộ đệm dựng một l�
 
 ### 5.10 Cấu hình cân bằng
 
-- Mọi số trong đặc tả (ngưỡng 92%, tốc độ điểm sáng 68% bề rộng vải mỗi giây, cảnh cắt khi thắng nhắm 1,5 s, hệ số tốc độ theo chu vi kẹp 1,6–2,5 lần; dung sai ghim 4,3% nếu dùng ghim; vùng chọn 7,1% tới 19%, thời lượng trình diễn) nằm trong asset cấu hình, theo đơn vị bề rộng vải.
+- Mọi số trong đặc tả (ngưỡng 92%, tốc độ điểm sáng 68% bề rộng vải mỗi giây, cảnh cắt khi thắng nhắm 1,5 s, hệ số tốc độ theo chu vi kẹp 1,6–2,5 lần; snap khi thắng 0,4 bề rộng vải mỗi giây, 0,2–0,5 s; hút nhẹ về viền bán kính 3,5%, lực 0,5, trượt vào viền 0,12 s; kim gấp: hút trục 2,5%, lực 0,6, lật bung 0,9 s, dừng 0,3 s; dung sai ghim 4,3% nếu dùng ghim; vùng chọn 7,1% tới 19%; màu và độ đậm vùng tô; thời lượng trình diễn) nằm trong asset cấu hình, theo đơn vị bề rộng vải.
+- Tham số sinh vị trí ban đầu theo mức độ khó nằm trong `DifficultyTierConfig` (Data/Configs), chỉ Level Editor và trình kiểm tra dùng; game lúc chạy không cần.
 - Sau này có thể ghi đè từ remote config qua interface, không đổi nơi đọc.
 
 ### 5.11 Chuyển cảnh giữa Home và màn chơi
@@ -430,7 +439,7 @@ Tiền công, nâng cấp tiệm, lookbook, vải, câu chuyện khách, sự ki
 | Mốc | Nội dung | Cổng qua |
 | --- | --- | --- |
 | M0 Khung project | Thư mục, asmdef, ba scene, Boot và luồng scene, dịch vụ rỗng, CI dựng được bản trống | Project mở không lỗi, CI xanh |
-| M1 Lõi | Chuyển lõi bản thử sang `GraphNode.Core`; test EditMode với số liệu đối chiếu (100% cho đáp án, bảng độ nhạy, thứ tự ghim, đối xứng gương và đảo chiều) | Test xanh; đo thời gian tính trên Editor và một máy Android phổ biến |
+| M1 Lõi | Chuyển lõi bản thử sang `GraphNode.Core` (gồm hút nhẹ về viền, gấp vải, sinh vị trí ban đầu); test EditMode với số liệu đối chiếu (100% cho đáp án, bảng độ nhạy, thứ tự ghim, đối xứng gương và đảo chiều, lỗ của màn gấp, sinh lại cùng seed) | Test xanh; đo thời gian tính trên Editor và một máy Android phổ biến |
 | M2 Màn chơi tối thiểu | Một level đọc từ JSON, kéo tương đối, vùng tô và viền (thử hai cách vẽ, chọn một), thanh khớp, thắng | Chơi hết màn 1 trên thiết bị thật, giữ 60 fps khi kéo node |
 | M3 Luật đầy đủ | Điểm sáng (trang trí, nốt nhạc), chuỗi trình diễn, bảng kết quả; ghim và đảo chiều chỉ khi chốt dùng ghim | 4 màn của bản thử chơi được, khớp luật lõi của bản thử (không đối chiếu hình ảnh hay giao diện) |
 | M4 Nội dung và tiệm may | Level Editor, kiểm tra hàng loạt trong CI, khoảng 20 màn, tiến trình và save; màn Home khách ở quầy, bong bóng, thẻ đơn, chuyển cảnh cơ bản, khách nhận đồ | Kiểm tra hàng loạt xanh; lưu và tải lại đúng; chơi trọn một đơn từ Home |

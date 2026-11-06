@@ -204,7 +204,11 @@ Level là dữ liệu, không phải scene: một scene gameplay dùng chung t�
 | schemaVersion | int | Phiên bản cấu trúc file, để chuyển đổi khi đổi cấu trúc |
 | id, chapterId | string | Định danh và chương chứa màn |
 | targetShape | danh sách điểm (0–1) | Đường viền hình mẫu, chuẩn hóa theo khung vải. Level Editor sinh ra từ vòng lời giải (24 đoạn mỗi cạnh), không vẽ tay riêng; kiểm tra hàng loạt báo lỗi nếu lệch với lời giải |
-| nodes | id, startPos, solutionPos, type, locked | Vị trí ban đầu, một lời giải mẫu, loại thẳng hoặc cong, có bị khóa không |
+| nodes | id, startPos, solutionPos, type, locked | Vị trí ban đầu, một lời giải mẫu, loại thẳng hoặc cong, có bị khóa không. Node khóa nằm đúng `solutionPos`. `startPos` do Level Editor sinh theo độ khó rồi ghi vào file (mục Độ khó); game chỉ đọc, không sinh lúc chạy |
+| difficulty | `easy`, `medium`, `hard` | Mức độ khó, quyết định số node kéo được tối đa và quy luật sinh vị trí ban đầu (mục Độ khó) |
+| startSeed | int | Hạt giống của lần sinh vị trí ban đầu, để sinh lại đúng kết quả cũ |
+| startGenOverride | đối tượng, tùy chọn | Ghi đè từng tham số sinh của mức độ khó cho riêng màn này (khoảng lệch, khoảng độ khớp ban đầu, độ lệch kim) |
+| fold | đối tượng, tùy chọn | Màn gấp vải (mục Cơ chế gấp đôi vải): trục gấp, vị trí kim lúc đầu, các đoạn cắt `chains`. Khi có `fold`, `ring` là nửa hình khép dọc mép gấp |
 | ring | danh sách id node có thứ tự | Vòng node: mỗi cặp liền kề, kể cả cuối với đầu, là một cạnh vòng. Phải chứa mọi node, mỗi node đúng một lần |
 | innerEdges | cặp id node | Cạnh trong, nối thêm ngoài vòng; có thể rỗng |
 | markers | edge, t, kind | Ghim trên viền mẫu (mục Ghim); có thể rỗng, bản đầu chưa dùng |
@@ -236,7 +240,23 @@ File JSON là bản gốc của level: Level Editor đọc và ghi thẳng JSON,
 
 ### Độ khó
 
-Các nút vặn độ khó: số node (3 đến 10), tỷ lệ điểm cong, số cạnh bên trong, số node bị khóa, độ xa giữa vị trí ban đầu và lời giải, độ phức tạp của hình mẫu, và ngưỡng thắng. Đường cong độ khó dạng răng cưa: cứ 4–5 màn có một màn "aha" khó hơn và một màn nghỉ dễ hơn.
+Các nút vặn độ khó: số node của hình (3 đến 10), số node kéo được (theo mức độ khó bên dưới), tỷ lệ điểm cong, số cạnh bên trong, số node bị khóa, độ xa giữa vị trí ban đầu và lời giải, độ phức tạp của hình mẫu, và ngưỡng thắng. Đường cong độ khó dạng răng cưa: cứ 4–5 màn có một màn "aha" khó hơn và một màn nghỉ dễ hơn.
+
+#### Mức độ khó và sinh vị trí ban đầu (đã chốt 2026-11-06)
+
+Mỗi level chọn một mức độ khó. Mức độ khó quyết định **số node người chơi phải kéo** (các node còn lại khóa đúng vị trí lời giải) và **quy luật sinh vị trí ban đầu** cho các node kéo được. Đã thử trên bản web: mọi màn hiện có đặt ở mức dễ.
+
+| Mức | Node kéo được tối đa | Độ lệch mỗi node khỏi chỗ đúng | Độ khớp ban đầu | Kim lệch khỏi trục (màn gấp) |
+| --- | --- | --- | --- | --- |
+| Dễ | 3 | 6–12% bề rộng vải | 55–85% | 5–8% |
+| Vừa | 6 | 12–22% | 40–70% | 8–14% |
+| Khó | 9 | 20–35% | 25–50% | 12–20% |
+
+- **Cách sinh:** mỗi node kéo được lệch khỏi vị trí đúng một khoảng ngẫu nhiên trong khoảng của mức, theo hướng ngẫu nhiên; node trên mép gấp chỉ lệch dọc mép. Giữ trong khung vải (cách mép 6%), các node kéo được cách mọi node khác tối thiểu 7%. Tính độ khớp ban đầu; ngoài khoảng của mức thì sinh lại, tự nới hoặc thu độ lệch sau mỗi lần trượt. Cận trên của độ khớp ban đầu luôn thấp hơn ngưỡng thắng của level ít nhất 8 điểm để không thắng ngay.
+- **Màn gấp:** kim lệch về phía nửa vải đang có, không lấn qua node khóa; node viền ngoài không sinh trong đoạn lỗ.
+- **Tất định:** sinh từ `startSeed`, cùng seed và cùng tham số thì ra cùng vị trí. Kết quả ghi vào file level; game không sinh lúc chạy.
+- **Chỉnh được trong Editor:** mọi số trong bảng (số node tối đa, khoảng lệch, khoảng độ khớp, độ lệch kim, khoảng cách tối thiểu, lề khung) nằm trong ScriptableObject `DifficultyTierConfig`, mở rộng hay thêm mức mới không cần sửa code. Từng level có thể ghi đè bằng `startGenOverride`. Số trong bảng là giá trị khởi đầu đã thử trên bản web.
+- **Chọn node kéo được:** người thiết kế chọn trong Level Editor; công cụ báo lỗi nếu vượt số tối đa của mức.
 
 Đề xuất 10 màn đầu:
 
@@ -258,8 +278,8 @@ Các nút vặn độ khó: số node (3 đến 10), tỷ lệ điểm cong, s�
 - **Nhập hình mẫu:** từ đường path SVG, hoặc vẽ tay rồi làm mượt.
 - **Dựng graph:** đặt node, nối cạnh, chọn loại điểm, đánh dấu node khóa, kéo node vào vị trí lời giải.
 - **Tối ưu lời giải:** nút tự dịch node từng chút để điểm khớp cao nhất. Thử nghiệm trước đó: trái tim 8 node đạt khoảng 97%.
-- **Xáo trộn:** tạo vị trí ban đầu ngẫu nhiên có ràng buộc: điểm khớp ban đầu 30–60%, các node không chồng lên nhau.
-- **Kiểm tra hàng loạt:** mọi level có lời giải vượt ngưỡng, vị trí ban đầu chưa vượt ngưỡng.
+- **Sinh vị trí ban đầu theo độ khó:** chọn mức độ khó và node kéo được, bấm Sinh (đổi seed để ra phương án khác), xem trước độ khớp ban đầu; chỉnh tham số ghi đè ngay trong Editor. Quy luật ở mục Mức độ khó và sinh vị trí ban đầu.
+- **Kiểm tra hàng loạt:** mọi level có lời giải vượt ngưỡng, vị trí ban đầu chưa vượt ngưỡng; số node kéo được không vượt mức độ khó; độ khớp ban đầu nằm trong khoảng của mức (hoặc của phần ghi đè); node khóa đúng vị trí lời giải; sinh lại từ `startSeed` ra đúng `startPos` đã lưu. Màn gấp thêm: hình mẫu đặt giữa khung, kim lúc đầu trong khoảng đi được, node viền ngoài không nằm trong đoạn lỗ, thiếu lỗ thì không đạt ngưỡng.
 - **Đề xuất ngưỡng thắng:** công cụ đo độ khó của hình rồi gợi ý `winThreshold` cho người thiết kế level. Cách đo: xê dịch ngẫu nhiên mọi node không khóa quanh lời giải một khoảng nhỏ (ví dụ 0,02 như bảng độ nhạy), lặp vài trăm lần, ghi phân bố điểm khớp; tính thêm tỉ số chu vi²/diện tích của hình mẫu để cảnh báo hình mảnh. Công cụ chỉ gợi ý; người thiết kế xem, chốt và ghi vào file level, rồi chạy kiểm tra hàng loạt. Số lần lặp, khoảng xê dịch và cách quy từ phân bố ra ngưỡng: cần chốt.
   - **Đã chốt:** ngưỡng là dữ liệu cố định của từng level. Game không tự đổi ngưỡng lúc chạy và không chỉnh theo từng người chơi.
 
@@ -396,7 +416,9 @@ Font: Baloo 2, hỗ trợ đầy đủ tiếng Việt.
 - **Hình mẫu:** bóng mờ nét đứt trên vải, kèm thẻ nhỏ phía trên.
 - **Đường cắt (viền ngoài):** nét đứt đậm như phấn may, nét chạy chậm để trông sống.
 - **Cạnh bên trong:** nét mảnh, độ mờ khoảng 35%, cho thấy chúng không bị cắt.
-- **Node:** điểm thẳng là ô vuông bo góc trắng, điểm cong là chấm tròn màu hồng; node bị khóa có thêm ghim kim may và viền xám.
+- **Node:** điểm thẳng là tam giác màu kem, điểm cong là chấm tròn màu hồng (đã chốt khi làm bản web); node bị khóa có thêm ghim kim may và viền xám.
+  - **Viền sáng quanh node (đã chốt 2026-11-06):** mọi node có một vòng trắng kem mỏng 1,5 px, hơi trong (độ đậm khoảng 70%), bên ngoài nét mực (số tạm). Viền chỉ vừa đủ để nhận thấy, không cần nổi rõ (bản 3 px đã thử và thấy quá rõ); mục đích là để node tách khỏi mọi nền: vải, vùng tô hồng, lớp mờ của nửa gấp. Các hướng khác để node dễ nhìn (node to hơn, màu tương phản hơn, bóng đổ, node khóa nhạt hơn, nhún nhẹ lúc mở màn, cạnh nhạt hơn) người dùng đang cân nhắc, chưa làm.
+- **Khung vải:** bản web để tấm vải rộng khoảng 93% chiều ngang màn hình dọc cho node và viền dễ nhìn, dễ chạm; bố cục bản chính theo mẫu giao diện của người dùng.
 - **Thanh khớp:** nằm phía trên vải, cạnh thẻ hình mẫu.
 
 ### Dựng hình
@@ -618,6 +640,22 @@ Vì vậy ngưỡng 92% chỉ dễ chịu với hình đủ to. Với hình nh�
 - **Sản phẩm:** mỗi màn lấp một ô trong bộ vải ghép 4 ô.
 - **Trên màn hình:** thêm bảng kết quả sau mỗi màn (thời gian, lần kéo, gợi ý, đặt lại) so với mục tiêu 30–90 giây, và ô bật để hiện % khớp thật.
 
+### Ngưỡng các mảnh của bản web (đã chốt 2026-11-06)
+
+Người dùng chỉnh tay bằng bảng ngưỡng trên bản web rồi chốt (các mảnh 90% sau đó nâng lên 92%); số đã ghi thẳng vào dữ liệu level của bản web để ai mở link cũng dùng cùng số. Dùng làm giá trị đối chiếu khi dựng các màn tương tự trong bản chính, không thay ngưỡng mặc định 92% của các màn khác. Tất cả đang ở mức độ khó dễ.
+
+| Mảnh | Ngưỡng | Node kéo được |
+| --- | --- | --- |
+| Mũ nấm | 92% | 3 |
+| Thân nấm | 95% | 3 |
+| Viên kem | 92% | 3 |
+| Ốc quế (tam giác 3 node) | 92% | 2 |
+| Thân áo khoác | 95% | 3 |
+| Áo lót trong | 92% | 3 |
+| Cổ áo | 92% | 3 |
+| Trái tim gấp đôi | 92% | 3 (cùng cây kim) |
+| Trái tim khoét lỗ | 92% | 3 (cùng cây kim) |
+
 ### Link bản thử
 
 - [Bản thử gốc: kéo tương đối, 4 màn, tô đầy, điểm chạy, ghim](https://claude.ai/artifact/B9DyTodTCCdETv1esSkSFf) (demo luật lõi; không phải gốc cho hình ảnh, giao diện hay meta)
@@ -697,10 +735,12 @@ Tấm vải gấp đôi qua một cây kim làm mép gấp; người chơi chỉ
   - Mép gấp vẽ thành cây kim (lỗ kim và sợi chỉ ở một đầu, mũi kim ở đầu kia), có hai mũi tên nhỏ báo hướng đi được.
   - Kim chỉ đi theo chiều vuông góc với chính nó; hướng mũi kim quyết định chiều đi (kim dọc thì đi trái phải, kim ngang thì đi lên xuống, kim chéo thì đi theo đường chéo vuông góc). Bản đầu chỉ có kim dọc, không xoay.
   - Kéo kim thì phần gương xem trước đổi ngay theo. Node trên mép gấp chạy theo kim. Kim không lấn qua các node phía trước (xem khoảng kim đi được).
-  - Vai trò giải đố: hình mẫu có thể lệch tâm, nên người chơi phải tìm đúng trục trước. Đặt kim sai trục thì không bao giờ đạt ngưỡng (bản thử: kim lệch 3% bề rộng vải tốt nhất chỉ khoảng 82–87%).
+  - **Hình gấp đặt giữa khung (đã chốt 2026-11-05):** trục đối xứng của hình mẫu luôn trùng giữa khung vải theo chiều kim đi. Lý do: kim không vuốt quá nửa tấm vải (gấp đôi đúng giữa), nên chỉ khi hình ở giữa khung thì chỗ xa nhất kim đi được mới trùng trục của hình; hình lệch thì kim vượt qua giữa hình, nhìn như lỗi (đã thử với trục 47%). Kim bắt đầu lệch, người chơi kéo về giữa, lực hút báo khi khớp. Thử thách chính của màn gấp là xếp node và khoét lỗ; bước tìm trục để dành cho cơ chế kim xoay (mục Tiềm năng phát triển sau).
   - **Thanh gạt dài (đã chốt hướng 2026-11-05):** ngoài khung vải, song song với chiều kim đi, có một thanh gạt dài; núm gạt luôn thẳng hàng với cây kim và nối lên mép vải bằng nét đứt. Người chơi vuốt thanh này để dời kim cho rõ, không phải chạm trúng cây kim mảnh trên vải. Chạm thẳng vào cây kim vẫn kéo được; chạm vào node được ưu tiên hơn chạm vào kim.
   - **Hút nhẹ về đúng trục (đã chốt 2026-11-05):** khi kim tới gần trục lời giải thì bị hút nhẹ, có tiếng tick và rung ngắn lúc vừa lọt vào, núm gạt sáng chấm vàng ở chỗ trục; thả tay trong vùng hút thì kim đặt hẳn vào trục. Cái giá chấp nhận được: lộ vị trí trục khi quét kim qua, đổi lại không phải canh tay từng điểm phần trăm và cảm giác giống lực hút của node. Giữ công tắc trong cấu hình để màn khó có thể tắt.
-  - **Khoảng kim đi được (đã chốt 2026-11-05):** vải đang gấp nên kim không vuốt vượt quá nửa hình: kim dừng trước node xa nhất phía trước kim (cách 2% bề rộng vải), không đẩy node theo. Kim cũng không đi xa tới mức nửa gương lọt ra ngoài vải (bản gương của node xa nhất phải nằm trong 98% bề rộng vải); node thường cũng không kéo xa tới mức bản gương ra ngoài vải. Thanh gạt tô đậm đoạn kim đi được lúc đó.
+  - **Khoảng kim đi được (đã chốt 2026-11-05):** kim không vuốt quá **nửa bề rộng tấm vải** theo chiều kim đi: gấp đúng giữa là nếp gấp cho phần gấp lớn nhất, gấp quá giữa thì không gấp được. Phía còn lại, kim dừng trước node xa nhất phía trước kim (cách 2% bề rộng vải), không đẩy node theo. Node thường cũng không kéo xa tới mức bản gương ra ngoài vải. Vì vậy hình gấp luôn đặt giữa khung (xem trên).
+  - **Thanh gạt chỉ hiện đoạn đi được:** rãnh thanh gạt chỉ vẽ đúng đoạn kim đi được lúc đó (đổi theo vị trí node), không vẽ phần không tới được; chạm cũng chỉ nhận trên đoạn này.
+  - **Bóng nếp gấp:** dọc cây kim có bóng tối nhẹ phía nửa vải đang có và một viền sáng mảnh phía nửa gấp, để nhìn rõ nếp gấp.
   - Bản thử: vùng chạm kim rộng 6,5% bề rộng vải mỗi bên (đủ 44 pt); thanh gạt cao 52 pt vùng chạm; kim đi trong khoảng 25–85% bề rộng vải, mỗi 2,5% phát tiếng tick nhỏ; hút trục bán kính 2,5% bề rộng vải, lực tối đa 0,6 (số tạm).
 - **Luật kéo node:** node chỉ nằm ở nửa vải phía trước kim. Node trên mép gấp khóa vào mép, chỉ trượt dọc mép (đã chốt 2026-11-05). Node khóa (ghim) nằm trên mép gấp thì đứng yên theo chiều dọc mép nhưng vẫn chạy theo kim, vì nó thuộc nếp gấp. Lực hút nhẹ áp cho mọi node kéo được, kể cả node trên mép gấp (đã chốt 2026-11-05): node mép gấp chỉ trượt dọc kim nên chỉ hút theo chiều dọc kim, về chỗ viền mẫu cắt ngang đường kim gần nhất; cùng bán kính, lực, tiếng tick và cách đặt hẳn khi thả tay như node thường. Node trên mép gấp nằm trong phạm vi cây kim (từ lỗ kim tới mũi kim), trùng với đường chỉ viền của tấm vải.
   - **Node mép gấp kéo tự do dọc kim (2026-11-05):** đã thử giới hạn node mép gấp theo thứ tự dọc kim (không kéo xuyên qua đoạn lỗ) và bỏ; node mép gấp đi tự do trong phạm vi cây kim như node thường.
@@ -712,8 +752,8 @@ Tấm vải gấp đôi qua một cây kim làm mép gấp; người chơi chỉ
   - **Lật bung:** nửa gấp xoay quanh kim từ úp ra mở hẳn, mặt trái vải tối hơn khi còn úp, kèm tiếng sột soạt. **Không vẽ node** trong lúc lật (đã chốt 2026-11-05): cắt xong thì node biến mất, chỉ còn miếng vải, đồng nhất với chuỗi thắng của màn thường. Trong lúc lật, mảnh nhấc dần lên đúng tư thế đầu bước đổ màu (cao hơn và to hơn một chút như bước nhấc của màn thường).
   - **Nối sang đổ màu (đã chốt 2026-11-05):** mở hẳn thì lấp lánh nhẹ (ít hạt hơn bước đổ màu, một nốt cao nhỏ, rung rất ngắn) và dừng một nhịp ngắn để người chơi kịp thấy cả hình vừa mở, rồi sang bước đổ màu và bay vào ô như màn thường. Bước nhấc lên riêng được gộp vào nhịp lật. Bản thử: lật 0,9 s, dừng 0,3 s (số tạm). Đã thử bỏ hẳn nhịp dừng và lấp lánh: chuyển quá nhanh, người chơi không kịp hiểu vừa có chuyện gì.
 - **Màn thưởng:** ghép **mảnh đã mở** (đã chốt 2026-11-05); chỉ khâu chạy theo cả viền ngoài và viền lỗ.
-- **Số liệu bản thử:** trái tim thường 4 node (2 node tròn, 2 node tam giác trên mép gấp), kim đầu ở 42%, trục 50%, khớp ban đầu 35%; trái tim khoét lỗ 8 node (4 trên mép gấp; khóa 2 node tròn viền ngoài làm mốc và 2 node tam giác đầu, cuối vòng ghim trên mép gấp; 4 node kéo được), lỗ thu nhỏ 0,42 lần hình trái tim thường, kim đầu ở 50%, trục lệch tâm 55%, khớp ban đầu 56%, thiếu lỗ chỉ khoảng 86%; cả hai ngưỡng 92%. Mỗi nửa trái tim chỉ cần 2 node tròn (đỉnh thùy, sườn) là đủ ra hình, node tròn thứ ba đã bỏ vì thừa.
-- **Cần chốt:** gấp vải xuất hiện từ màn nào và cách dạy lần đầu (quyết khi dựng chuỗi màn thật). Ngưỡng từng mảnh người dùng còn đang chỉnh trên bản web.
+- **Số liệu bản thử:** trái tim thường 4 node (2 node tròn, 2 node tam giác trên mép gấp), kim đầu ở 42%, trục 50%, khớp ban đầu 35%; trái tim khoét lỗ 8 node (4 trên mép gấp; khóa 2 node tròn viền ngoài làm mốc và 2 node tam giác đầu, cuối vòng ghim trên mép gấp; 4 node kéo được), lỗ thu nhỏ 0,42 lần hình trái tim thường, kim đầu ở 40%, trục giữa khung 50%, khớp ban đầu 41%, thiếu lỗ chỉ khoảng 86%; cả hai ngưỡng 92%. Mỗi nửa trái tim chỉ cần 2 node tròn (đỉnh thùy, sườn) là đủ ra hình, node tròn thứ ba đã bỏ vì thừa.
+- **Cần chốt:** gấp vải xuất hiện từ màn nào và cách dạy lần đầu (quyết khi dựng chuỗi màn thật). Ngưỡng hai mảnh trái tim đã chốt 92% (mục Ngưỡng các mảnh của bản web).
 
 ### Ý tưởng chưa hoàn thiện: mặt nạ phần bị cắt bỏ
 
@@ -727,6 +767,6 @@ Các hướng có thể phát triển, chưa làm trong bản đầu.
 
 Hai cơ chế gấp vải khó, chưa làm trong màn 4, để dành cho các màn về sau:
 
-- **Xoay mũi kim:** người chơi xoay được cây kim, nên phải tìm cả góc lẫn vị trí của trục đối xứng. Hướng đi của kim vẫn theo luật chung: luôn vuông góc với hướng mũi kim. Hình mẫu đối xứng qua trục chéo hoặc trục khó nhận ra. Cần chốt: xoay tự do hay theo bậc góc; cách điều khiển xoay bằng một ngón (ví dụ kéo đầu lỗ kim).
+- **Xoay mũi kim:** người chơi xoay được cây kim, nên phải tìm cả góc lẫn vị trí của trục đối xứng. Hướng đi của kim vẫn theo luật chung: luôn vuông góc với hướng mũi kim. Hình mẫu đối xứng qua trục chéo hoặc trục khó nhận ra; đây là nơi giữ bước "tìm trục" đã bỏ khỏi màn gấp thường. Giới hạn kim khi xoay phải tính lại (nửa tấm vải theo hướng kim đi) để không lộ đáp án. Cần chốt: xoay tự do hay theo bậc góc; cách điều khiển xoay bằng một ngón (ví dụ kéo đầu lỗ kim).
 - **Gấp hai lần:** vải gấp tư, người chơi chỉ xếp một phần tư; mở ra thành hình đối xứng bốn phía (bông tuyết, hoa bốn cánh). Kết hợp với khoét lỗ ở mép gấp để ra hoa văn ren. Hình mở ra = gộp bốn bản soi gương.
 - **Gấp chéo:** kim nằm chéo; người chơi phải xoay hình trong đầu. Cùng nền với xoay mũi kim.

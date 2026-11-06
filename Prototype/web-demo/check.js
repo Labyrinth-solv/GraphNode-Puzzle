@@ -1,4 +1,5 @@
 const GN = require('./web/core.js');
+require('./web/startgen.js');
 const LEVELS = require('./web/levels.js').LEVELS;
 for (const lv of LEVELS) {
   GN.prepare(lv);
