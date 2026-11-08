@@ -266,3 +266,20 @@ function pentaF(step, oct) {
   - Bỏ chốt giữa dư thừa, giảm từ 6 nodes $\to$ 5 nodes.
   - Mở rộng thân áo từ $87\text{px} \to 116\text{px}$, cạnh cong đáy đạt $116\text{px}$ ($58\text{px}$ vùng kéo uốn).
   - Vạt áo cong chữ U bo tròn mượt mà, cảm giác uốn dây phóng khoáng, đã tay và thỏa mãn.
+
+### 7.7. [ĐANG XEM XÉT / UNDER REVIEW] Tối Ưu Màn 3 (Trái Tim Khoét Lỗ): Giải Phóng Cụm Chốt Giữa & Kéo Uốn Vòm Vai Ngoài
+
+> **Trạng thái**: ĐANG XEM XÉT trên `Prototype/web-v2/`.
+
+- **Hiện tượng trên di động**:
+  - Tại Màn 3 (`heartHole`), cụm 4 đầu ghim gỗ ở trung tâm nằm san sát nhau ($40 - 49\text{px}$), gây cảm giác chật chội và dễ bấm nhầm.
+  - Sợi dây uốn cong được đặt ở mép trong lỗ khoét (Cạnh 5) chỉ dài $53.8\text{px}$, khi trừ $25\%$ vùng đệm ở mỗi đầu chốt chỉ còn $26.9\text{px}$ khả dụng. Ngón tay cái người chơi đè lên cả 2 chốt khiến việc kéo uốn bị chặn.
+- **Tiêu chuẩn Game Feel áp dụng**:
+  1. **Tận dụng cạnh cong chủ đạo có biên độ lớn**:
+     - Thay vì bắt người chơi uốn một đoạn dây cụt ngủn ở góc kẹt bên trong, chuyển trọng tâm tương tác sang **Vòm vai lớn bên ngoài (Cạnh 1)**.
+     - Chiều dài cạnh uốn cong tăng lên **$128.5\text{px}$** ($L = 0.355$). Vùng kéo uốn khả dụng $64.2\text{px}$ vượt trội so với kích thước ngón tay cái, mang lại cảm giác vuốt dây cực kỳ êm ái và đã tay.
+  2. **Giải phóng không gian thị giác (Visual Breathing Space)**:
+     - Phóng to lỗ khoét từ $42\% \to 55\%$, dãn cách các chốt ghim lên $\ge 58 - 71\text{px}$.
+     - Hai đầu ghim đối xứng qua nếp gấp cách nhau $91.9\text{px}$, không còn hiện tượng chốt ghim chồng lấn vào nhau.
+  3. **Khớp nối thành phẩm (Reward Screen Assembly)**:
+     - Tỉ lệ thu nhỏ của Mảnh 1 được đồng bộ chính xác với tỉ lệ lỗ khoét mới ($s = 0.55$, toạ độ `[118.0, 334.8, 154.0]`), đảm bảo trải nghiệm may vá mượt mà, thỏa mãn khi hoàn thành màn chơi.

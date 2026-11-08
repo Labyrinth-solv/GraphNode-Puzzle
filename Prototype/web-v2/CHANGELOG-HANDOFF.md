@@ -615,3 +615,24 @@ Theo yêu cầu của người dùng, cả 3 mảnh của **Màn 2 (`cardigan`)*
 >   - $L_{bendFree} \ge 0.28$ ($ge 100\text{px}$): Chiều dài tối thiểu của một cạnh có thể uốn cong.
 >   - Topology: 1 cạnh cong duy nhất cho 1 đường cong liên tục, không cắm node ở đỉnh vòm cong.
 >   - Canvas Coverage: Bề rộng mảnh ghép chiếm tối thiểu $45\% - 75\%$ khung tranh $362\text{px}$.
+
+### 12. [ĐANG XEM XÉT / UNDER REVIEW] Tối Ưu Lỗ Khoét Trái Tim (Màn 3) & Chuyển Uốn Cong Ra Vòm Vai Tim Ngoài
+
+> **Trạng thái**: ĐANG XEM XÉT (Đã áp dụng trên bản `Prototype/web-v2/`, chờ duyệt sau khi test thực tế trên mobile trước khi đồng bộ sang `web-v3`).  
+> **Vấn đề thực tế**: Tại Màn 3 mảnh "Trái tim khoét lỗ" (`heartHole`, index 6), cụm 4 chốt trung tâm (Node 0, 6, 7 và đối xứng) dồn toa trong bán kính chỉ $40 - 49\text{px}$, và đoạn dây uốn cong `bendFree: [5]` nằm bên trong lỗ chỉ dài $53.8\text{px}$ (vùng kéo uốn thực tế chỉ $26.9\text{px}$), khiến ngón tay cái ($45\text{px}$) bị che kín cả 2 chốt, hệ thống ưu tiên nhận diện chốt cố định khiến người chơi không kéo uốn được sợi dây.  
+> **Giải pháp Phương Án 1**:
+> 1. **Chuyển cạnh uốn cong ra Vòm Vai Ngoài (`bendFree: [1]`)**:
+>    - Cạnh 1 (nối Node 1 và Node 2) dài tới **$128.5\text{px}$** ($+139\%$ so với cạnh $53.8\text{px}$ cũ), đoạn giữa khả dụng kéo uốn đạt tới **$64.2\text{px}$**.
+>    - Thao tác kéo uốn vòm vai ngoài làm cả trái tim bung nở căng tròn, cảm giác đã tay, mãn nhãn và hoàn toàn tự do.
+> 2. **Phóng to lỗ khoét lên $55\%$ chuẩn tỉ lệ affine đồng dạng**:
+>    - Toàn bộ lỗ khoét trong được scale $0.55\text{x}$ với tâm dời $y_0 = 0.295$, mở rộng không gian trung tâm:
+>      - Node 4: `[0.50, 0.79]` (Chóp nhọn đáy lỗ trong)
+>      - Node 5: `[0.269, 0.526]` (Mép hông lỗ trong)
+>      - Node 6: `[0.373, 0.361]` (Vòm tai lỗ trong)
+>      - Node 7: `[0.50, 0.460]` (Đỉnh lõm lỗ trong)
+>    - Khoảng cách các chốt được giải tỏa: $L_{7-6} = 58.3\text{px}$, $L_{0-7} = 57.9\text{px}$, $L_{6-5} = 70.6\text{px}$, $L_{6-6'} = 91.9\text{px}$.
+> 3. **Cấu hình chốt tự nhiên**:
+>    - `free: [2, 3, 5]` (3 chốt kéo: hông ngoài 2, đáy ngoài 3, hông lỗ trong 5), tuân thủ tuyệt đối trần `easy` tier.
+>    - Cạnh lỗ trong (Cạnh 5) được tạo cong tự nhiên theo Catmull-Rom (`solBend = -0.0310`), không bắt người chơi phải uốn thủ công trong kẹt hẹp.
+> 4. **Màn Thưởng Ghép Hình**:
+>    - Mảnh 1 (Trái tim đặc) đặt lọt khít $100\%$ vào lỗ khoét mới: `place[5] = [118.0, 334.8, 154.0]` (tỉ lệ $280 \times 0.55 = 154$).
