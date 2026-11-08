@@ -589,3 +589,29 @@ Theo yêu cầu của người dùng, cả 3 mảnh của **Màn 2 (`cardigan`)*
   - Chạm sát đầu mút dây ($u = 0.12$): Dây bị chặn không kích hoạt.
 - **Smoke Test Toàn Diện (`Prototype/web-v2/smoke.js`)**:
   - Toàn bộ 5 sản phẩm (Kem, Cardigan, Trái tim gấp, Bé thỏ, Chậu hoa) với 13 màn chơi vượt qua $100\%$.
+
+
+---
+
+### 11. [ĐANG XEM XÉT / UNDER REVIEW] Bộ Quy Chuẩn Khoảng Cách An Toàn (Ergonomic Design Standards) & Tối Ưu Màn Áo Lót Trong (Cardigan Màn 2)
+
+> **Đang xem xét theo phản hồi người chơi (2026-11-08)**:
+> - **Vấn đề thực tế**: Tại Màn 2 (Áo lót trong, chuỗi Cardigan), 3 node ở đáy áo nằm quá gần nhau (khoảng cách chỉ $56.5\text{px}$), khiến đoạn dây nối giữa 2 node bị ngắn ngủn ($28.5\text{px}$ khả dụng). Khi người chơi kéo dây uốn cong trên điện thoại, ngón tay to đè kín cả 2 chốt và dây, gây khó chịu và dễ chạm nhầm.
+> - **Cải tiến triển khai (Phương Án 1 - Single U-Hem Curve)**:
+>   1. **Bỏ chốt chóp giữa dư thừa `[0.50, 0.94]`**: Thay vì chia đôi đường cong đáy thành 2 đoạn dây ngắn ngủn, chuyển thành **1 cạnh cong chữ U duy nhất** nối trực tiếp 2 góc đáy áo.
+>   2. **Mở rộng bề ngang thân áo từ $24\% \to 32\%$ ($87\text{px} \to 116\text{px}$)**:
+>      - Node 0: `[0.34, 0.06]` (Vai trái)
+>      - Node 1: `[0.50, 0.20]` (Cổ chữ V, khóa ghim vàng)
+>      - Node 2: `[0.66, 0.06]` (Vai phải)
+>      - Node 3: `[0.66, 0.84]` (Góc đáy phải)
+>      - Node 4: `[0.34, 0.84]` (Góc đáy trái)
+>   3. **Cạnh uốn cong vạt áo rộng rãi**:
+>      - Cạnh đáy nối Node 3 và Node 4 dài **$116\text{px}$** ($0.32$).
+>      - Đoạn giữa khả dụng để ngón tay kéo uốn đạt tới **$58\text{px}$** (rộng hơn hẳn ngón tay cái $45\text{px}$).
+>      - Uốn cong mềm mại `solBend = -0.0975` võng xuống đáy $Y \approx 0.94$, tạo dáng gấu áo bo tròn tuyệt đẹp.
+>   4. **Tương thích hoàn hảo với Màn Thưởng**: Cập nhật đường may ráp cardigan `seams: [[3, 2, 3], [3, 4, 0], [4, 4, 0]]`, đường may hai sườn áo ráp chuẩn xác $100\%$.
+> - **Thiết lập 4 Quy Tắc Vàng Khoảng Cách An Toàn (Ergonomic Golden Rules)**:
+>   - $L_{node-node} \ge 0.20$ ($ge 72\text{px}$): Khoảng cách tối thiểu giữa 2 chốt bất kỳ.
+>   - $L_{bendFree} \ge 0.28$ ($ge 100\text{px}$): Chiều dài tối thiểu của một cạnh có thể uốn cong.
+>   - Topology: 1 cạnh cong duy nhất cho 1 đường cong liên tục, không cắm node ở đỉnh vòm cong.
+>   - Canvas Coverage: Bề rộng mảnh ghép chiếm tối thiểu $45\% - 75\%$ khung tranh $362\text{px}$.

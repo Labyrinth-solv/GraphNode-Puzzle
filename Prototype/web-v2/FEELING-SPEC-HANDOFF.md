@@ -246,3 +246,23 @@ function pentaF(step, oct) {
   - **Lớp 3 - Bong bóng bảo vệ 2 đầu chốt ($R_{safe} = 0.085 \approx 31\text{px}$)**: Khi điểm chạm nằm ở khoảng trống lân cận ngoài vùng chốt, nếu khoảng cách tới một đầu chốt mở nhỏ hơn $0.085$, dây nối không được phép kích hoạt để tránh cướp cảm ứng lúc ngón tay bấm lệch rìa ngoài.
   - **Locked Node Pass-Through**: Chạm sát chốt đã khóa nhưng trúng đoạn giữa dây nối thì tự động uốn dây, tránh đơ thao tác.
 - **Trạng thái**: Đang áp dụng thử nghiệm trên **`Prototype/web-v2/`**; bản **`Prototype/web-v3/`** giữ nguyên chờ người chơi duyệt.
+
+
+### 7.6. [ĐANG XEM XÉT / UNDER REVIEW] Bộ Quy Chuẩn Thiết Kế Khoảng Cách An Toàn (Ergonomic Standards) & Tối Ưu Vạt Áo Chữ U
+
+- **Nguyên nhân cần chuẩn hóa**: Màn hình điện thoại có kích thước nhỏ ($390\text{px}$), trong khi ngón tay cái có diện tích tiếp xúc lớn ($44 - 50\text{px}$). Nếu khoảng cách giữa 2 node hoặc chiều dài cạnh uốn cong quá ngắn, ngón tay sẽ che lấp toàn bộ chi tiết và gây xung đột cảm ứng.
+- **Bảng quy chuẩn khoảng cách công thái học di động**:
+  1. **Khoảng cách giữa 2 Node ($L_{node-node}$)**:
+     - Tối thiểu tuyệt đối: $0.20$ ($72\text{px}$).
+     - Khuyến nghị: $0.25 - 0.35$ ($90 - 125\text{px}$).
+     - Đảm bảo 2 chốt thêu và ghim gỗ không chạm đè vào nhau.
+  2. **Chiều dài cạnh uốn cong ($L_{bendFree}$)**:
+     - Tối thiểu tuyệt đối: $0.28$ ($100\text{px}$).
+     - Đoạn giữa khả dụng ($u \in [0.25, 0.75]$) phải đạt $\ge 50\text{px}$ để vừa vặn tiết diện tiếp xúc của ngón tay cái.
+  3. **Nguyên tắc Topology đường cong**:
+     - Với đường cong liên tục (gấu áo bo tròn, cánh hoa, tai thỏ), dùng **1 cạnh cong duy nhất uốn `solBend`**, tuyệt đối không cắm thêm node ở đỉnh đường cong.
+     - Chỉ đặt node tại các điểm gãy góc nhọn $\ge 45^\circ$.
+- **Áp dụng thực tế trên Màn 2 (Áo lót trong)**:
+  - Bỏ chốt giữa dư thừa, giảm từ 6 nodes $\to$ 5 nodes.
+  - Mở rộng thân áo từ $87\text{px} \to 116\text{px}$, cạnh cong đáy đạt $116\text{px}$ ($58\text{px}$ vùng kéo uốn).
+  - Vạt áo cong chữ U bo tròn mượt mà, cảm giác uốn dây phóng khoáng, đã tay và thỏa mãn.
