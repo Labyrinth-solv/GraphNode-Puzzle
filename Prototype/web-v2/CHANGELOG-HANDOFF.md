@@ -616,9 +616,9 @@ Theo yêu cầu của người dùng, cả 3 mảnh của **Màn 2 (`cardigan`)*
 >   - Topology: 1 cạnh cong duy nhất cho 1 đường cong liên tục, không cắm node ở đỉnh vòm cong.
 >   - Canvas Coverage: Bề rộng mảnh ghép chiếm tối thiểu $45\% - 75\%$ khung tranh $362\text{px}$.
 
-### 12. [ĐANG XEM XÉT / UNDER REVIEW] Tối Ưu Lỗ Khoét Trái Tim (Màn 3) & Chuyển Uốn Cong Ra Vòm Vai Tim Ngoài
+### 12. [CHÍNH THỨC ĐÃ DUYỆT / OFFICIALLY APPROVED] Tối Ưu Lỗ Khoét Trái Tim (Màn 3) & Chuyển Uốn Cong Ra Vòm Vai Tim Ngoài
 
-> **Trạng thái**: ĐANG XEM XÉT (Đã áp dụng trên bản `Prototype/web-v2/`, chờ duyệt sau khi test thực tế trên mobile trước khi đồng bộ sang `web-v3`).  
+> **Trạng thái**: ĐÃ DUYỆT CHÍNH THỨC (Người dùng đã trải nghiệm thực tế trên mobile và duyệt chính thức).  
 > **Vấn đề thực tế**: Tại Màn 3 mảnh "Trái tim khoét lỗ" (`heartHole`, index 6), cụm 4 chốt trung tâm (Node 0, 6, 7 và đối xứng) dồn toa trong bán kính chỉ $40 - 49\text{px}$, và đoạn dây uốn cong `bendFree: [5]` nằm bên trong lỗ chỉ dài $53.8\text{px}$ (vùng kéo uốn thực tế chỉ $26.9\text{px}$), khiến ngón tay cái ($45\text{px}$) bị che kín cả 2 chốt, hệ thống ưu tiên nhận diện chốt cố định khiến người chơi không kéo uốn được sợi dây.  
 > **Giải pháp Phương Án 1**:
 > 1. **Chuyển cạnh uốn cong ra Vòm Vai Ngoài (`bendFree: [1]`)**:
@@ -636,3 +636,29 @@ Theo yêu cầu của người dùng, cả 3 mảnh của **Màn 2 (`cardigan`)*
 >    - Cạnh lỗ trong (Cạnh 5) được tạo cong tự nhiên theo Catmull-Rom (`solBend = -0.0310`), không bắt người chơi phải uốn thủ công trong kẹt hẹp.
 > 4. **Màn Thưởng Ghép Hình**:
 >    - Mảnh 1 (Trái tim đặc) đặt lọt khít $100\%$ vào lỗ khoét mới: `place[5] = [118.0, 334.8, 154.0]` (tỉ lệ $280 \times 0.55 = 154$).
+
+### 13. [ĐANG XEM XÉT / UNDER REVIEW] Nâng Cấp Khớp Dây Chuyền (Chained Wire Snap) & Hiển Thị Nút Kéo Dây Cục Bộ (Per-Edge Readiness)
+
+> **Trạng thái**: ĐANG XEM XÉT (Đã áp dụng trên bản `Prototype/web-v2/`, chờ kiểm tra thực tế trên mobile trước khi đồng bộ sang `web-v3`).  
+> **Vấn đề phản ánh từ người dùng**:
+> 1. Khi kéo đường cong khớp viền mẫu thì có phát âm thanh và phát sáng rất đã tay, nhưng khi kéo 1 node đang nối với 1 ghim khóa thì sợi dây nối với ghim không phát sáng và không có âm thanh khớp dây.
+> 2. Sau khi kéo node nối với ghim khóa, người chơi nhìn vào sợi dây thì thấy trơn tuột, nút cúc kéo uốn cong bị biến mất ("kéo dây không có nữa").
+>
+> **Nguyên nhân phát hiện**:
+> 1. `checkChainedEdgeSnaps` kiểm tra khoảng cách dựa trên tọa độ ngón tay thô (`rawP`) vốn bị lệch trên mobile, dẫn tới điều kiện snap dây chuyền bị từ chối. Ghim khóa (`locked`) bị đo khoảng cách sai thay vì tự động công nhận là đã neo chuẩn.
+> 2. Âm thanh nhịp bồi dây cũ quá nhỏ (bị tiếng cúc bấm chốt lấn át), thiếu tia sáng seam zip flash và độ nảy đàn hồi.
+> 3. Điều kiện vẽ nút cúc kéo dây (`drawPinchBeads`) và vầng hào quang viền (`drawBreathingCrescentGaps`) bắt buộc toàn bộ tất cả các chốt trong màn phải cắm hết mới xuất hiện, khiến sợi dây vừa nối xong bị trơ trọi.
+> 4. Dung sai neo `isEdgeAnchoredToPins` quá ngặt đối với ghim khóa và nhịp trượt settle của node.
+>
+> **Giải pháp triển khai trên `web-v2`**:
+> 1. **Khắc phục triệt để logic `checkChainedEdgeSnaps(d.i, d.magQ)`**:
+>    - So sánh trực tiếp theo tọa độ chốt đích đã hút nam châm (`d.magQ`).
+>    - Ghim khóa (`locked`) được tự động công nhận là đã neo chuẩn $100\%$ (`isPinAnchored`).
+>    - Ngay khi node cắm chốt: Tia sáng viền rực rỡ (`triggerSeamZip`) chạy dọc sợi dây từ ghim khóa sang chốt mới, dây nảy đàn hồi (`triggerEdgeBounce`), bụi tơ tằm li ti (`lint`) bay ra.
+>    - Hòa âm nhịp bồi: Sweep rút chỉ giòn tan (`sweep(0.12, 0.08, 1300, 3200, 0.05)`) kèm Kalimba ngân vang trễ $50\text{ms}$ cùng rung haptic `vib([6, 12, 8])`.
+> 2. **Hiển thị Nút Kéo Dây Cục Bộ (Per-Edge Readiness)**:
+>    - Xóa bỏ rào cản bắt buộc cắm đủ hết toàn màn.
+>    - Ngay khi **cả 2 đầu mút của cạnh cong đã vào vị trí** (ví dụ: Ghim khóa 1 + Node kéo 2 vừa cắm) $\to$ Nút bọ thêu cúc len (`drawPinchBeads`) và vầng hào quang viền (`drawBreathingCrescentGaps`) lập tức thở nhẹ và sáng lên trên sợi dây đó, mời gọi người chơi kéo uốn dây ngay tức thì!
+> 3. **Nới lỏng dung sai neo `isEdgeAnchoredToPins`**:
+>    - Tự động công nhận ghim khóa neo chuẩn, dung sai cho node kéo trùm toàn bộ bán kính nam châm $\le 0.10$ ($36\text{px}$), đảm bảo $100\%$ các lần uốn dây vào viền mẫu đều snap dính mượt mà và phát sáng đầy đủ.
+

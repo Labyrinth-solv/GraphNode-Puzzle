@@ -508,23 +508,35 @@
   }
 
   // Kiểm tra hai đầu mút của cạnh k có đang được cắm chính xác vào hai chốt mục tiêu hay không
-  function isEdgeAnchoredToPins(k) {
+  function isPinAnchored(nodeIdx, targetQ) {
     var lv = LV[S.li] ? LV[S.li].def : null;
-    if (!lv || !lv.ring || !lv.sol) return false;
+    if (!lv || !lv.sol) return false;
+    var fo = foldOf();
+    if (onFold(nodeIdx)) {
+      if (fo && Math.abs(S.foldX - fo.solX) > 0.025) return false;
+    }
+    if (locked(nodeIdx)) return true;
+    var p = (targetQ && nodeIdx === targetQ.i) ? targetQ.pos : S.pos[nodeIdx];
+    if (!p) return false;
+    var d = Math.hypot(p[0] - lv.sol[nodeIdx][0], p[1] - lv.sol[nodeIdx][1]);
+    return d <= PIN_MAG_R + 0.025; // trùm toàn bộ bán kính nam châm và nhịp settle
+  }
+
+  // Kiểm tra hai đầu mút của cạnh k có đang được cắm chính xác vào hai chốt mục tiêu hay không
+  function isEdgeAnchoredToPins(k, targetQ) {
+    var lv = LV[S.li] ? LV[S.li].def : null;
+    if (!lv || !lv.ring) return false;
     var r = lv.ring, n = r.length;
     var ra = r[k], rb = r[(k + 1) % n];
-    var da = Math.hypot(S.pos[ra][0] - lv.sol[ra][0], S.pos[ra][1] - lv.sol[ra][1]);
-    var db = Math.hypot(S.pos[rb][0] - lv.sol[rb][0], S.pos[rb][1] - lv.sol[rb][1]);
-    return (da <= PIN_SNAP_R + 0.015) && (db <= PIN_SNAP_R + 0.015);
+    return isPinAnchored(ra, targetQ) && isPinAnchored(rb, targetQ);
   }
 
   // Tìm các cạnh kề với node vừa cắm mà cạnh đó vừa chính thức khép kín và khớp hoàn toàn vào viền mẫu
-  function checkChainedEdgeSnaps(nodeIdx) {
+  function checkChainedEdgeSnaps(nodeIdx, targetPos) {
     var lv = LV[S.li] ? LV[S.li].def : null;
     if (!lv || !lv.ring || !lv.sol) return [];
-    // Đảm bảo chính node vừa thả cũng đã nằm đúng trong chốt mục tiêu của nó
-    var dNode = Math.hypot(S.pos[nodeIdx][0] - lv.sol[nodeIdx][0], S.pos[nodeIdx][1] - lv.sol[nodeIdx][1]);
-    if (dNode > PIN_SNAP_R + 0.015) return [];
+    var tQ = { i: nodeIdx, pos: targetPos || S.pos[nodeIdx] };
+    if (!isPinAnchored(nodeIdx, tQ)) return [];
 
     var r = lv.ring, n = r.length;
     var completed = [];
@@ -532,9 +544,8 @@
       var ra = r[k], rb = r[(k + 1) % n];
       if (ra === nodeIdx || rb === nodeIdx) {
         var oth = (ra === nodeIdx ? rb : ra);
-        // Kiểm tra xem đầu mút kia đã cắm đúng chốt mục tiêu của nó chưa
-        var dOth = Math.hypot(S.pos[oth][0] - lv.sol[oth][0], S.pos[oth][1] - lv.sol[oth][1]);
-        if (dOth <= PIN_SNAP_R + 0.015) {
+        // Kiểm tra xem đầu mút kia đã cắm đúng chốt mục tiêu của nó chưa (ghim khóa tự động coi là đã neo)
+        if (isPinAnchored(oth, tQ)) {
           // Kiểm tra độ cong của cạnh này có đang khớp với viền mẫu không
           var curH = S.bend ? (S.bend[k] || 0) : 0;
           var solH = lv.solBend ? (lv.solBend[k] || 0) : 0;
@@ -1025,16 +1036,24 @@
       S.ripples.push({ x: X(d.magQ[0]), y: Y(d.magQ[1]), t0: now(), c: C.mustard, world: true });
 
       // NHỊP BỒI TRỖI DÂY (Chained Edge Snap): Nếu cạnh nối với chốt này vừa được hoàn tất khớp viền
-      var chainedEdges = checkChainedEdgeSnaps(d.i);
+      var chainedEdges = checkChainedEdgeSnaps(d.i, d.magQ);
       if (chainedEdges.length > 0) {
         var tSnap = now() + 0.05;
         chainedEdges.forEach(function (ek) {
           triggerSeamZip(ek, 0.5, tSnap);
           triggerEdgeBounce(ek, 1, tSnap);
+          var lvDef = LV[S.li] ? LV[S.li].def : null;
+          if (lvDef && lvDef.ring) {
+            var ra = lvDef.ring[ek], rb = lvDef.ring[(ek + 1) % lvDef.ring.length];
+            var pA = S.pos[ra], pB = S.pos[rb];
+            var mx = (pA[0] + pB[0]) * 0.5, my = (pA[1] + pB[1]) * 0.5;
+            lint(X(mx), Y(my), -Math.PI / 2, 4);
+          }
         });
-        // Âm bồi rút chỉ vải thanh thoát êm dịu trễ 50ms
-        sweep(0.10, 0.05, 1400, 3000, 0.05);
-        pluck(pentaF(step + 1, 0), 0.065, 0.055);
+        // Âm bồi rút chỉ may giòn tan thanh thoát kèm nốt Kalimba ngân vang trễ 50ms
+        sweep(0.12, 0.08, 1300, 3200, 0.05);
+        pluck(pentaF(step + 1, 0), 0.10, 0.055);
+        vib([6, 12, 8]);
       }
       return;
     }
@@ -2341,8 +2360,7 @@
     var lv = LV[S.li];
     if (!lv || !lv.def || !lv.def.bendFree || !lv.def.bendFree.length) return;
     var def = lv.def;
-    var pinSt = checkPins(def, S.pos);
-    if (!pinSt.allFilled || !areAllPinsInCorrectPosition(def, S.pos) || S.iouV >= S.thr) return;
+    if (S.iouV >= S.thr) return;
     if (S.phase !== 'play' && S.phase !== 'verify') return;
     // Chỉ gợi ý sau khi người chơi đã thả tay cắm chốt cuối hoàn toàn (không còn drag hay settle node)
     if (S.drag !== null || S.settle !== null) return;
@@ -2357,6 +2375,7 @@
 
     for (var bi = 0; bi < def.bendFree.length; bi++) {
       var k = def.bendFree[bi];
+      if (!isEdgeAnchoredToPins(k)) continue;
       var solH = def.solBend ? (def.solBend[k] || 0) : 0;
       var curH = S.bend ? (S.bend[k] || 0) : 0;
       var bendErr = Math.abs(curH - solH);
@@ -2470,8 +2489,7 @@
     var lv = LV[S.li];
     if (!lv || !lv.def || !lv.def.bendFree || !lv.def.bendFree.length) return;
     var def = lv.def;
-    var pinSt = checkPins(def, S.pos);
-    if (!pinSt.allFilled || !areAllPinsInCorrectPosition(def, S.pos) || S.iouV >= S.thr) return;
+    if (S.iouV >= S.thr) return;
     if (S.phase !== 'play' && S.phase !== 'verify') return;
     // Chỉ gợi ý sau khi người chơi đã thả tay cắm chốt cuối hoàn toàn (không còn drag hay settle node)
     if (S.drag !== null || S.settle !== null) return;
@@ -2486,6 +2504,7 @@
 
     for (var bi = 0; bi < def.bendFree.length; bi++) {
       var k = def.bendFree[bi];
+      if (!isEdgeAnchoredToPins(k)) continue;
       var solH = def.solBend ? (def.solBend[k] || 0) : 0;
       var curH = S.bend ? (S.bend[k] || 0) : 0;
       var bendErr = Math.abs(curH - solH);
