@@ -459,3 +459,133 @@ Theo yêu cầu của người dùng, cả 3 mảnh của **Màn 2 (`cardigan`)*
 >    - `humUpdate`: Nâng biên độ cọ vải khi kéo dây lên $2.0\text{x}$.
 > 3. **Kết quả trải nghiệm**:
 >    - Người chơi chỉ cần để âm lượng điện thoại ở mức trung bình ($40\% - 50\%$) là âm thanh đã phát ra rõ ràng, đầm ấm, trong trẻo và giữ trọn vẹn chất mộc mạc của theme thủ công may vá.
+
+---
+
+### 9. Đột Phá Công Thái Học Di Động: Micro-Breathing Focus Lens (1.04x), Nhấc Bóng Vật Lý 3D & Touch Y-Offset ("Lifted Anchor")
+
+> **Cập nhật ngày 2026-11-07 theo phê duyệt chính thức giải pháp Hướng 3**:
+> Khi trải nghiệm game trên điện thoại di động, kích thước màn hình nhỏ và ngón tay cái to khiến việc thao tác kéo ghim / uốn dây dễ bị ngón tay che khuất (Touch Occlusion), đồng thời người chơi khó chiêm ngưỡng các hiệu ứng vi mô tinh tế.
+> Ban đầu đề xuất zoom $1.25\text{x}$ kèm Camera Pan $\pm 42\text{px}$ bị người chơi phản hồi là **quá gắt, dễ gây choáng và khó chịu do thế giới trôi dạt**.
+> Sau khi phân tích sâu về Game Feel & thị giác ngoại vi, giải pháp **Hướng 3: Micro-Breathing Focus Lens ($1.04\text{x}$) + Nhấc bóng vật lý 3D + Khóa cứng Pan = 0** đã được triển khai và người chơi **chính thức phê duyệt**:
+
+```
+                               ┌────────────────────────────────────────────────┐
+                               │       CÔNG THÁI HỌC DI ĐỘNG (PORTRAIT)         │
+                               └───────────────────────┬────────────────────────┘
+                                                       │
+         ┌─────────────────────────┬───────────────────┴───────────────┬────────────────────────┐
+         ▼                         ▼                                   ▼                        ▼
+┌──────────────────┐     ┌──────────────────┐               ┌──────────────────┐     ┌──────────────────┐
+│  Touch Y-Offset  │     │  Micro-Breathing │               │ Nhấc Bóng 3D     │     │  Hitbox & Node   │
+│ ("Lifted Anchor")│     │    Focus Lens    │               │  (Lifted Shadow) │     │ Visual Expansion │
+│  Node nâng cao   │     │  1.0x ↔ 1.04x    │               │  Node nở +15%    │     │  R 10.5 → 13.5px │
+│ 22px trên ngón   │     │  Pan = 0 (Tĩnh)  │               │  Bóng tách 6.5px │     │ Pick 0.088→0.22  │
+└──────────────────┘     └──────────────────┘               └──────────────────┘     └──────────────────┘
+```
+
+#### 1. Trụ cột 1: Nâng Chốt Nổi Khỏi Đầu Ngón Tay (Touch Y-Offset – 22px)
+- **Nguyên lý**: Ngón tay cái người chơi che khuất diện tích khoảng $30 - 45\text{px}$. Nếu node nằm chính xác dưới đầu ngón tay thì toàn bộ chốt mục tiêu, hoa văn và đường viền bên dưới sẽ bị che lấp.
+- **Giải pháp chuyển tiếp êm ái (Smooth Ramp-up)**:
+  - Khi mới chạm ngón tay (`dragDist = 0`): Độ dời bằng $0\text{px}$, node nằm đúng vị trí chạm ban đầu, **hoàn toàn không giật nảy**.
+  - Khi ngón tay bắt đầu di chuyển vượt $14\text{px}$ (`dragDist / 14`): Độ dời nâng dần lên $-22\text{px}$ trên trục $Y$. Chốt tròn và đầu ghim nổi cao lên trên ngón tay khoảng $22\text{px}$ (vừa vặn nằm ngay phía trên đầu móng tay, không bị che khuất và không có cảm giác bay quá xa).
+- **Đồng bộ vị trí logic & trực quan (Zero Dissonance)**:
+  - Tọa độ logic cắm chốt và xét hút nam châm tính theo đúng vị trí hình ảnh nổi mà người chơi đang nhìn thấy. Bạn thấy node ở đâu thì thả tay chốt sẽ cắm chính xác tại đó!
+  - Sợi chỉ nối ngón tay (`drawWire`): Nối sợi chỉ đứt nét mộc mạc từ điểm tiếp xúc ngón tay lên đầu chốt đang bay, tạo cảm giác như ngón tay đang cầm dây kéo một con rối mini thủ công cực kỳ thú vị.
+  - Phân tách thiết bị thông minh: Chỉ kích hoạt Touch Y-Offset trên màn hình cảm ứng di động (`e.pointerType === 'touch'` hoặc `coarse pointer`). Khi thao tác bằng chuột trên máy tính, con trỏ chuột mũi tên siêu nhỏ vẫn giữ node ở đầu chuột tự nhiên, không bị nhảy.
+
+#### 2. Trụ cột 2: Micro-Breathing Focus Lens ($1.04\text{x}$) & Khóa Cứng Pan = 0
+- **Triệt tiêu hoàn toàn căn nguyên gây choáng**:
+  - **Khóa cứng Camera Pan ($\text{Pan} = 0$)**: Màn hình đứng yên $100\%$, không trôi dạt sang trái/phải/lên/xuống theo ngón tay. Bạn giữ được một điểm tựa thị giác tuyệt đối tĩnh lặng.
+  - **Biên độ vi mô $1.04\text{x}$ (chỉ $+4\%$)**: Trên khung vải $362\text{px}$, nó chỉ nở nhẹ ra đúng **$7\text{px}$ mỗi cạnh**. Mắt người nhìn vào không cảm nhận thấy màn hình bị phóng to giật cục, mà não bộ chỉ cảm nhận như **ống kính máy ảnh khẽ siết nét (focus breath)** một nhịp nhẹ nhàng.
+  - Khi buông tay, khung tranh êm ả thở nhẹ về $1.0\text{x}$.
+- **Nhịp thở êm ái**: Tốc độ lerp giảm từ $7.5 \to 3.5$, camera êm như một nhịp hít thở tự nhiên, hoàn toàn không gây chóng mặt hay giật lag.
+- **Giữ cố định toàn bộ giao diện (Static HUD)**: Thẻ hình mẫu mục tiêu, thanh % tiến trình, các ô thành phẩm sưu tập và 3 nút bổ trợ bên dưới được giữ cố định nguyên vị trí trên màn hình. Chỉ có khung tranh vải và đường may bên trong được lấy nét.
+
+#### 3. Trụ cột 3: Bóng Đổ Vật Lý 3D Tách Lớp (Lifted Drop Shadow)
+- Thay vì di chuyển cả thế giới, game tác động trực tiếp vào chính vật thể người chơi đang cầm:
+  - Khi ở trạng thái nghỉ: Bóng đổ nằm sát chân ghim ($1.5\text{px}$).
+  - Khi ngón tay bắt đầu kéo: 
+    - Node tự nở nhẹ $+15\%$ (từ $13.5\text{px} \to 15.5\text{px}$).
+    - **Bóng đổ tách tụt xuống dưới mặt vải $6.5\text{px}$** và mờ rộng ra (`ellipse 15.5px x 8.5px`).
+    - Não bộ lập tức nhận thức theo trực giác thị giác 3D: *"Chiếc ghim tròn này vừa được ngón tay nhấc bổng lên khỏi mặt vải len!"*. Bạn nhìn thấy rõ mồn một chiếc chốt mình đang điều khiển mà không cần cả thế giới phải phóng to.
+
+#### 4. Trụ cột 4: Nâng Cấp Kích Thước Trực Quan & Vùng Chạm (Hitbox Expansion)
+- **Bán kính node (`drawNode`)**: Tăng từ $10.5\text{px} \to 13.5\text{px}$ (đường kính tăng lên $27\text{px}$, khi camera zoom $1.04\text{x}$ và node nở khi kéo đạt $31\text{px}$). Node tròn đầy đặn, rõ ràng, cảm giác chạm nảy như một chiếc cúc áo gỗ xinh xắn.
+- **Chốt thêu dấu × vàng bơ mật ong (`drawTargetPins`)**:
+  - Đệm nỉ tròn: Bán kính tăng từ $6.8\text{px} \to 8.8\text{px}$ (viền ngoài $10.2\text{px}$).
+  - Cánh chữ thập thêu: Tăng từ $3.6\text{px} \to 4.6\text{px}$.
+  - Hạt French knot tâm chốt: Tăng từ $1.4\text{px} \to 1.8\text{px}$.
+  - Sóng xung nhịp thở gợi ý chốt trống: Tăng biên độ tỏa từ $20\text{px} \to 24\text{px}$, bán kính quầng thở tâm tăng lên $10.5\text{px} - 13.5\text{px}$.
+- **Vùng bắt chạm tương tác (Hit-box Tolerances)**:
+  - Bán kính chọn node `PICK_MIN / PICK_MAX`: Tăng từ $0.071 / 0.19 \to 0.088 / 0.22$ (tương đương đường kính chạm thực tế $\approx 64\text{px}$ trên canvas, vượt tiêu chuẩn tối thiểu $44 - 48\text{pt}$ của Apple & Google HIG).
+  - Khoảng cách chạm bắt dây uốn cong: Bán kính tìm kiếm tăng từ $0.072 \to 0.088$, ngưỡng bắt chạm `bestEdge.d` tăng từ $0.065 \to 0.085$. Người chơi chạm nhẹ ngón tay vào bất kỳ điểm nào dọc theo thân dây là có thể uốn cong tức thì, nhẹ nhàng và tự nhiên.
+
+
+---
+
+### 10. [ĐANG XEM XÉT / UNDER REVIEW] Bộ Lọc Cảm Ứng 3 Lớp (Smart 3-Layer Tap Arbitration) Chống Chạm Nhầm Dây Thay Vì Chốt
+
+> **Đang xem xét theo phản hồi & trải nghiệm thực tế trên điện thoại (2026-11-08)**:
+> - **Hiện trạng trải nghiệm**: Khi chơi trên điện thoại bằng ngón tay cái, người chơi muốn vuốt di chuyển chốt (node) nhưng rất dễ bị nhầm thành kéo uốn dây viền cong. Người chơi trong thực tế không bao giờ có xu hướng kéo uốn dây ở sát đầu chốt mà luôn kéo ở đoạn giữa dây.
+> - **Căn nguyên kỹ thuật**:
+>   1. `hitTestEdge` trước đây cho phép nhận diện kéo dây ở dải $u \in [0.12, 0.88]$, tức cho phép nắm dây ở cự ly chỉ cách đầu chốt $12\%$.
+>   2. Điều kiện cũ `!(best >= 0 && !locked(best) && bd < 0.044)` yêu cầu điểm chạm phải cách tâm chốt dưới $16\text{px}$ mới ưu tiên chốt. Trên màn hình cảm ứng di động, ngón tay cái có tiết diện lớn ($40 - 50\text{px}$) nên điểm tiếp xúc thường cách tâm chốt $18 - 25\text{px}$. Do đó, sợi chỉ viền đi qua chốt lập tức cướp quyền điều khiển, biến thao tác kéo chốt thành uốn cong dây ngoài ý muốn.
+> - **Phạm vi triển khai**: Đã triển khai thử nghiệm trên **`Prototype/web-v2/`**. Bản **`Prototype/web-v3/`** được giữ nguyên vẹn chờ người chơi duyệt.
+
+```
+                               ┌────────────────────────────────────────────────────────┐
+                               │ BỘ LỌC CẢM ỨNG 3 LỚP (SMART 3-LAYER TAP ARBITRATION)   │
+                               └───────────────────────────┬────────────────────────────┘
+                                                           │
+          ┌────────────────────────────────────────────────┼────────────────────────────────────────┐
+          ▼                                                ▼                                        ▼
+┌─────────────────────────────────┐      ┌──────────────────────────────────┐     ┌───────────────────────────────────┐
+│ Lớp 1: Mid-Span Pinching        │      │ Lớp 2: Node-First Priority       │     │ Lớp 3: Endpoint Protective Bubble │
+│ Giới hạn uốn dây ở đoạn giữa    │      │ Bán kính ưu tiên chốt 25px       │     │ Bong bóng an toàn 2 đầu chốt      │
+│ u ∈ [0.25, 0.75]                │      │ bd < 0.068 (~25px): Chốt 100%    │     │ Safe Radius = 0.085 (~31px)       │
+│ 25% hai đầu chốt là Vùng Chết   │      │ bestEdge.d < bd mới nhận uốn dây │     │ Không cướp cảm ứng khi bấm lệch   │
+└─────────────────────────────────┘      └──────────────────────────────────┘     └───────────────────────────────────┘
+```
+
+#### 1. Lớp 1: Giới Hạn Vùng Bắt Chạm Dây Ở Đoạn Giữa (Mid-Span Pinching)
+- **Nguyên lý tự nhiên**: Người chơi chỉ có nhu cầu uốn cong một đường chỉ khi họ chạm vào phần thân giữa của sợi chỉ. Ở đoạn gần 2 đầu ghim, đường chỉ bắt buộc phải thẳng hàng với chốt.
+- **Vùng Chết 25% (25% Endpoint Deadzone)**:
+  - Cắt bỏ hoàn toàn khả năng tương tác uốn dây ở $25\%$ chiều dài mỗi đầu mút chốt:
+    ```js
+    // hitTestEdge(fx, fy):
+    var u = (s + t) / m;
+    if (u < 0.25 || u > 0.75) continue; // Chỉ nhận diện u trong [0.25, 0.75]
+    ```
+  - Điểm kéo ban đầu khi bắt đầu uốn dây: `uInit = clamp(..., 0.25, 0.75)`.
+  - Trong quá trình đang kéo uốn (`applyEdgeDrag`), người chơi vẫn có thể miết ngón tay tự do trong khoảng $[0.14, 0.86]$ để tạo dáng sóng lụa mượt mà không bị ngắt quãng.
+
+#### 2. Lớp 2: Ưu Tiên Tuyệt Đối Cho Chốt Mở (Node-First Priority)
+- **Mở rộng bán kính ưu tiên chốt lên $25\text{px}$ (`NODE_PRIOR_R = 0.068`)**:
+  - Khi ngón tay chạm vào vùng lân cận của một Node MỞ (`best >= 0 && !locked(best)`):
+    - Nếu khoảng cách tới tâm chốt $bd < 0.068$ ($approx 25\text{px}$): **Chốt thắng 100%**, dây viền hoàn toàn không có quyền cướp cảm ứng.
+    - Người chơi thoải mái chạm ngón tay cái lệch tâm mà chốt vẫn được nhấc lên chính xác tuyệt đối.
+  - **Trọng tài so sánh khoảng cách**: Chỉ khi ngón tay ở ngoài bán kính ưu tiên ($bd \ge 0.068$) VÀ điểm chạm nằm gần sợi dây hơn tâm chốt (`bestEdge.d < bd`), hệ thống mới xem xét chuyển sang thao tác uốn dây.
+- **Locked Node Pass-Through**: Nếu chạm trúng một chốt ĐÃ KHÓA (`best >= 0 && locked(best)`) mà chạm gần đoạn giữa dây nối, cảm ứng tự động bắt vào dây để uốn cong, tránh làm người chơi cảm thấy thao tác bị đơ cứng.
+
+#### 3. Lớp 3: Bong Bóng Bảo Vệ 2 Đầu Chốt (Endpoint Protective Bubble, $R = 0.085$)
+- **Xử lý khi ngón tay chạm vào khoảng trống lân cận (`best < 0`)**:
+  - Khi người chơi định với tay kéo chốt nhưng bấm lệch ra ngoài rìa chốt một chút:
+  - Hệ thống đo khoảng cách từ điểm chạm tới 2 đầu chốt mút (`ra, rb`) của sợi dây:
+    ```js
+    var safeR = 0.085; // ~31px
+    if ((!locked(ra) && distToA < safeR) || (!locked(rb) && distToB < safeR)) {
+      // Nằm trong bong bóng bảo vệ của chốt mở -> không uốn dây
+    } else {
+      startEdgeDrag(e, p, fx, fy, bestEdge.k, bestEdge.u);
+    }
+    ```
+  - Ngăn chặn hoàn toàn hiện tượng dây nối vồ lấy cảm ứng khi ngón tay vô tình bấm sượt qua rìa ngoài của chốt.
+
+#### 4. Kết Quả Kiểm Thử Tự Động & Tiêu Chí Nghiệm Thu
+- **Unit Test Trọng Tài Cảm Ứng (`scratch/test_tap_arbitration.js`)**:
+  - Chạm lệch tâm chốt $18\text{px}$ hướng về phía dây nối: Chốt được chọn $100\%$, dây nối hoàn toàn không bị kích hoạt (`curSt.drag = Node 1`, `curSt.edgeDrag = null`).
+  - Chạm đúng đoạn giữa dây ($u \approx 0.5$): Nhận diện uốn dây tức thì (`curSt.edgeDrag = Edge 2`, `curSt.drag = null`).
+  - Chạm sát đầu mút dây ($u = 0.12$): Dây bị chặn không kích hoạt.
+- **Smoke Test Toàn Diện (`Prototype/web-v2/smoke.js`)**:
+  - Toàn bộ 5 sản phẩm (Kem, Cardigan, Trái tim gấp, Bé thỏ, Chậu hoa) với 13 màn chơi vượt qua $100\%$.
