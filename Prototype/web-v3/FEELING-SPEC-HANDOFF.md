@@ -266,3 +266,36 @@ function pentaF(step, oct) {
   - Bỏ chốt giữa dư thừa, giảm từ 6 nodes $\to$ 5 nodes.
   - Mở rộng thân áo từ $87\text{px} \to 116\text{px}$, cạnh cong đáy đạt $116\text{px}$ ($58\text{px}$ vùng kéo uốn).
   - Vạt áo cong chữ U bo tròn mượt mà, cảm giác uốn dây phóng khoáng, đã tay và thỏa mãn.
+
+### 7.7. [CHÍNH THỨC ĐÃ DUYỆT / OFFICIALLY APPROVED] Tối Ưu Màn 3 (Trái Tim Khoét Lỗ): Giải Phóng Cụm Chốt Giữa & Kéo Uốn Vòm Vai Ngoài
+
+> **Trạng thái**: ĐÃ DUYỆT CHÍNH THỨC (Người dùng đã test thực tế trên mobile và duyệt).
+
+- **Hiện tượng trên di động**:
+  - Tại Màn 3 (`heartHole`), cụm 4 đầu ghim gỗ ở trung tâm nằm san sát nhau ($40 - 49\text{px}$), gây cảm giác chật chội và dễ bấm nhầm.
+  - Sợi dây uốn cong được đặt ở mép trong lỗ khoét (Cạnh 5) chỉ dài $53.8\text{px}$, khi trừ $25\%$ vùng đệm ở mỗi đầu chốt chỉ còn $26.9\text{px}$ khả dụng. Ngón tay cái người chơi đè lên cả 2 chốt khiến việc kéo uốn bị chặn.
+- **Tiêu chuẩn Game Feel áp dụng**:
+  1. **Tận dụng cạnh cong chủ đạo có biên độ lớn**:
+     - Thay vì bắt người chơi uốn một đoạn dây cụt ngủn ở góc kẹt bên trong, chuyển trọng tâm tương tác sang **Vòm vai lớn bên ngoài (Cạnh 1)**.
+     - Chiều dài cạnh uốn cong tăng lên **$128.5\text{px}$** ($L = 0.355$). Vùng kéo uốn khả dụng $64.2\text{px}$ vượt trội so với kích thước ngón tay cái, mang lại cảm giác vuốt dây cực kỳ êm ái và đã tay.
+  2. **Giải phóng không gian thị giác (Visual Breathing Space)**:
+     - Phóng to lỗ khoét từ $42\% \to 55\%$, dãn cách các chốt ghim lên $\ge 58 - 71\text{px}$.
+     - Hai đầu ghim đối xứng qua nếp gấp cách nhau $91.9\text{px}$, không còn hiện tượng chốt ghim chồng lấn vào nhau.
+  3. **Khớp nối thành phẩm (Reward Screen Assembly)**:
+     - Tỉ lệ thu nhỏ của Mảnh 1 được đồng bộ chính xác với tỉ lệ lỗ khoét mới ($s = 0.55$, toạ độ `[118.0, 334.8, 154.0]`), đảm bảo trải nghiệm may vá mượt mà, thỏa mãn khi hoàn thành màn chơi.
+
+### 7.8. [ĐANG XEM XÉT / UNDER REVIEW] Cảm Giác Khớp Dây Nối Với Ghim Khóa & Hiển Thị Nút Cúc Kéo Dây Tức Thì
+
+> **Trạng thái**: ĐANG XEM XÉT trên `Prototype/web-v2/`.
+
+- **Nguyên lý nhịp bồi âm thanh & thị giác (Chained Audio-Visual Resonance)**:
+  - Khi ngón tay thả chốt kéo vào lỗ cắm, chốt phát ra tiếng cúc bấm gỗ (`pinSnapSound`).
+  - Đúng $50\text{ms}$ sau (nhịp bồi trôi chảy): Sợi dây nối giữa chốt mới và ghim khóa phát sáng rực rỡ (`Seam Zip Flash`), sợi dây nảy nhẹ như dây đàn guitar (`Edge Bounce`), và tiếng rút chỉ giòn tan (`sweep` $1.3\text{kHz} \to 3.2\text{kHz}$) cùng nốt Kalimba trong trẻo vang lên.
+  - Người chơi cảm nhận rõ ràng: **"Sợi chỉ vừa được thợ may kéo thẳng thớm và may cố định vào cọc ghim"**.
+
+- **Quy chuẩn sẵn sàng theo từng cạnh (Per-Edge Readiness Standard)**:
+  - Tuyệt đối không bắt người chơi phải hoàn thành toàn bộ các node khác mới hiển thị nút kéo uốn dây.
+  - Điều kiện hiển thị cúc kéo dây (`Pinch Bead`) và mảng thở khuyết (`Breathing Crescent Gap`):
+    $$\text{Ready}(k) = \text{isPinAnchored}(ra) \land \text{isPinAnchored}(rb) \land (|h - h_{sol}| \ge 0.012)$$
+  - Ngay khi 2 đầu mút của cạnh cong đã được neo vững (dù là chốt kéo vừa cắm hay ghim khóa), nút bọ thêu cúc len lập tức xuất hiện, nhấp nháy thở nhẹ với quầng hào quang màu kem bơ, trao toàn quyền kiểm soát cho người chơi uốn dây bất cứ khi nào họ muốn.
+
