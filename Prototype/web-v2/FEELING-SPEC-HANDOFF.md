@@ -234,7 +234,7 @@ function pentaF(step, oct) {
 - Khoảng cách bắt chạm thân dây: $0.088 / 0.085$.
 
 
-### 7.5. [ĐANG XEM XÉT / UNDER REVIEW] Bộ Lọc Cảm Ứng 3 Lớp (Smart 3-Layer Tap Arbitration) Chống Chạm Nhầm Dây Thay Vì Chốt
+### 7.5. [ĐÃ DUYỆT CHÍNH THỨC / APPROVED] Bộ Lọc Cảm Ứng 3 Lớp (Smart 3-Layer Tap Arbitration) Chống Chạm Nhầm Dây Thay Vì Chốt
 
 - **Bối cảnh thực tế**: Trên điện thoại di động, ngón tay cái có diện tích tiếp xúc lớn. Khi người chơi muốn chạm kéo chốt nhưng vị trí chạm hơi lệch về phía sợi dây nối, đường cong rất dễ cướp cảm ứng khiến người chơi uốn nhầm dây thay vì di chuyển chốt.
 - **Triết lý tương tác tự nhiên**:
@@ -245,10 +245,10 @@ function pentaF(step, oct) {
   - **Lớp 2 - Ưu tiên chốt mở ($R_{node} = 0.068 \approx 25\text{px}$)**: Nếu điểm chạm cách tâm một chốt mở dưới $25\text{px}$, chốt được ưu tiên $100\%$, dây nối bị vô hiệu hóa hoàn toàn. Nếu chạm xa hơn $25\text{px}$ và nằm sát thân dây hơn tâm chốt (`bestEdge.d < bd`), dây mới nhận quyền kéo.
   - **Lớp 3 - Bong bóng bảo vệ 2 đầu chốt ($R_{safe} = 0.085 \approx 31\text{px}$)**: Khi điểm chạm nằm ở khoảng trống lân cận ngoài vùng chốt, nếu khoảng cách tới một đầu chốt mở nhỏ hơn $0.085$, dây nối không được phép kích hoạt để tránh cướp cảm ứng lúc ngón tay bấm lệch rìa ngoài.
   - **Locked Node Pass-Through**: Chạm sát chốt đã khóa nhưng trúng đoạn giữa dây nối thì tự động uốn dây, tránh đơ thao tác.
-- **Trạng thái**: Đang áp dụng thử nghiệm trên **`Prototype/web-v2/`**; bản **`Prototype/web-v3/`** giữ nguyên chờ người chơi duyệt.
+- **Trạng thái**: Đã nghiệm thu và đồng bộ hóa 100% trên cả hai bản **`Prototype/web-v2/`** và **`Prototype/web-v3/`**.
 
 
-### 7.6. [ĐANG XEM XÉT / UNDER REVIEW] Bộ Quy Chuẩn Thiết Kế Khoảng Cách An Toàn (Ergonomic Standards) & Tối Ưu Vạt Áo Chữ U
+### 7.6. [ĐÃ DUYỆT CHÍNH THỨC / APPROVED] Bộ Quy Chuẩn Thiết Kế Khoảng Cách An Toàn (Ergonomic Standards) & Tối Ưu Vạt Áo Chữ U
 
 - **Nguyên nhân cần chuẩn hóa**: Màn hình điện thoại có kích thước nhỏ ($390\text{px}$), trong khi ngón tay cái có diện tích tiếp xúc lớn ($44 - 50\text{px}$). Nếu khoảng cách giữa 2 node hoặc chiều dài cạnh uốn cong quá ngắn, ngón tay sẽ che lấp toàn bộ chi tiết và gây xung đột cảm ứng.
 - **Bảng quy chuẩn khoảng cách công thái học di động**:

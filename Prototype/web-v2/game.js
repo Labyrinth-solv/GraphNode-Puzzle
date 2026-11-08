@@ -753,7 +753,7 @@
       if (!isMirror(i) && d < pickRadius(i) && d < bd) { bd = d; best = i; }
     }
     var bestEdge = hitTestEdge(fx, fy);
-    // [ĐANG XEM XÉT / UNDER REVIEW] BỘ LỌC CẢM ỨNG 3 LỚP (SMART 3-LAYER TAP ARBITRATION):
+    // [ĐÃ DUYỆT CHÍNH THỨC / APPROVED] BỘ LỌC CẢM ỨNG 3 LỚP (SMART 3-LAYER TAP ARBITRATION):
     // Lớp 1 (Mid-Span): hitTestEdge đã lọc chặt chẽ chỉ nhận điểm u trong [0.25, 0.75] (loại bỏ 25% vùng đầu mút sát chốt).
     // Lớp 2 (Node-First Priority):
     // - Khi chạm trong bán kính ưu tiên của Node MỞ (bd < NODE_PRIOR_R = 0.068 ~ 25px): Node thắng 100%, dây tuyệt đối không cướp cảm ứng.

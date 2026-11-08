@@ -32,13 +32,13 @@
       start: [[0.26, 0.16], [0.30, 0.60], [0.14, 0.67], [0.12, 0.30], [0.40, 0.70], [0.60, 0.30], [0.86, 0.40], [0.86, 0.67], [0.70, 0.86], [0.74, 0.16]]
     },
     {
-      // Màn 2 - Mảnh 2 (index 3): Áo lót trong
-      id: 'shirt', name: 'Áo lót trong', winThreshold: 0.95, tier: 'medium', free: [0, 2, 3, 4, 5],
+      // Màn 2 - Mảnh 2 (index 3): Áo lót trong (Đã tối ưu 5 node, gấu cong chữ U 116px)
+      id: 'shirt', name: 'Áo lót trong', winThreshold: 0.95, tier: 'medium', free: [0, 2, 3, 4],
       pattern: { kind: 'knit', base: '#F4E2B8', deep: '#EBCF90', accent: '#C9A35E' },
-      types: ['s', 's', 's', 'c', 'c', 'c'],
-      ring: [0, 1, 2, 3, 4, 5], inner: [], locked: [1],
-      sol:   [[0.38, 0.06], [0.50, 0.20], [0.62, 0.06], [0.62, 0.84], [0.50, 0.94], [0.38, 0.84]],
-      start: [[0.20, 0.30], [0.50, 0.20], [0.80, 0.40], [0.40, 0.70], [0.70, 0.86], [0.30, 0.90]]
+      types: ['s', 's', 's', 'c', 'c'],
+      ring: [0, 1, 2, 3, 4], inner: [], locked: [1],
+      sol:   [[0.34, 0.06], [0.50, 0.20], [0.66, 0.06], [0.66, 0.84], [0.34, 0.84]],
+      start: [[0.20, 0.30], [0.50, 0.20], [0.80, 0.40], [0.70, 0.86], [0.30, 0.90]]
     },
     {
       // Màn 2 - Mảnh 3 (index 4): Cổ áo
@@ -188,7 +188,7 @@
   var PRODUCTS = [
     { id: 'icecream', label: 'Màn 1', levels: [0, 1], order: [1, 0], seams: [[0, 4, 0]],
       place: { 0: [70, 210, 250], 1: [70, 315, 250] } },
-    { id: 'cardigan', label: 'Màn 2', levels: [2, 3, 4], order: [2, 3, 4], seams: [[3, 2, 3], [3, 5, 0], [4, 4, 0]],
+    { id: 'cardigan', label: 'Màn 2', levels: [2, 3, 4], order: [2, 3, 4], seams: [[3, 2, 3], [3, 4, 0], [4, 4, 0]],
       place: { 2: [65, 258, 260], 3: [95, 288, 200], 4: [110, 275, 170] } },
     { id: 'heart', label: 'Màn 3', levels: [5, 6], order: [6, 5], seams: [[6, 0, 0]],
       // mảnh 1 thu nhỏ đúng tỉ lệ lỗ (0,42) và đặt trùng vị trí lỗ của mảnh 2

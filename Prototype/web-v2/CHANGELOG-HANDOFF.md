@@ -524,14 +524,14 @@ Theo yêu cầu của người dùng, cả 3 mảnh của **Màn 2 (`cardigan`)*
 
 ---
 
-### 10. [ĐANG XEM XÉT / UNDER REVIEW] Bộ Lọc Cảm Ứng 3 Lớp (Smart 3-Layer Tap Arbitration) Chống Chạm Nhầm Dây Thay Vì Chốt
+### 10. [ĐÃ DUYỆT CHÍNH THỨC / APPROVED] Bộ Lọc Cảm Ứng 3 Lớp (Smart 3-Layer Tap Arbitration) Chống Chạm Nhầm Dây Thay Vì Chốt
 
-> **Đang xem xét theo phản hồi & trải nghiệm thực tế trên điện thoại (2026-11-08)**:
+> **Đã phê duyệt chính thức theo phản hồi & trải nghiệm thực tế trên điện thoại (2026-11-08)**:
 > - **Hiện trạng trải nghiệm**: Khi chơi trên điện thoại bằng ngón tay cái, người chơi muốn vuốt di chuyển chốt (node) nhưng rất dễ bị nhầm thành kéo uốn dây viền cong. Người chơi trong thực tế không bao giờ có xu hướng kéo uốn dây ở sát đầu chốt mà luôn kéo ở đoạn giữa dây.
 > - **Căn nguyên kỹ thuật**:
 >   1. `hitTestEdge` trước đây cho phép nhận diện kéo dây ở dải $u \in [0.12, 0.88]$, tức cho phép nắm dây ở cự ly chỉ cách đầu chốt $12\%$.
 >   2. Điều kiện cũ `!(best >= 0 && !locked(best) && bd < 0.044)` yêu cầu điểm chạm phải cách tâm chốt dưới $16\text{px}$ mới ưu tiên chốt. Trên màn hình cảm ứng di động, ngón tay cái có tiết diện lớn ($40 - 50\text{px}$) nên điểm tiếp xúc thường cách tâm chốt $18 - 25\text{px}$. Do đó, sợi chỉ viền đi qua chốt lập tức cướp quyền điều khiển, biến thao tác kéo chốt thành uốn cong dây ngoài ý muốn.
-> - **Phạm vi triển khai**: Đã triển khai thử nghiệm trên **`Prototype/web-v2/`**. Bản **`Prototype/web-v3/`** được giữ nguyên vẹn chờ người chơi duyệt.
+> - **Phạm vi triển khai**: Đã nghiệm thu và đồng bộ hóa 100% trên cả hai bản **`Prototype/web-v2/`** và **`Prototype/web-v3/`**.
 
 ```
                                ┌────────────────────────────────────────────────────────┐
@@ -593,9 +593,9 @@ Theo yêu cầu của người dùng, cả 3 mảnh của **Màn 2 (`cardigan`)*
 
 ---
 
-### 11. [ĐANG XEM XÉT / UNDER REVIEW] Bộ Quy Chuẩn Khoảng Cách An Toàn (Ergonomic Design Standards) & Tối Ưu Màn Áo Lót Trong (Cardigan Màn 2)
+### 11. [ĐÃ DUYỆT CHÍNH THỨC / APPROVED] Bộ Quy Chuẩn Khoảng Cách An Toàn (Ergonomic Design Standards) & Tối Ưu Màn Áo Lót Trong (Cardigan Màn 2)
 
-> **Đang xem xét theo phản hồi người chơi (2026-11-08)**:
+> **Đã phê duyệt chính thức theo phản hồi người chơi (2026-11-08)**:
 > - **Vấn đề thực tế**: Tại Màn 2 (Áo lót trong, chuỗi Cardigan), 3 node ở đáy áo nằm quá gần nhau (khoảng cách chỉ $56.5\text{px}$), khiến đoạn dây nối giữa 2 node bị ngắn ngủn ($28.5\text{px}$ khả dụng). Khi người chơi kéo dây uốn cong trên điện thoại, ngón tay to đè kín cả 2 chốt và dây, gây khó chịu và dễ chạm nhầm.
 > - **Cải tiến triển khai (Phương Án 1 - Single U-Hem Curve)**:
 >   1. **Bỏ chốt chóp giữa dư thừa `[0.50, 0.94]`**: Thay vì chia đôi đường cong đáy thành 2 đoạn dây ngắn ngủn, chuyển thành **1 cạnh cong chữ U duy nhất** nối trực tiếp 2 góc đáy áo.
