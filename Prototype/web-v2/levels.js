@@ -205,6 +205,17 @@
       ring: [0, 1, 2, 3, 4], inner: [], locked: [0, 4],
       sol:   [[0.28, 0.24], [0.72, 0.24], [0.86, 0.48], [0.50, 0.90], [0.14, 0.48]],
       start: [[0.28, 0.24], [0.62, 0.40], [0.74, 0.70], [0.40, 0.76], [0.14, 0.48]]
+    },
+    {
+      // Màn 7 (index 14): Củ cà rốt, một mảnh, chuyển thể từ art Color Page (thân củ cam tươi, 2 tai lá xanh, viền đen)
+      id: 'carrot', name: 'Củ cà rốt', winThreshold: 0.94, tier: 'easy', free: [1, 3], bendFree: [2, 3],
+      solBendOverride: { 2: -0.16, 3: -0.16 },
+      pattern: { kind: 'stripes', base: '#F87838', deep: '#D85810', accent: '#FFA868' },
+      fabric: { mat: 'flat', base: '#F87838', light: '#FFA868', dark: '#D85810', line: '#261E1A' },
+      types: ['c', 'c', 'c', 'c'],
+      ring: [0, 1, 2, 3], inner: [], locked: [0, 2],
+      sol:   [[0.30, 0.24], [0.50, 0.27], [0.70, 0.24], [0.50, 0.90]],
+      start: [[0.30, 0.24], [0.50, 0.38], [0.70, 0.24], [0.50, 0.76]]
     }
   ];
   // Sản phẩm: các mảnh theo thứ tự chơi; order = thứ tự vẽ ở màn thưởng (sau cùng nằm trên);
@@ -222,7 +233,9 @@
     { id: 'flowerpot', label: 'Màn 5', levels: [10, 11, 12], order: [11, 12, 10], seams: [[11, 0, 0], [12, 0, 2], [10, 0, 0]],
       place: { 10: [98, 224, 194], 11: [99, 326, 192], 12: [115, 404, 160] } },
     { id: 'strawberry', label: 'Màn 6', standalone: true, levels: [13], order: [13], seams: [[13, 0, 0]],
-      place: { 13: [70, 262, 250] } }
+      place: { 13: [70, 262, 250] } },
+    { id: 'carrot', label: 'Màn 7', standalone: true, levels: [14], order: [14], seams: [[14, 0, 0]],
+      place: { 14: [70, 262, 250] } }
   ];
   if (typeof module !== 'undefined' && module.exports) module.exports = { LEVELS: LEVELS, PRODUCTS: PRODUCTS };
   else { root.LEVELS = LEVELS; root.PRODUCTS = PRODUCTS; }

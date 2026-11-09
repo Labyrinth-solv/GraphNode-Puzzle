@@ -3213,6 +3213,14 @@
       { at: function () { return ptOf(13, 0.42, 0.52); }, draw: function (p, k) { eye(p, k * 1.1); } },
       { at: function () { return ptOf(13, 0.58, 0.52); }, draw: function (p, k) { eye(p, k * 1.1); } },
       { at: function () { return ptOf(13, 0.50, 0.61); }, draw: function (p, k) { smile(p, k, 24); } }
+    ],
+    // màn 7, Củ cà rốt từ Color Page: 2 tai lá xanh non ở đỉnh, mắt cười xinh, nếp vân thân củ
+    carrot: [
+      { at: function () { return ptOf(14, 0.50, 0.26); }, draw: function (p, k) { carrotLeaves(p, k); } },
+      { at: function () { return ptOf(14, 0.42, 0.46); }, draw: function (p, k) { eye(p, k * 1.1); } },
+      { at: function () { return ptOf(14, 0.58, 0.46); }, draw: function (p, k) { eye(p, k * 1.1); } },
+      { at: function () { return ptOf(14, 0.50, 0.53); }, draw: function (p, k) { smile(p, k, 24); } },
+      { at: function () { return ptOf(14, 0.50, 0.68); }, draw: function (p, k) { carrotRims(p, k); } }
     ]
   };
   var BERRY_LINE = '#2A2326';
@@ -3237,6 +3245,31 @@
       ctx.restore();
     });
   }
+  
+  var CARROT_LINE = '#261E1A';
+  function carrotLeaves(p, k) {
+    ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(k, k); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(0, -12, 0, -20); ctx.lineWidth = 5; ctx.strokeStyle = CARROT_LINE; ctx.stroke();
+    ctx.lineWidth = 3; ctx.strokeStyle = '#90C018'; ctx.stroke();
+    // lá trái
+    ctx.beginPath(); ctx.moveTo(-2, 0); ctx.bezierCurveTo(-25, -20, -35, -45, -20, -55); ctx.bezierCurveTo(-5, -45, 0, -25, -2, 0);
+    ctx.fillStyle = '#90C018'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = CARROT_LINE; ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(-14, -32, 6, 2, -0.6, 0, 7); ctx.fillStyle = '#B0E048'; ctx.fill();
+    // lá phải
+    ctx.beginPath(); ctx.moveTo(2, 0); ctx.bezierCurveTo(25, -20, 35, -45, 20, -55); ctx.bezierCurveTo(5, -45, 0, -25, 2, 0);
+    ctx.fillStyle = '#90C018'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = CARROT_LINE; ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(14, -32, 6, 2, 0.6, 0, 7); ctx.fillStyle = '#B0E048'; ctx.fill();
+    ctx.restore();
+  }
+  function carrotRims(p, k) {
+    var q1 = ptOf(14, 0.45, 0.62), q2 = ptOf(14, 0.55, 0.72), q3 = ptOf(14, 0.48, 0.80);
+    ctx.save(); ctx.lineCap = 'round'; ctx.lineWidth = 2.4 * k; ctx.strokeStyle = '#D85810';
+    ctx.beginPath(); ctx.moveTo(q1[0] - 22 * k, q1[1]); ctx.quadraticCurveTo(q1[0], q1[1] + 3 * k, q1[0] + 16 * k, q1[1]); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(q2[0] - 12 * k, q2[1]); ctx.quadraticCurveTo(q2[0] + 8 * k, q2[1] + 2.5 * k, q2[0] + 20 * k, q2[1]); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(q3[0] - 14 * k, q3[1]); ctx.quadraticCurveTo(q3[0], q3[1] + 2 * k, q3[0] + 12 * k, q3[1]); ctx.stroke();
+    ctx.restore();
+  }
+
   function coatButton(p, k) {
     ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(k, k);
     ctx.beginPath(); ctx.arc(0, 0, 6.5, 0, 7); ctx.fillStyle = '#3F5F5C'; ctx.fill(); ctx.lineWidth = 1.6; ctx.strokeStyle = C.ink; ctx.stroke();

@@ -720,3 +720,23 @@ Các thay đổi dưới đây làm và thử ở `Prototype/web-demo` trước,
 - Lý do: đường chỉ nét đứt hiện tại thu nhỏ đường viền 88% quanh tâm nên lệch ra ngoài hoặc cắt ngang mảnh ở hình có phần mảnh, lõm (tay áo, cổ chữ V, tai thỏ, lỗ tim); viền mực đậm co giãn theo cỡ mảnh làm sản phẩm mất chất vải; ba lớp nét chồng ở cùng mép.
 
 **Kiểm tra:** `node smoke.js` qua 6 sản phẩm; `node bend-target.js` 6/6 (mới, chép từ web-demo); `node alt-solve.js` 7/7.
+
+### 17. [CHÍNH THỨC ĐÃ DUYỆT / OFFICIALLY APPROVED] Màn 7 Củ Cà Rốt (Carrot) Chuyển Thể Từ Kho Tranh Vẽ Color Page (2026-11-09)
+
+1. **Khởi tạo kho dữ liệu hình vẽ riêng biệt (`Assets/Docs/ColorPageData/`)**:
+   - Trích xuất và lưu trữ danh mục 556 hình vẽ cấp độ từ `D:\Work\Unity-project\APK Clone\Color Page\Assets`.
+   - Lưu trữ đa giác chuẩn hóa `extracted_shapes/` và ảnh gốc tham chiếu `reference_images/` cho 25 đối tượng tiêu biểu (cà rốt, vịt con, quả sồi, hoa hướng dương, nấm, bánh kem, cá, v.v.) để tái sử dụng lâu dài mà không cần quét lại APK.
+
+2. **Thiết kế Level 14 & Sản Phẩm 7 (`carrot` — Củ Cà Rốt)**:
+   - **Bảng màu nguyên bản**: Nền cam tươi `#F87838`, bóng `#D85810`, vệt sáng `#FFA868`, cuống lá xanh non `#90C018` / `#B0E048`, viền đen `#261E1A`.
+   - **Cấu trúc 4 node & công thái học**:
+     - 2 chốt ghim cố định ở vai: `[0.30, 0.24]` và `[0.70, 0.24]`.
+     - 1 node rãnh cuống ở đỉnh `[0.50, 0.27]` và 1 node chóp đáy `[0.50, 0.90]`.
+     - Khoảng cách an toàn $\min d = 73.2\text{px}$ (vượt xa mức tối thiểu $40\text{px}$).
+     - Bắt buộc uốn cong phình 2 cạnh sườn củ cà rốt ra ngoài (`solBendOverride: { 2: -0.16, 3: -0.16 }`) để đạt ngưỡng thắng $94\%$ (nếu chỉ cắm chốt thẳng, độ khớp chỉ đạt $29.2\%$).
+   - **Màn thưởng hoàn thiện**:
+     - Vẽ 2 tai lá xanh non vểnh hai bên ở rãnh cuống (`carrotLeaves`).
+     - Mắt cười xinh xắn và 3 nếp vân đặc trưng của củ cà rốt (`carrotRims`).
+3. **Kiểm thử tự động**:
+   - `node smoke.js`: **PASS 100% cả 7 sản phẩm** (Kem, Cardigan, Trái tim, Bé thỏ, Chậu hoa, Dâu tây, Củ cà rốt).
+   - `node check.js`: **PASS 15/15 màn** đạt chuẩn công thái học và độ khớp.

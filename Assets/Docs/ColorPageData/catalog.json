@@ -1,0 +1,4450 @@
+[
+  {
+    "id": "3dglasses",
+    "fileName": "ICON-3dGlasses.png",
+    "name": "3dGlasses",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 14
+  },
+  {
+    "id": "acorn",
+    "fileName": "ICON-acorn.png",
+    "name": "acorn",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 27
+  },
+  {
+    "id": "alien",
+    "fileName": "ICON-alien.png",
+    "name": "alien",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 23
+  },
+  {
+    "id": "aliengreeneye",
+    "fileName": "ICON-alienGreenEye.png",
+    "name": "alienGreenEye",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 40
+  },
+  {
+    "id": "alienredeye",
+    "fileName": "ICON-alienRedEye.png",
+    "name": "alienRedEye",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 35
+  },
+  {
+    "id": "alienviolet",
+    "fileName": "ICON-alienViolet.png",
+    "name": "alienViolet",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 42
+  },
+  {
+    "id": "alien_0",
+    "fileName": "ICON-alien_0.png",
+    "name": "alien_0",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 23
+  },
+  {
+    "id": "alpacahead",
+    "fileName": "ICON-alpacaHead.png",
+    "name": "alpacaHead",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 30
+  },
+  {
+    "id": "angel",
+    "fileName": "ICON-angel.png",
+    "name": "angel",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 27
+  },
+  {
+    "id": "applehalloween",
+    "fileName": "ICON-appleHalloween.png",
+    "name": "appleHalloween",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 26
+  },
+  {
+    "id": "aquariumfish",
+    "fileName": "ICON-aquariumFish.png",
+    "name": "aquariumFish",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 9
+  },
+  {
+    "id": "arrowfire",
+    "fileName": "ICON-arrowFire.png",
+    "name": "arrowFire",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 34
+  },
+  {
+    "id": "baby",
+    "fileName": "ICON-Baby.png",
+    "name": "Baby",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 30
+  },
+  {
+    "id": "baloon",
+    "fileName": "ICON-baloon.png",
+    "name": "baloon",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 26
+  },
+  {
+    "id": "baloonheart",
+    "fileName": "ICON-baloonHeart.png",
+    "name": "baloonHeart",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 27
+  },
+  {
+    "id": "bamboo",
+    "fileName": "ICON-bamboo.png",
+    "name": "bamboo",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 36
+  },
+  {
+    "id": "basketball",
+    "fileName": "ICON-basketball.png",
+    "name": "basketball",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "bat",
+    "fileName": "ICON-bat.png",
+    "name": "bat",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 27
+  },
+  {
+    "id": "bath",
+    "fileName": "icon-bath.png",
+    "name": "bath",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 25
+  },
+  {
+    "id": "bat_0",
+    "fileName": "icon-bat_0.png",
+    "name": "bat_0",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 28
+  },
+  {
+    "id": "bearstrange",
+    "fileName": "ICON-bearStrange.png",
+    "name": "bearStrange",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 32
+  },
+  {
+    "id": "beet",
+    "fileName": "ICON-beet.png",
+    "name": "beet",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 29
+  },
+  {
+    "id": "big_cake",
+    "fileName": "ICON-big_cake.png",
+    "name": "big_cake",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 17
+  },
+  {
+    "id": "blot",
+    "fileName": "ICON-blot.png",
+    "name": "blot",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 30
+  },
+  {
+    "id": "bones",
+    "fileName": "ICON-bones.png",
+    "name": "bones",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 10
+  },
+  {
+    "id": "bonsai",
+    "fileName": "ICON-bonsai.png",
+    "name": "bonsai",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 34
+  },
+  {
+    "id": "book",
+    "fileName": "ICON-book.png",
+    "name": "book",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 19
+  },
+  {
+    "id": "bookshelf",
+    "fileName": "ICON-bookshelf.png",
+    "name": "bookshelf",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "bottleletter",
+    "fileName": "ICON-bottleLetter.png",
+    "name": "bottleLetter",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 26
+  },
+  {
+    "id": "boxgold",
+    "fileName": "ICON-BoxGold.png",
+    "name": "BoxGold",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 17
+  },
+  {
+    "id": "breadbag",
+    "fileName": "ICON-BreadBag.png",
+    "name": "BreadBag",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 15
+  },
+  {
+    "id": "breadhot",
+    "fileName": "ICON-BreadHot.png",
+    "name": "BreadHot",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 20
+  },
+  {
+    "id": "brokenheart",
+    "fileName": "ICON-brokenHeart.png",
+    "name": "brokenHeart",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 17
+  },
+  {
+    "id": "brush",
+    "fileName": "ICON-brush.png",
+    "name": "brush",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "bubbletea2",
+    "fileName": "ICON-bubbleTea2.png",
+    "name": "bubbleTea2",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 18
+  },
+  {
+    "id": "bucketfoam",
+    "fileName": "ICON-BucketFoam.png",
+    "name": "BucketFoam",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 20
+  },
+  {
+    "id": "burger",
+    "fileName": "ICON-burger.png",
+    "name": "burger",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 19
+  },
+  {
+    "id": "calendar",
+    "fileName": "ICON-calendar.png",
+    "name": "calendar",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 14
+  },
+  {
+    "id": "camera — копия",
+    "fileName": "ICON-camera — копия.png",
+    "name": "camera — копия",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 9
+  },
+  {
+    "id": "candle",
+    "fileName": "ICON-candle.png",
+    "name": "candle",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 18
+  },
+  {
+    "id": "candleglass",
+    "fileName": "ICON-candleGlass.png",
+    "name": "candleGlass",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 22
+  },
+  {
+    "id": "card",
+    "fileName": "ICON-card.png",
+    "name": "card",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 8
+  },
+  {
+    "id": "carpkoi",
+    "fileName": "ICON-carpKoi.png",
+    "name": "carpKoi",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 30
+  },
+  {
+    "id": "carrot",
+    "fileName": "ICON-carrot.png",
+    "name": "carrot",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 26
+  },
+  {
+    "id": "carrot_0",
+    "fileName": "ICON-carrot_0.png",
+    "name": "carrot_0",
+    "hasGlb": false,
+    "hasPhysicsShape": false,
+    "contourPointsCount": 0
+  },
+  {
+    "id": "caseta",
+    "fileName": "icon-caseta.png",
+    "name": "caseta",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "catbox",
+    "fileName": "ICON-catbox.png",
+    "name": "catbox",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 18
+  },
+  {
+    "id": "cauldron",
+    "fileName": "ICON-cauldron.png",
+    "name": "cauldron",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 34
+  },
+  {
+    "id": "chameleon",
+    "fileName": "ICON-chameleon.png",
+    "name": "chameleon",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 29
+  },
+  {
+    "id": "chat",
+    "fileName": "ICON-Chat.png",
+    "name": "Chat",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 11
+  },
+  {
+    "id": "chertilo",
+    "fileName": "icon-chertilo.png",
+    "name": "chertilo",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 27
+  },
+  {
+    "id": "chesshorse",
+    "fileName": "ICON-chessHorse.png",
+    "name": "chessHorse",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 25
+  },
+  {
+    "id": "chikenleg",
+    "fileName": "ICON-chikenLeg.png",
+    "name": "chikenLeg",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 23
+  },
+  {
+    "id": "chili",
+    "fileName": "ICON-Chili.png",
+    "name": "Chili",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 32
+  },
+  {
+    "id": "chinese",
+    "fileName": "ICON-chinese.png",
+    "name": "chinese",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 43
+  },
+  {
+    "id": "chineselantern",
+    "fileName": "ICON-chineseLantern.png",
+    "name": "chineseLantern",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 23
+  },
+  {
+    "id": "chocolate2",
+    "fileName": "ICON-chocolate2.png",
+    "name": "chocolate2",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 23
+  },
+  {
+    "id": "chupachups",
+    "fileName": "ICON-chupaChups.png",
+    "name": "chupaChups",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "circus",
+    "fileName": "ICON-circus.png",
+    "name": "circus",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 17
+  },
+  {
+    "id": "clip",
+    "fileName": "ICON-clip.png",
+    "name": "clip",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "cloudlightning — копия",
+    "fileName": "ICON-cloudLightning — копия.png",
+    "name": "cloudLightning — копия",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 27
+  },
+  {
+    "id": "cloudrainbow",
+    "fileName": "ICON-cloudRainbow.png",
+    "name": "cloudRainbow",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 28
+  },
+  {
+    "id": "clown",
+    "fileName": "ICON-clown.png",
+    "name": "clown",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 31
+  },
+  {
+    "id": "cobra",
+    "fileName": "ICON-cobra.png",
+    "name": "cobra",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 30
+  },
+  {
+    "id": "cocktail",
+    "fileName": "ICON-cocktail.png",
+    "name": "cocktail",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 40
+  },
+  {
+    "id": "cocktail3",
+    "fileName": "ICON-cocktail3.png",
+    "name": "cocktail3",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 15
+  },
+  {
+    "id": "coffeecocktail",
+    "fileName": "ICON-coffeeCocktail.png",
+    "name": "coffeeCocktail",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 22
+  },
+  {
+    "id": "cook",
+    "fileName": "ICON-cook.png",
+    "name": "cook",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 28
+  },
+  {
+    "id": "cosmonaut",
+    "fileName": "ICON-cosmonaut.png",
+    "name": "cosmonaut",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 13
+  },
+  {
+    "id": "cottoncandy",
+    "fileName": "ICON-cottoncandy.png",
+    "name": "cottoncandy",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 23
+  },
+  {
+    "id": "cowboy",
+    "fileName": "ICON-cowboy.png",
+    "name": "cowboy",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 36
+  },
+  {
+    "id": "cowhead",
+    "fileName": "ICON-CowHead.png",
+    "name": "CowHead",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 31
+  },
+  {
+    "id": "cream",
+    "fileName": "ICON-cream.png",
+    "name": "cream",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 34
+  },
+  {
+    "id": "crepe",
+    "fileName": "ICON-crepe.png",
+    "name": "crepe",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 34
+  },
+  {
+    "id": "crown",
+    "fileName": "ICON-crown.png",
+    "name": "crown",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "crystal",
+    "fileName": "ICON-crystal.png",
+    "name": "crystal",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 30
+  },
+  {
+    "id": "cucumber",
+    "fileName": "ICON-cucumber.png",
+    "name": "cucumber",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 25
+  },
+  {
+    "id": "cup",
+    "fileName": "icon-cup.png",
+    "name": "cup",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "cup_0",
+    "fileName": "icon-cup_0.png",
+    "name": "cup_0",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "dango",
+    "fileName": "icon-dango.png",
+    "name": "dango",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 22
+  },
+  {
+    "id": "demon",
+    "fileName": "ICON-demon.png",
+    "name": "demon",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 36
+  },
+  {
+    "id": "desert",
+    "fileName": "ICON-desert.png",
+    "name": "desert",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 25
+  },
+  {
+    "id": "diamond",
+    "fileName": "ICON-diamond.png",
+    "name": "diamond",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 11
+  },
+  {
+    "id": "dino",
+    "fileName": "ICON-dino.png",
+    "name": "dino",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 28
+  },
+  {
+    "id": "dinocostume",
+    "fileName": "ICON-DinoCostume.png",
+    "name": "DinoCostume",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 23
+  },
+  {
+    "id": "dinodima",
+    "fileName": "ICON-dinoDima.png",
+    "name": "dinoDima",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 31
+  },
+  {
+    "id": "dnk",
+    "fileName": "ICON-dnk.png",
+    "name": "dnk",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 25
+  },
+  {
+    "id": "dogbasket",
+    "fileName": "ICON-dogBasket.png",
+    "name": "dogBasket",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "dogsfood",
+    "fileName": "ICON-DogsFood.png",
+    "name": "DogsFood",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 18
+  },
+  {
+    "id": "donut",
+    "fileName": "ICON-donut.png",
+    "name": "donut",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 18
+  },
+  {
+    "id": "drakar",
+    "fileName": "ICON-drakar.png",
+    "name": "drakar",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 44
+  },
+  {
+    "id": "dress",
+    "fileName": "ICON-dress.png",
+    "name": "dress",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 28
+  },
+  {
+    "id": "dresslongpink",
+    "fileName": "ICON-DressLongPink.png",
+    "name": "DressLongPink",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 29
+  },
+  {
+    "id": "drum3",
+    "fileName": "ICON-drum3.png",
+    "name": "drum3",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 4
+  },
+  {
+    "id": "duck",
+    "fileName": "ICON-duck.png",
+    "name": "duck",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 33
+  },
+  {
+    "id": "ducknew",
+    "fileName": "ICON-duckNew.png",
+    "name": "duckNew",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 26
+  },
+  {
+    "id": "duck_0",
+    "fileName": "icon-duck_0.png",
+    "name": "duck_0",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 22
+  },
+  {
+    "id": "dwarf",
+    "fileName": "ICON-dwarf.png",
+    "name": "dwarf",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 27
+  },
+  {
+    "id": "eagle",
+    "fileName": "ICON-eagle.png",
+    "name": "eagle",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 27
+  },
+  {
+    "id": "easel (1)",
+    "fileName": "ICON-easel (1).png",
+    "name": "easel (1)",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 16
+  },
+  {
+    "id": "easteregg",
+    "fileName": "ICON-EasterEgg.png",
+    "name": "EasterEgg",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "eggground",
+    "fileName": "ICON-EggGround.png",
+    "name": "EggGround",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 13
+  },
+  {
+    "id": "eggplant",
+    "fileName": "ICON-eggplant.png",
+    "name": "eggplant",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 23
+  },
+  {
+    "id": "electroguitar",
+    "fileName": "ICON-electroGuitar.png",
+    "name": "electroGuitar",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 26
+  },
+  {
+    "id": "elephant",
+    "fileName": "ICON-Elephant.png",
+    "name": "Elephant",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 32
+  },
+  {
+    "id": "elephantindian",
+    "fileName": "ICON-elephantIndian.png",
+    "name": "elephantIndian",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 28
+  },
+  {
+    "id": "emojipunk",
+    "fileName": "ICON-EmojiPunk.png",
+    "name": "EmojiPunk",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "eraser",
+    "fileName": "icon-eraser.png",
+    "name": "eraser",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 16
+  },
+  {
+    "id": "eyeshadows",
+    "fileName": "ICON-EYESHADOWS.png",
+    "name": "EYESHADOWS",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "fairygirl",
+    "fileName": "ICON-fairyGirl.png",
+    "name": "fairyGirl",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 35
+  },
+  {
+    "id": "fanjapanese",
+    "fileName": "ICON-fanJapanese.png",
+    "name": "fanJapanese",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 17
+  },
+  {
+    "id": "featherink",
+    "fileName": "ICON-featherInk.png",
+    "name": "featherInk",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 26
+  },
+  {
+    "id": "fig",
+    "fileName": "ICON-fig.png",
+    "name": "fig",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "fingerzombie",
+    "fileName": "ICON-FingerZombie.png",
+    "name": "FingerZombie",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 19
+  },
+  {
+    "id": "fire",
+    "fileName": "ICON-fire.png",
+    "name": "fire",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 26
+  },
+  {
+    "id": "fishfugu",
+    "fileName": "ICON-fishFugu.png",
+    "name": "fishFugu",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 28
+  },
+  {
+    "id": "fishpackage",
+    "fileName": "ICON-FishPackage.png",
+    "name": "FishPackage",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 27
+  },
+  {
+    "id": "fishseaweed",
+    "fileName": "ICON-fishSeaweed.png",
+    "name": "fishSeaweed",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 33
+  },
+  {
+    "id": "flamingos",
+    "fileName": "ICON-flamingos.png",
+    "name": "flamingos",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 33
+  },
+  {
+    "id": "flask",
+    "fileName": "ICON-flask.png",
+    "name": "flask",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 20
+  },
+  {
+    "id": "flowersunflower",
+    "fileName": "ICON-flowerSunFlower.png",
+    "name": "flowerSunFlower",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 37
+  },
+  {
+    "id": "foxhead",
+    "fileName": "ICON-foxHead.png",
+    "name": "foxHead",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 26
+  },
+  {
+    "id": "frank",
+    "fileName": "ICON-frank.png",
+    "name": "frank",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 23
+  },
+  {
+    "id": "frog",
+    "fileName": "ICON-frog.png",
+    "name": "frog",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 19
+  },
+  {
+    "id": "frogprincess2",
+    "fileName": "ICON-FrogPrincess2.png",
+    "name": "FrogPrincess2",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 26
+  },
+  {
+    "id": "gamepad",
+    "fileName": "icon-gamepad.png",
+    "name": "gamepad",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 25
+  },
+  {
+    "id": "gingermancup",
+    "fileName": "ICON-gingermanCup.png",
+    "name": "gingermanCup",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 20
+  },
+  {
+    "id": "giraffecostume",
+    "fileName": "ICON-GiraffeCostume.png",
+    "name": "GiraffeCostume",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 31
+  },
+  {
+    "id": "godzillabook",
+    "fileName": "ICON-GodzillaBook.png",
+    "name": "GodzillaBook",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 7
+  },
+  {
+    "id": "golf",
+    "fileName": "ICON-golf.png",
+    "name": "golf",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 25
+  },
+  {
+    "id": "golf_0",
+    "fileName": "ICON-golf_0.png",
+    "name": "golf_0",
+    "hasGlb": false,
+    "hasPhysicsShape": false,
+    "contourPointsCount": 0
+  },
+  {
+    "id": "gorilla",
+    "fileName": "ICON-gorilla.png",
+    "name": "gorilla",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "granny",
+    "fileName": "ICON-granny.png",
+    "name": "granny",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 25
+  },
+  {
+    "id": "guitar — копия",
+    "fileName": "ICON-guitar — копия.png",
+    "name": "guitar — копия",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "hairstraightener",
+    "fileName": "ICON-hairStraightener.png",
+    "name": "hairStraightener",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 43
+  },
+  {
+    "id": "hamster",
+    "fileName": "icon-hamster.png",
+    "name": "hamster",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 33
+  },
+  {
+    "id": "hand",
+    "fileName": "icon-hand.png",
+    "name": "hand",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "handeyeindian",
+    "fileName": "ICON-handEyeIndian.png",
+    "name": "handEyeIndian",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "heartfire",
+    "fileName": "ICON-heartfire.png",
+    "name": "heartfire",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 35
+  },
+  {
+    "id": "heartplanet",
+    "fileName": "ICON-HeartPlanet.png",
+    "name": "HeartPlanet",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 23
+  },
+  {
+    "id": "heartred",
+    "fileName": "ICON-heartRed.png",
+    "name": "heartRed",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 25
+  },
+  {
+    "id": "heartsbubbles",
+    "fileName": "ICON-HeartsBubbles.png",
+    "name": "HeartsBubbles",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 23
+  },
+  {
+    "id": "heartwings",
+    "fileName": "ICON-heartWings.png",
+    "name": "heartWings",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 29
+  },
+  {
+    "id": "helmet",
+    "fileName": "icon-helmet.png",
+    "name": "helmet",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "heromask",
+    "fileName": "ICON-heroMask.png",
+    "name": "heroMask",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 22
+  },
+  {
+    "id": "hippimobile 1",
+    "fileName": "icon-hippimobile 1.png",
+    "name": "hippimobile 1",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "home",
+    "fileName": "ICON-home.png",
+    "name": "home",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 16
+  },
+  {
+    "id": "honey",
+    "fileName": "ICON-Honey.png",
+    "name": "Honey",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 32
+  },
+  {
+    "id": "hoodie",
+    "fileName": "ICON-hoodie.png",
+    "name": "hoodie",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 25
+  },
+  {
+    "id": "horsetoy",
+    "fileName": "ICON-HorseToy.png",
+    "name": "HorseToy",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 33
+  },
+  {
+    "id": "hotdog",
+    "fileName": "ICON-hotdog.png",
+    "name": "hotdog",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "hotfoodegg",
+    "fileName": "ICON-HotFoodEgg.png",
+    "name": "HotFoodEgg",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 22
+  },
+  {
+    "id": "icecream",
+    "fileName": "ICON-iceCream.png",
+    "name": "iceCream",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 16
+  },
+  {
+    "id": "icecreamanother",
+    "fileName": "ICON-icecreamAnother.png",
+    "name": "icecreamAnother",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 23
+  },
+  {
+    "id": "icecreamcam",
+    "fileName": "icon-iceCreamCam.png",
+    "name": "iceCreamCam",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 16
+  },
+  {
+    "id": "icecreamer",
+    "fileName": "ICON-iceCreamer.png",
+    "name": "iceCreamer",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 31
+  },
+  {
+    "id": "icecreamfallen",
+    "fileName": "ICON-IceCreamFallen.png",
+    "name": "IceCreamFallen",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 23
+  },
+  {
+    "id": "icecream_0",
+    "fileName": "ICON-icecream_0.png",
+    "name": "icecream_0",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 11
+  },
+  {
+    "id": "instax",
+    "fileName": "ICON-instax.png",
+    "name": "instax",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 10
+  },
+  {
+    "id": "island",
+    "fileName": "ICON-island.png",
+    "name": "island",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 39
+  },
+  {
+    "id": "jam",
+    "fileName": "ICON-Jam.png",
+    "name": "Jam",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 20
+  },
+  {
+    "id": "jester",
+    "fileName": "ICON-jester.png",
+    "name": "jester",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 34
+  },
+  {
+    "id": "juicer",
+    "fileName": "ICON-juicer.png",
+    "name": "juicer",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "keyheart",
+    "fileName": "ICON-keyHeart.png",
+    "name": "keyHeart",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 23
+  },
+  {
+    "id": "keyhome",
+    "fileName": "ICON-keyHome.png",
+    "name": "keyHome",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 36
+  },
+  {
+    "id": "kfc",
+    "fileName": "ICON-kfc.png",
+    "name": "kfc",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 36
+  },
+  {
+    "id": "kite",
+    "fileName": "icon-kite.png",
+    "name": "kite",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 32
+  },
+  {
+    "id": "kiwi",
+    "fileName": "ICON-kiwi.png",
+    "name": "kiwi",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 23
+  },
+  {
+    "id": "koala — копия",
+    "fileName": "ICON-koala — копия.png",
+    "name": "koala — копия",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 35
+  },
+  {
+    "id": "laundry",
+    "fileName": "ICON-laundry.png",
+    "name": "laundry",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 16
+  },
+  {
+    "id": "lemonade",
+    "fileName": "ICON-lemonade.png",
+    "name": "lemonade",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "lightfish",
+    "fileName": "Icon-lightfish.png",
+    "name": "lightfish",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 26
+  },
+  {
+    "id": "lightning",
+    "fileName": "ICON-lightning.png",
+    "name": "lightning",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "like",
+    "fileName": "ICON-like.png",
+    "name": "like",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 11
+  },
+  {
+    "id": "lion",
+    "fileName": "ICON-lion.png",
+    "name": "lion",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 31
+  },
+  {
+    "id": "log",
+    "fileName": "ICON-log.png",
+    "name": "log",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 23
+  },
+  {
+    "id": "lollipop",
+    "fileName": "ICON-lollipop.png",
+    "name": "lollipop",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "macaroon",
+    "fileName": "ICON-macaroon.png",
+    "name": "macaroon",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 25
+  },
+  {
+    "id": "machineoil",
+    "fileName": "ICON-machineOil.png",
+    "name": "machineOil",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 10
+  },
+  {
+    "id": "magicball",
+    "fileName": "ICON-magicball.png",
+    "name": "magicball",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 18
+  },
+  {
+    "id": "magnet",
+    "fileName": "ICON-magnet.png",
+    "name": "magnet",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 13
+  },
+  {
+    "id": "map",
+    "fileName": "ICON-map.png",
+    "name": "map",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 38
+  },
+  {
+    "id": "map_0",
+    "fileName": "icon-map_0.png",
+    "name": "map_0",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 25
+  },
+  {
+    "id": "maracas",
+    "fileName": "icon-maracas.png",
+    "name": "maracas",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "marshmallow",
+    "fileName": "ICON-marshmallow.png",
+    "name": "marshmallow",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 30
+  },
+  {
+    "id": "mermaidariel",
+    "fileName": "ICON-mermaidAriel.png",
+    "name": "mermaidAriel",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 32
+  },
+  {
+    "id": "mexicoman",
+    "fileName": "ICON-mexicoMan.png",
+    "name": "mexicoMan",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 26
+  },
+  {
+    "id": "money",
+    "fileName": "ICON-money.png",
+    "name": "money",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "monk",
+    "fileName": "ICON-monk.png",
+    "name": "monk",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 28
+  },
+  {
+    "id": "moon",
+    "fileName": "Icon-moon.png",
+    "name": "moon",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 26
+  },
+  {
+    "id": "moti",
+    "fileName": "icon-moti.png",
+    "name": "moti",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 23
+  },
+  {
+    "id": "mousecomputer",
+    "fileName": "ICON-mouseComputer.png",
+    "name": "mouseComputer",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 23
+  },
+  {
+    "id": "mummy",
+    "fileName": "ICON-mummy.png",
+    "name": "mummy",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 17
+  },
+  {
+    "id": "mushroom",
+    "fileName": "ICON-mushroom.png",
+    "name": "mushroom",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 25
+  },
+  {
+    "id": "napkins",
+    "fileName": "ICON-napkins.png",
+    "name": "napkins",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 18
+  },
+  {
+    "id": "navyseeal",
+    "fileName": "icon-navyseeal.png",
+    "name": "navyseeal",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 22
+  },
+  {
+    "id": "nefertiti",
+    "fileName": "ICON-Nefertiti.png",
+    "name": "Nefertiti",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 23
+  },
+  {
+    "id": "niceass",
+    "fileName": "ICON-niceAss.png",
+    "name": "niceAss",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "ninja",
+    "fileName": "ICON-ninja.png",
+    "name": "ninja",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 26
+  },
+  {
+    "id": "nuclear",
+    "fileName": "ICON-nuclear.png",
+    "name": "nuclear",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 20
+  },
+  {
+    "id": "onionpurple",
+    "fileName": "ICON-onionPurple.png",
+    "name": "onionPurple",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 27
+  },
+  {
+    "id": "overalls",
+    "fileName": "ICON-overalls.png",
+    "name": "overalls",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 33
+  },
+  {
+    "id": "owlfly",
+    "fileName": "ICON-OwlFly.png",
+    "name": "OwlFly",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 38
+  },
+  {
+    "id": "packman",
+    "fileName": "ICON-packman.png",
+    "name": "packman",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 27
+  },
+  {
+    "id": "paintroller",
+    "fileName": "ICON-PaintRoller.png",
+    "name": "PaintRoller",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 22
+  },
+  {
+    "id": "pajamaspink",
+    "fileName": "ICON-pajamasPink.png",
+    "name": "pajamasPink",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 34
+  },
+  {
+    "id": "pancakes",
+    "fileName": "ICON-pancakes.png",
+    "name": "pancakes",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "paperpencil",
+    "fileName": "ICON-paperPencil.png",
+    "name": "paperPencil",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 9
+  },
+  {
+    "id": "parrot",
+    "fileName": "ICON-parrot.png",
+    "name": "parrot",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 25
+  },
+  {
+    "id": "peach",
+    "fileName": "ICON-peach.png",
+    "name": "peach",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "pelican",
+    "fileName": "ICON-pelican.png",
+    "name": "pelican",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 35
+  },
+  {
+    "id": "pepperpot",
+    "fileName": "ICON-PepperPot.png",
+    "name": "PepperPot",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 7
+  },
+  {
+    "id": "pig",
+    "fileName": "ICON-pig.png",
+    "name": "pig",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 29
+  },
+  {
+    "id": "pig_0",
+    "fileName": "ICON-pig_0.png",
+    "name": "pig_0",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 27
+  },
+  {
+    "id": "pill",
+    "fileName": "ICON-pill.png",
+    "name": "pill",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 19
+  },
+  {
+    "id": "pineapple1",
+    "fileName": "ICON-pineapple1.png",
+    "name": "pineapple1",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 31
+  },
+  {
+    "id": "pinguin — копия",
+    "fileName": "ICON-pinguin — копия.png",
+    "name": "pinguin — копия",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 31
+  },
+  {
+    "id": "pinjata",
+    "fileName": "ICON-pinjata.png",
+    "name": "pinjata",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "pirate2",
+    "fileName": "ICON-pirate2.png",
+    "name": "pirate2",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 28
+  },
+  {
+    "id": "pizza",
+    "fileName": "ICON-pizza.png",
+    "name": "pizza",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 13
+  },
+  {
+    "id": "plane",
+    "fileName": "ICON-plane.png",
+    "name": "plane",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 30
+  },
+  {
+    "id": "planet",
+    "fileName": "ICON-planet.png",
+    "name": "planet",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "policeman",
+    "fileName": "ICON-policeman.png",
+    "name": "policeman",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "poncho",
+    "fileName": "ICON-Poncho.png",
+    "name": "Poncho",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 30
+  },
+  {
+    "id": "popit",
+    "fileName": "ICON-popIt.png",
+    "name": "popIt",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "postalstamp",
+    "fileName": "ICON-postalStamp.png",
+    "name": "postalStamp",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 7
+  },
+  {
+    "id": "pot",
+    "fileName": "ICON-pot.png",
+    "name": "pot",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 12
+  },
+  {
+    "id": "potion",
+    "fileName": "ICON-potion.png",
+    "name": "potion",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 25
+  },
+  {
+    "id": "pounder",
+    "fileName": "ICON-Pounder.png",
+    "name": "Pounder",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 25
+  },
+  {
+    "id": "powder",
+    "fileName": "ICON-powder.png",
+    "name": "powder",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 20
+  },
+  {
+    "id": "pudding",
+    "fileName": "ICON-pudding.png",
+    "name": "pudding",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 25
+  },
+  {
+    "id": "punch",
+    "fileName": "ICON-punch.png",
+    "name": "punch",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 17
+  },
+  {
+    "id": "punk",
+    "fileName": "ICON-punk.png",
+    "name": "punk",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 31
+  },
+  {
+    "id": "rabbithat",
+    "fileName": "ICON-RabbitHat.png",
+    "name": "RabbitHat",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 30
+  },
+  {
+    "id": "radish",
+    "fileName": "ICON-radish.png",
+    "name": "radish",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 34
+  },
+  {
+    "id": "rainbow-cloud",
+    "fileName": "ICON-RAINBOW-CLOUD.png",
+    "name": "RAINBOW-CLOUD",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 19
+  },
+  {
+    "id": "ramen",
+    "fileName": "ICON-ramen.png",
+    "name": "ramen",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 26
+  },
+  {
+    "id": "rhinoceros",
+    "fileName": "ICON-rhinoceros.png",
+    "name": "rhinoceros",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 32
+  },
+  {
+    "id": "rocket",
+    "fileName": "ICON-rocket.png",
+    "name": "rocket",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 7
+  },
+  {
+    "id": "rollstrawberry",
+    "fileName": "ICON-RollStrawberry.png",
+    "name": "RollStrawberry",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 28
+  },
+  {
+    "id": "roster",
+    "fileName": "ICON-roster.png",
+    "name": "roster",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 31
+  },
+  {
+    "id": "salute",
+    "fileName": "ICON-salute.png",
+    "name": "salute",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 14
+  },
+  {
+    "id": "sandwichegg",
+    "fileName": "ICON-SandwichEgg.png",
+    "name": "SandwichEgg",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 17
+  },
+  {
+    "id": "santa3",
+    "fileName": "ICON-santa3.png",
+    "name": "santa3",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 25
+  },
+  {
+    "id": "scroll",
+    "fileName": "ICON-scroll.png",
+    "name": "scroll",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 17
+  },
+  {
+    "id": "seahorse",
+    "fileName": "ICON-SeaHorse.png",
+    "name": "SeaHorse",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 28
+  },
+  {
+    "id": "shark",
+    "fileName": "ICON-shark.png",
+    "name": "shark",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 15
+  },
+  {
+    "id": "shark2",
+    "fileName": "ICON-shark2.png",
+    "name": "shark2",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 30
+  },
+  {
+    "id": "sharpener",
+    "fileName": "ICON-sharpener.png",
+    "name": "sharpener",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 33
+  },
+  {
+    "id": "shawarma",
+    "fileName": "ICON-shawarma.png",
+    "name": "shawarma",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 27
+  },
+  {
+    "id": "ship",
+    "fileName": "ICON-ship.png",
+    "name": "ship",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 36
+  },
+  {
+    "id": "sledgifts",
+    "fileName": "ICON-sledGifts.png",
+    "name": "sledGifts",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 28
+  },
+  {
+    "id": "smoothie",
+    "fileName": "ICON-smoothie.png",
+    "name": "smoothie",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "snail",
+    "fileName": "ICON-Snail.png",
+    "name": "Snail",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 29
+  },
+  {
+    "id": "snake",
+    "fileName": "ICON-snake.png",
+    "name": "snake",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 46
+  },
+  {
+    "id": "sneakerv",
+    "fileName": "ICON-sneakerV.png",
+    "name": "sneakerV",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 20
+  },
+  {
+    "id": "soapfoam",
+    "fileName": "ICON-SoapFoam.png",
+    "name": "SoapFoam",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 11
+  },
+  {
+    "id": "sock",
+    "fileName": "ICON-sock.png",
+    "name": "sock",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 16
+  },
+  {
+    "id": "spagirl",
+    "fileName": "ICON-spaGirl.png",
+    "name": "spaGirl",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 20
+  },
+  {
+    "id": "spices",
+    "fileName": "ICON-spices.png",
+    "name": "spices",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "spray",
+    "fileName": "ICON-spray.png",
+    "name": "spray",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "sprout",
+    "fileName": "ICON-sprout.png",
+    "name": "sprout",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 42
+  },
+  {
+    "id": "squid",
+    "fileName": "ICON-squid.png",
+    "name": "squid",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 31
+  },
+  {
+    "id": "star",
+    "fileName": "ICON-star.png",
+    "name": "star",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 23
+  },
+  {
+    "id": "starhand",
+    "fileName": "ICON-starHand.png",
+    "name": "starHand",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 20
+  },
+  {
+    "id": "sterringwheel",
+    "fileName": "ICON-sterringWheel.png",
+    "name": "sterringWheel",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 22
+  },
+  {
+    "id": "stingray",
+    "fileName": "ICON-stingray.png",
+    "name": "stingray",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 34
+  },
+  {
+    "id": "stripefish",
+    "fileName": "Icon-stripefish.png",
+    "name": "stripefish",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 22
+  },
+  {
+    "id": "submarine",
+    "fileName": "ICON-submarine.png",
+    "name": "submarine",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 20
+  },
+  {
+    "id": "succulent",
+    "fileName": "ICON-succulent.png",
+    "name": "succulent",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 28
+  },
+  {
+    "id": "suitcase",
+    "fileName": "ICON-suitcase.png",
+    "name": "suitcase",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 8
+  },
+  {
+    "id": "sunbathing",
+    "fileName": "icon-sunbathing.png",
+    "name": "sunbathing",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 10
+  },
+  {
+    "id": "sunbed",
+    "fileName": "ICON-sunbed.png",
+    "name": "sunbed",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 32
+  },
+  {
+    "id": "sunsea",
+    "fileName": "ICON-sunSea.png",
+    "name": "sunSea",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 30
+  },
+  {
+    "id": "sunsetsea",
+    "fileName": "ICON-SunsetSea.png",
+    "name": "SunsetSea",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 46
+  },
+  {
+    "id": "sunsunglasses",
+    "fileName": "ICON-sunSunglasses.png",
+    "name": "sunSunglasses",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 36
+  },
+  {
+    "id": "superhero",
+    "fileName": "ICON-superhero.png",
+    "name": "superhero",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 6
+  },
+  {
+    "id": "surfer",
+    "fileName": "icon-surfer.png",
+    "name": "surfer",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 26
+  },
+  {
+    "id": "surpriseboxman",
+    "fileName": "ICON-surpriseBoxMan.png",
+    "name": "surpriseBoxMan",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "sushi",
+    "fileName": "ICON-sushi.png",
+    "name": "sushi",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 19
+  },
+  {
+    "id": "sweatercanada",
+    "fileName": "ICON-sweaterCanada.png",
+    "name": "sweaterCanada",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 7
+  },
+  {
+    "id": "swith",
+    "fileName": "ICON-swith.png",
+    "name": "swith",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 7
+  },
+  {
+    "id": "sword",
+    "fileName": "ICON-sword.png",
+    "name": "sword",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 33
+  },
+  {
+    "id": "tamagotchi",
+    "fileName": "ICON-tamagotchi.png",
+    "name": "tamagotchi",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 29
+  },
+  {
+    "id": "target",
+    "fileName": "ICON-target.png",
+    "name": "target",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 26
+  },
+  {
+    "id": "tea",
+    "fileName": "icon-tea.png",
+    "name": "tea",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 17
+  },
+  {
+    "id": "tetris 1",
+    "fileName": "icon-tetris 1.png",
+    "name": "tetris 1",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "thermometer36",
+    "fileName": "ICON-thermometer36.png",
+    "name": "thermometer36",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 17
+  },
+  {
+    "id": "toaster",
+    "fileName": "ICON-toaster.png",
+    "name": "toaster",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 13
+  },
+  {
+    "id": "toilet",
+    "fileName": "ICON-toilet.png",
+    "name": "toilet",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 23
+  },
+  {
+    "id": "tomahawk",
+    "fileName": "ICON-tomahawk.png",
+    "name": "tomahawk",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 35
+  },
+  {
+    "id": "toreador",
+    "fileName": "ICON-toreador.png",
+    "name": "toreador",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 26
+  },
+  {
+    "id": "tornado",
+    "fileName": "ICON-tornado.png",
+    "name": "tornado",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 38
+  },
+  {
+    "id": "totemmask",
+    "fileName": "ICON-totemMask.png",
+    "name": "totemMask",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 26
+  },
+  {
+    "id": "trafficlight",
+    "fileName": "ICON-trafficlight.png",
+    "name": "trafficlight",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 7
+  },
+  {
+    "id": "traydish",
+    "fileName": "ICON-trayDish.png",
+    "name": "trayDish",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 26
+  },
+  {
+    "id": "treemoon",
+    "fileName": "ICON-treeMoon.png",
+    "name": "treeMoon",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "trident",
+    "fileName": "ICON-trident.png",
+    "name": "trident",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 33
+  },
+  {
+    "id": "tshirt",
+    "fileName": "ICON-Tshirt.png",
+    "name": "Tshirt",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 36
+  },
+  {
+    "id": "turkey",
+    "fileName": "ICON-turkey.png",
+    "name": "turkey",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 33
+  },
+  {
+    "id": "tyansailor",
+    "fileName": "ICON-tyanSailor.png",
+    "name": "tyanSailor",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 32
+  },
+  {
+    "id": "ufo",
+    "fileName": "ICON-ufo.png",
+    "name": "ufo",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 22
+  },
+  {
+    "id": "unicorn",
+    "fileName": "ICON-unicorn.png",
+    "name": "unicorn",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 27
+  },
+  {
+    "id": "unicornbook0",
+    "fileName": "ICON-UnicornBook0.png",
+    "name": "UnicornBook0",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 29
+  },
+  {
+    "id": "vampire",
+    "fileName": "ICON-vampire.png",
+    "name": "vampire",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 22
+  },
+  {
+    "id": "vialpotion",
+    "fileName": "ICON-vialPotion.png",
+    "name": "vialPotion",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 25
+  },
+  {
+    "id": "viking",
+    "fileName": "ICON-viking.png",
+    "name": "viking",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 27
+  },
+  {
+    "id": "vulcano",
+    "fileName": "ICON-vulcano.png",
+    "name": "vulcano",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 27
+  },
+  {
+    "id": "wallet",
+    "fileName": "ICON-wallet.png",
+    "name": "wallet",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 18
+  },
+  {
+    "id": "wandmagical",
+    "fileName": "ICON-wandMagical.png",
+    "name": "wandMagical",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "waterlily",
+    "fileName": "ICON-waterLily.png",
+    "name": "waterLily",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 31
+  },
+  {
+    "id": "watermelon",
+    "fileName": "ICON-watermelon.png",
+    "name": "watermelon",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "whalesea0",
+    "fileName": "ICON-WhaleSea0.png",
+    "name": "WhaleSea0",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 29
+  },
+  {
+    "id": "whale — копия",
+    "fileName": "ICON-whale — копия.png",
+    "name": "whale — копия",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 37
+  },
+  {
+    "id": "wig",
+    "fileName": "ICON-wig.png",
+    "name": "wig",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 19
+  },
+  {
+    "id": "window",
+    "fileName": "ICON-window.png",
+    "name": "window",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 9
+  },
+  {
+    "id": "witchhat",
+    "fileName": "ICON-WitchHat.png",
+    "name": "WitchHat",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 23
+  },
+  {
+    "id": "wizard",
+    "fileName": "ICON-wizard.png",
+    "name": "wizard",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 35
+  },
+  {
+    "id": "wok",
+    "fileName": "ICON-wok.png",
+    "name": "wok",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 11
+  },
+  {
+    "id": "womenbody",
+    "fileName": "ICON-womenBody.png",
+    "name": "womenBody",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 18
+  },
+  {
+    "id": "wreathxmas",
+    "fileName": "ICON-WreathXmas.png",
+    "name": "WreathXmas",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "wrestler",
+    "fileName": "icon-wrestler.png",
+    "name": "wrestler",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 18
+  },
+  {
+    "id": "yellowsneaker",
+    "fileName": "ICON-YellowSneaker.png",
+    "name": "YellowSneaker",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 29
+  },
+  {
+    "id": "yogi",
+    "fileName": "ICON-yogi.png",
+    "name": "yogi",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 22
+  },
+  {
+    "id": "zombie 1",
+    "fileName": "ICON-zombie 1.png",
+    "name": "zombie 1",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 26
+  },
+  {
+    "id": "zombiehandbone",
+    "fileName": "ICON-ZombieHandBone.png",
+    "name": "ZombieHandBone",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": " onion",
+    "fileName": "ICON- onion.png",
+    "name": " onion",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 26
+  },
+  {
+    "id": " tv",
+    "fileName": "ICON- TV.png",
+    "name": " TV",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 16
+  },
+  {
+    "id": "",
+    "fileName": "Icon.png",
+    "name": "",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 17
+  },
+  {
+    "id": "afro",
+    "fileName": "IconAfro.png",
+    "name": "Afro",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "airpods",
+    "fileName": "IconAirpods.png",
+    "name": "Airpods",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "angelemoji",
+    "fileName": "IconAngelEmoji.png",
+    "name": "AngelEmoji",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 15
+  },
+  {
+    "id": "anteater",
+    "fileName": "IconAnteater.png",
+    "name": "Anteater",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 26
+  },
+  {
+    "id": "aquariumtower",
+    "fileName": "IconAquariumTower.png",
+    "name": "AquariumTower",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 15
+  },
+  {
+    "id": "armtattoo",
+    "fileName": "IconArmTattoo.png",
+    "name": "ArmTattoo",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 25
+  },
+  {
+    "id": "asianbuild",
+    "fileName": "IconAsianBuild.png",
+    "name": "AsianBuild",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "astronauthelmet",
+    "fileName": "IconAstronautHelmet.png",
+    "name": "AstronautHelmet",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 139
+  },
+  {
+    "id": "axolotl",
+    "fileName": "IconAxolotl.png",
+    "name": "Axolotl",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 30
+  },
+  {
+    "id": "bedgirl",
+    "fileName": "IconBedGirl.png",
+    "name": "BedGirl",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 16
+  },
+  {
+    "id": "bluebat",
+    "fileName": "IconBlueBat.png",
+    "name": "BlueBat",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 22
+  },
+  {
+    "id": "bluebird",
+    "fileName": "IconBlueBird.png",
+    "name": "BlueBird",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 22
+  },
+  {
+    "id": "blueghost",
+    "fileName": "IconBlueGhost.png",
+    "name": "BlueGhost",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "boiledegg",
+    "fileName": "IconBoiledEgg.png",
+    "name": "BoiledEgg",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "bowlhamster",
+    "fileName": "IconBowlHamster.png",
+    "name": "BowlHamster",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 18
+  },
+  {
+    "id": "boxershorts",
+    "fileName": "IconBoxerShorts.png",
+    "name": "BoxerShorts",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 20
+  },
+  {
+    "id": "boxheart",
+    "fileName": "IconBoxHeart.png",
+    "name": "BoxHeart",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 15
+  },
+  {
+    "id": "boxingglove",
+    "fileName": "IconBoxingGlove.png",
+    "name": "BoxingGlove",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 15
+  },
+  {
+    "id": "brokenegg",
+    "fileName": "IconBrokenEgg.png",
+    "name": "BrokenEgg",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 13
+  },
+  {
+    "id": "brokenheart",
+    "fileName": "IconBrokenHeart.png",
+    "name": "BrokenHeart",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 19
+  },
+  {
+    "id": "bullfinch",
+    "fileName": "IconBullfinch.png",
+    "name": "Bullfinch",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 19
+  },
+  {
+    "id": "cakestand",
+    "fileName": "IconCakeStand.png",
+    "name": "CakeStand",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 20
+  },
+  {
+    "id": "candyheart",
+    "fileName": "IconCandyHeart.png",
+    "name": "CandyHeart",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 22
+  },
+  {
+    "id": "canheart",
+    "fileName": "IconCanHeart.png",
+    "name": "CanHeart",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "cateyes",
+    "fileName": "IconCatEyes.png",
+    "name": "CatEyes",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 25
+  },
+  {
+    "id": "catstrawberry",
+    "fileName": "IconCatStrawberry.png",
+    "name": "CatStrawberry",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 25
+  },
+  {
+    "id": "cattoilet",
+    "fileName": "IconCatToilet.png",
+    "name": "CatToilet",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 22
+  },
+  {
+    "id": "cherry",
+    "fileName": "IconCherry.png",
+    "name": "Cherry",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 28
+  },
+  {
+    "id": "chickegg",
+    "fileName": "IconChickEgg.png",
+    "name": "ChickEgg",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 23
+  },
+  {
+    "id": "chinese",
+    "fileName": "IconChinese.png",
+    "name": "Chinese",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 137
+  },
+  {
+    "id": "chinisedress",
+    "fileName": "IconChiniseDress.png",
+    "name": "ChiniseDress",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 28
+  },
+  {
+    "id": "cinnabon",
+    "fileName": "IconCinnabon.png",
+    "name": "Cinnabon",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 16
+  },
+  {
+    "id": "cockhead",
+    "fileName": "IconCockHead.png",
+    "name": "CockHead",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 20
+  },
+  {
+    "id": "coconut",
+    "fileName": "IconCoconut.png",
+    "name": "Coconut",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "colorfulparrot",
+    "fileName": "IconColorfulParrot.png",
+    "name": "ColorfulParrot",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 19
+  },
+  {
+    "id": "corset",
+    "fileName": "IconCorset.png",
+    "name": "Corset",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 26
+  },
+  {
+    "id": "cotton",
+    "fileName": "IconCotton.png",
+    "name": "Cotton",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 25
+  },
+  {
+    "id": "crisps",
+    "fileName": "IconCrisps.png",
+    "name": "Crisps",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 27
+  },
+  {
+    "id": "crocoface",
+    "fileName": "IconCrocoFace.png",
+    "name": "CrocoFace",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 18
+  },
+  {
+    "id": "cupcakeheart",
+    "fileName": "IconCupcakeHeart.png",
+    "name": "CupcakeHeart",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 20
+  },
+  {
+    "id": "cupheart",
+    "fileName": "IconCupHeart.png",
+    "name": "CupHeart",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 11
+  },
+  {
+    "id": "cutebackpack",
+    "fileName": "IconCuteBackpack.png",
+    "name": "CuteBackpack",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 18
+  },
+  {
+    "id": "cuteoctopus",
+    "fileName": "IconCuteOctopus.png",
+    "name": "CuteOctopus",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 27
+  },
+  {
+    "id": "deer",
+    "fileName": "IconDeer.png",
+    "name": "Deer",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 30
+  },
+  {
+    "id": "dinobaby",
+    "fileName": "IconDinoBaby.png",
+    "name": "DinoBaby",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 190
+  },
+  {
+    "id": "divinghelmet",
+    "fileName": "IconDivingHelmet.png",
+    "name": "DivingHelmet",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 18
+  },
+  {
+    "id": "dolphin",
+    "fileName": "IconDolphin.png",
+    "name": "Dolphin",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 25
+  },
+  {
+    "id": "dragonfruit",
+    "fileName": "IconDragonFruit.png",
+    "name": "DragonFruit",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 22
+  },
+  {
+    "id": "drinkjar",
+    "fileName": "IconDrinkJar.png",
+    "name": "DrinkJar",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 66
+  },
+  {
+    "id": "ducklala",
+    "fileName": "IconDuckLala.png",
+    "name": "DuckLala",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "dummynecklace",
+    "fileName": "IconDummyNecklace.png",
+    "name": "DummyNecklace",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 25
+  },
+  {
+    "id": "easteregg",
+    "fileName": "IconEasterEgg.png",
+    "name": "EasterEgg",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 19
+  },
+  {
+    "id": "eclipse",
+    "fileName": "IconEclipse.png",
+    "name": "Eclipse",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "eggdragon",
+    "fileName": "IconEggDragon.png",
+    "name": "EggDragon",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 27
+  },
+  {
+    "id": "elvis",
+    "fileName": "IconElvis.png",
+    "name": "Elvis",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 20
+  },
+  {
+    "id": "emoji",
+    "fileName": "IconEmoji.png",
+    "name": "Emoji",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 19
+  },
+  {
+    "id": "emojihat",
+    "fileName": "IconEmojiHat.png",
+    "name": "EmojiHat",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "emojiparty",
+    "fileName": "IconEmojiParty.png",
+    "name": "EmojiParty",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 8
+  },
+  {
+    "id": "englishman",
+    "fileName": "IconEnglishman.png",
+    "name": "Englishman",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 28
+  },
+  {
+    "id": "feather",
+    "fileName": "IconFeather.png",
+    "name": "Feather",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 18
+  },
+  {
+    "id": "filmstock",
+    "fileName": "IconFilmStock.png",
+    "name": "FilmStock",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "fitnessbracelet",
+    "fileName": "IconFitnessBracelet.png",
+    "name": "FitnessBracelet",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 13
+  },
+  {
+    "id": "flasher",
+    "fileName": "IconFlasher.png",
+    "name": "Flasher",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 13
+  },
+  {
+    "id": "flowerblond",
+    "fileName": "IconFlowerBlond.png",
+    "name": "FlowerBlond",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 17
+  },
+  {
+    "id": "flyagaric",
+    "fileName": "IconFlyAgaric.png",
+    "name": "FlyAgaric",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 16
+  },
+  {
+    "id": "frogwater",
+    "fileName": "IconFrogWater.png",
+    "name": "FrogWater",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 18
+  },
+  {
+    "id": "fuji",
+    "fileName": "IconFuji.png",
+    "name": "Fuji",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 22
+  },
+  {
+    "id": "girlfrog",
+    "fileName": "IconGirlFrog.png",
+    "name": "GirlFrog",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 38
+  },
+  {
+    "id": "girlspa",
+    "fileName": "IconGirlSpa.png",
+    "name": "GirlSpa",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 184
+  },
+  {
+    "id": "glasses",
+    "fileName": "IconGlasses.png",
+    "name": "Glasses",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 23
+  },
+  {
+    "id": "goldfish",
+    "fileName": "IconGoldFish.png",
+    "name": "GoldFish",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 26
+  },
+  {
+    "id": "goldfishaquarium",
+    "fileName": "IconGoldfishAquarium.png",
+    "name": "GoldfishAquarium",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 14
+  },
+  {
+    "id": "greenduck",
+    "fileName": "IconGreenDuck.png",
+    "name": "GreenDuck",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 23
+  },
+  {
+    "id": "happyrat",
+    "fileName": "IconHappyRat.png",
+    "name": "HappyRat",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 25
+  },
+  {
+    "id": "hawaii",
+    "fileName": "IconHawaii.png",
+    "name": "Hawaii",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 22
+  },
+  {
+    "id": "heartflame",
+    "fileName": "IconHeartFlame.png",
+    "name": "HeartFlame",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "heartpaw",
+    "fileName": "IconHeartPaw.png",
+    "name": "HeartPaw",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 15
+  },
+  {
+    "id": "icecreambear",
+    "fileName": "IconIcecreamBear.png",
+    "name": "IcecreamBear",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "jamtost",
+    "fileName": "IconJamTost.png",
+    "name": "JamTost",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 11
+  },
+  {
+    "id": "jin 1",
+    "fileName": "IconJin 1.png",
+    "name": "Jin 1",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 22
+  },
+  {
+    "id": "kebab",
+    "fileName": "IconKebab.png",
+    "name": "Kebab",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 35
+  },
+  {
+    "id": "killerwhale",
+    "fileName": "IconKillerWhale.png",
+    "name": "KillerWhale",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 29
+  },
+  {
+    "id": "kilt",
+    "fileName": "IconKilt.png",
+    "name": "Kilt",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 16
+  },
+  {
+    "id": "lampheart",
+    "fileName": "IconLampHeart.png",
+    "name": "LampHeart",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 18
+  },
+  {
+    "id": "latinodress",
+    "fileName": "IconLatinoDress.png",
+    "name": "LatinoDress",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 19
+  },
+  {
+    "id": "lavalamp",
+    "fileName": "IconLavalamp.png",
+    "name": "Lavalamp",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 20
+  },
+  {
+    "id": "lego",
+    "fileName": "IconLego.png",
+    "name": "Lego",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 9
+  },
+  {
+    "id": "lemons",
+    "fileName": "IconLemons.png",
+    "name": "Lemons",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 27
+  },
+  {
+    "id": "letterheart",
+    "fileName": "IconLetterHeart.png",
+    "name": "LetterHeart",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 9
+  },
+  {
+    "id": "lighthouse",
+    "fileName": "IconLighthouse.png",
+    "name": "Lighthouse",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 22
+  },
+  {
+    "id": "lilyflower",
+    "fileName": "IconLilyFlower.png",
+    "name": "LilyFlower",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 27
+  },
+  {
+    "id": "lips",
+    "fileName": "IconLips.png",
+    "name": "Lips",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 18
+  },
+  {
+    "id": "lipstongue",
+    "fileName": "IconLipsTongue.png",
+    "name": "LipsTongue",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "liquidheart",
+    "fileName": "IconLiquidHeart.png",
+    "name": "LiquidHeart",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 28
+  },
+  {
+    "id": "makeupeye",
+    "fileName": "IconMakeupEye.png",
+    "name": "MakeupEye",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 9
+  },
+  {
+    "id": "mango",
+    "fileName": "IconMango.png",
+    "name": "Mango",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 17
+  },
+  {
+    "id": "marilynmonroe",
+    "fileName": "IconMarilynMonroe.png",
+    "name": "MarilynMonroe",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "marker",
+    "fileName": "IconMarker.png",
+    "name": "Marker",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 18
+  },
+  {
+    "id": "maskgirl",
+    "fileName": "IconMaskGirl.png",
+    "name": "MaskGirl",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 20
+  },
+  {
+    "id": "match",
+    "fileName": "IconMatch.png",
+    "name": "Match",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 16
+  },
+  {
+    "id": "meatknife",
+    "fileName": "IconMeatKnife.png",
+    "name": "MeatKnife",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 54
+  },
+  {
+    "id": "meteorite",
+    "fileName": "IconMeteorite.png",
+    "name": "Meteorite",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 14
+  },
+  {
+    "id": "miniship",
+    "fileName": "IconMiniShip.png",
+    "name": "MiniShip",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 34
+  },
+  {
+    "id": "mirrorlips",
+    "fileName": "IconMirrorLips.png",
+    "name": "MirrorLips",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 19
+  },
+  {
+    "id": "monstera",
+    "fileName": "IconMonstera.png",
+    "name": "Monstera",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 39
+  },
+  {
+    "id": "mountainflag",
+    "fileName": "IconMountainFlag.png",
+    "name": "MountainFlag",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 23
+  },
+  {
+    "id": "mustacheglasses",
+    "fileName": "IconMustacheGlasses.png",
+    "name": "MustacheGlasses",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "nigiri",
+    "fileName": "IconNigiri.png",
+    "name": "Nigiri",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 155
+  },
+  {
+    "id": "nut",
+    "fileName": "IconNut.png",
+    "name": "Nut",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 119
+  },
+  {
+    "id": "octopus",
+    "fileName": "IconOctopus.png",
+    "name": "Octopus",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "oliveoil",
+    "fileName": "IconOliveOil.png",
+    "name": "OliveOil",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 14
+  },
+  {
+    "id": "olympicjacket",
+    "fileName": "IconOlympicJacket.png",
+    "name": "OlympicJacket",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 22
+  },
+  {
+    "id": "papaya",
+    "fileName": "IconPapaya.png",
+    "name": "Papaya",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 23
+  },
+  {
+    "id": "parfume",
+    "fileName": "IconParfume.png",
+    "name": "Parfume",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "peacockhead",
+    "fileName": "IconPeacockHead.png",
+    "name": "PeacockHead",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 32
+  },
+  {
+    "id": "pearlshell",
+    "fileName": "IconPearlShell.png",
+    "name": "PearlShell",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "peas",
+    "fileName": "IconPeas.png",
+    "name": "Peas",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 25
+  },
+  {
+    "id": "pegasus",
+    "fileName": "IconPegasus.png",
+    "name": "Pegasus",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 18
+  },
+  {
+    "id": "penguinhat",
+    "fileName": "IconPenguinHat.png",
+    "name": "PenguinHat",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 15
+  },
+  {
+    "id": "pie",
+    "fileName": "IconPie.png",
+    "name": "Pie",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 17
+  },
+  {
+    "id": "pigman",
+    "fileName": "IconPigMan.png",
+    "name": "PigMan",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 20
+  },
+  {
+    "id": "pinkdress",
+    "fileName": "IconPinkDress.png",
+    "name": "PinkDress",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 33
+  },
+  {
+    "id": "pizzacheese",
+    "fileName": "IconPizzaCheese.png",
+    "name": "PizzaCheese",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 18
+  },
+  {
+    "id": "pocketlaunch",
+    "fileName": "IconPocketLaunch.png",
+    "name": "PocketLaunch",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 22
+  },
+  {
+    "id": "porthole",
+    "fileName": "IconPorthole.png",
+    "name": "Porthole",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 19
+  },
+  {
+    "id": "prize",
+    "fileName": "IconPrize.png",
+    "name": "Prize",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 20
+  },
+  {
+    "id": "pterodactyl",
+    "fileName": "IconPterodactyl.png",
+    "name": "Pterodactyl",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 22
+  },
+  {
+    "id": "puddle",
+    "fileName": "IconPuddle.png",
+    "name": "Puddle",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 31
+  },
+  {
+    "id": "puffin",
+    "fileName": "IconPuffin.png",
+    "name": "Puffin",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "pugdog",
+    "fileName": "IconPugDog.png",
+    "name": "PugDog",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 17
+  },
+  {
+    "id": "pumpkincandy",
+    "fileName": "IconPumpkinCandy.png",
+    "name": "PumpkinCandy",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 18
+  },
+  {
+    "id": "puppywash",
+    "fileName": "IconPuppyWash.png",
+    "name": "PuppyWash",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 20
+  },
+  {
+    "id": "puzzle",
+    "fileName": "iconPuzzle.png",
+    "name": "Puzzle",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 7
+  },
+  {
+    "id": "queen",
+    "fileName": "IconQueen.png",
+    "name": "Queen",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 30
+  },
+  {
+    "id": "rabbitgirl",
+    "fileName": "IconRabbitGirl.png",
+    "name": "RabbitGirl",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 32
+  },
+  {
+    "id": "rabbitwall",
+    "fileName": "IconRabbitWall.png",
+    "name": "RabbitWall",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 30
+  },
+  {
+    "id": "rambutanfruit",
+    "fileName": "IconRambutanFruit.png",
+    "name": "RambutanFruit",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 38
+  },
+  {
+    "id": "rattlesnake",
+    "fileName": "IconRattlesnake.png",
+    "name": "Rattlesnake",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 25
+  },
+  {
+    "id": "redlipstick",
+    "fileName": "IconRedLipstick.png",
+    "name": "RedLipstick",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 17
+  },
+  {
+    "id": "ringheart",
+    "fileName": "IconRingHeart.png",
+    "name": "RingHeart",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 19
+  },
+  {
+    "id": "robo",
+    "fileName": "IconRobo.png",
+    "name": "Robo",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 22
+  },
+  {
+    "id": "rollers",
+    "fileName": "IconRollers.png",
+    "name": "Rollers",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 32
+  },
+  {
+    "id": "rubik",
+    "fileName": "IconRubik.png",
+    "name": "Rubik",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 8
+  },
+  {
+    "id": "salmon",
+    "fileName": "IconSalmon.png",
+    "name": "Salmon",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "saxophone",
+    "fileName": "IconSaxophone.png",
+    "name": "Saxophone",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "schooluniform",
+    "fileName": "IconSchoolUniform.png",
+    "name": "SchoolUniform",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 30
+  },
+  {
+    "id": "scottishcat",
+    "fileName": "IconScottishCat.png",
+    "name": "ScottishCat",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 20
+  },
+  {
+    "id": "sharkhead",
+    "fileName": "IconSharkHead.png",
+    "name": "SharkHead",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 9
+  },
+  {
+    "id": "sheep",
+    "fileName": "IconSheep.png",
+    "name": "Sheep",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 26
+  },
+  {
+    "id": "sheepgrass",
+    "fileName": "IconSheepGrass.png",
+    "name": "SheepGrass",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 19
+  },
+  {
+    "id": "shirt",
+    "fileName": "IconShirt.png",
+    "name": "Shirt",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 18
+  },
+  {
+    "id": "skydoor",
+    "fileName": "IconSkyDoor.png",
+    "name": "SkyDoor",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 17
+  },
+  {
+    "id": "sleepmask",
+    "fileName": "IconSleepmask.png",
+    "name": "Sleepmask",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 16
+  },
+  {
+    "id": "smilefish",
+    "fileName": "IconSmileFish.png",
+    "name": "SmileFish",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 18
+  },
+  {
+    "id": "sneakers",
+    "fileName": "IconSneakers.png",
+    "name": "Sneakers",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 12
+  },
+  {
+    "id": "soap",
+    "fileName": "IconSoap.png",
+    "name": "Soap",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 112
+  },
+  {
+    "id": "spacandle",
+    "fileName": "IconSpaCandle.png",
+    "name": "SpaCandle",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 18
+  },
+  {
+    "id": "sponge",
+    "fileName": "IconSponge.png",
+    "name": "Sponge",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 18
+  },
+  {
+    "id": "sportsuit",
+    "fileName": "IconSportSuit.png",
+    "name": "SportSuit",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 26
+  },
+  {
+    "id": "sporttshirt",
+    "fileName": "IconSportTshirt.png",
+    "name": "SportTshirt",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 8
+  },
+  {
+    "id": "steakplate",
+    "fileName": "IconSteakPlate.png",
+    "name": "SteakPlate",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 18
+  },
+  {
+    "id": "strawberry",
+    "fileName": "IconStrawberry.png",
+    "name": "Strawberry",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 25
+  },
+  {
+    "id": "sunflower",
+    "fileName": "IconSunflower.png",
+    "name": "Sunflower",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 29
+  },
+  {
+    "id": "swimsuit",
+    "fileName": "IconSwimsuit.png",
+    "name": "Swimsuit",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 179
+  },
+  {
+    "id": "tabletennis",
+    "fileName": "IconTableTennis.png",
+    "name": "TableTennis",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 23
+  },
+  {
+    "id": "teddy",
+    "fileName": "IconTeddy.png",
+    "name": "Teddy",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "tennisball",
+    "fileName": "IconTennisBall.png",
+    "name": "TennisBall",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 156
+  },
+  {
+    "id": "throne",
+    "fileName": "IconThrone.png",
+    "name": "Throne",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 22
+  },
+  {
+    "id": "tiredemoji",
+    "fileName": "IconTiredEmoji.png",
+    "name": "TiredEmoji",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 20
+  },
+  {
+    "id": "tomato",
+    "fileName": "IconTomato.png",
+    "name": "Tomato",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "tonguepiercing",
+    "fileName": "IconTonguePiercing.png",
+    "name": "TonguePiercing",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 16
+  },
+  {
+    "id": "tshirtwash",
+    "fileName": "IconTshirtWash.png",
+    "name": "TshirtWash",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 23
+  },
+  {
+    "id": "turtleshell",
+    "fileName": "IconTurtleShell.png",
+    "name": "TurtleShell",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 16
+  },
+  {
+    "id": "ufohead",
+    "fileName": "IconUFOHead.png",
+    "name": "UFOHead",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 15
+  },
+  {
+    "id": "umbrellawind",
+    "fileName": "IconUmbrellaWind.png",
+    "name": "UmbrellaWind",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 19
+  },
+  {
+    "id": "underwear",
+    "fileName": "IconUnderwear.png",
+    "name": "Underwear",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 15
+  },
+  {
+    "id": "waist",
+    "fileName": "IconWaist.png",
+    "name": "Waist",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 15
+  },
+  {
+    "id": "watermice",
+    "fileName": "IconWatermIce.png",
+    "name": "WatermIce",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 21
+  },
+  {
+    "id": "wigwam (1)",
+    "fileName": "IconWigwam (1).png",
+    "name": "Wigwam (1)",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 12
+  },
+  {
+    "id": "windowcat",
+    "fileName": "IconWindowCat.png",
+    "name": "WindowCat",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 13
+  },
+  {
+    "id": "yellowdino",
+    "fileName": "IconYellowDino.png",
+    "name": "YellowDino",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 20
+  },
+  {
+    "id": "zombiebrain",
+    "fileName": "IconZombieBrain.png",
+    "name": "ZombieBrain",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 20
+  },
+  {
+    "id": "zombiegirl",
+    "fileName": "IconZombieGirl.png",
+    "name": "ZombieGirl",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 7
+  },
+  {
+    "id": "0",
+    "fileName": "Icon_0.png",
+    "name": "0",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 16
+  },
+  {
+    "id": "1",
+    "fileName": "Icon_1.png",
+    "name": "1",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 20
+  },
+  {
+    "id": "10",
+    "fileName": "Icon_10.png",
+    "name": "10",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 27
+  },
+  {
+    "id": "11",
+    "fileName": "Icon_11.png",
+    "name": "11",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 15
+  },
+  {
+    "id": "2",
+    "fileName": "Icon_2.png",
+    "name": "2",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 18
+  },
+  {
+    "id": "3",
+    "fileName": "icon_3.png",
+    "name": "3",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 20
+  },
+  {
+    "id": "4",
+    "fileName": "Icon_4.png",
+    "name": "4",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 26
+  },
+  {
+    "id": "5",
+    "fileName": "Icon_5.png",
+    "name": "5",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 27
+  },
+  {
+    "id": "6",
+    "fileName": "Icon_6.png",
+    "name": "6",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 16
+  },
+  {
+    "id": "7",
+    "fileName": "Icon_7.png",
+    "name": "7",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 20
+  },
+  {
+    "id": "8",
+    "fileName": "Icon_8.png",
+    "name": "8",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 17
+  },
+  {
+    "id": "9",
+    "fileName": "Icon_9.png",
+    "name": "9",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 20
+  },
+  {
+    "id": "ads",
+    "fileName": "icon_ads.png",
+    "name": "ads",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 10
+  },
+  {
+    "id": "ads_0",
+    "fileName": "icon_ads_0.png",
+    "name": "ads_0",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 9
+  },
+  {
+    "id": "corgi",
+    "fileName": "icon_corgi.png",
+    "name": "corgi",
+    "hasGlb": true,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 27
+  },
+  {
+    "id": "gdpr (1)",
+    "fileName": "icon_gdpr (1).png",
+    "name": "gdpr (1)",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 6
+  },
+  {
+    "id": "guy",
+    "fileName": "icon_guy.png",
+    "name": "guy",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 24
+  },
+  {
+    "id": "like",
+    "fileName": "icon_like.png",
+    "name": "like",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 9
+  },
+  {
+    "id": "like_0",
+    "fileName": "icon_like_0.png",
+    "name": "like_0",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 9
+  },
+  {
+    "id": "loading (1)",
+    "fileName": "icon_loading (1).png",
+    "name": "loading (1)",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 32
+  },
+  {
+    "id": "loading (2)",
+    "fileName": "icon_loading (2).png",
+    "name": "loading (2)",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 39
+  },
+  {
+    "id": "loading (3)",
+    "fileName": "icon_loading (3).png",
+    "name": "loading (3)",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 14
+  },
+  {
+    "id": "loading",
+    "fileName": "icon_loading.png",
+    "name": "loading",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 14
+  },
+  {
+    "id": "markers1 (1)",
+    "fileName": "icon_markers1 (1).png",
+    "name": "markers1 (1)",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 40
+  },
+  {
+    "id": "markers10",
+    "fileName": "icon_markers10.png",
+    "name": "markers10",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 46
+  },
+  {
+    "id": "markers11",
+    "fileName": "icon_markers11.png",
+    "name": "markers11",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 39
+  },
+  {
+    "id": "markers12",
+    "fileName": "icon_markers12.png",
+    "name": "markers12",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 38
+  },
+  {
+    "id": "markers13",
+    "fileName": "icon_markers13.png",
+    "name": "markers13",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 43
+  },
+  {
+    "id": "markers14",
+    "fileName": "icon_markers14.png",
+    "name": "markers14",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 46
+  },
+  {
+    "id": "markers15",
+    "fileName": "icon_markers15.png",
+    "name": "markers15",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 43
+  },
+  {
+    "id": "markers2",
+    "fileName": "icon_markers2.png",
+    "name": "markers2",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 57
+  },
+  {
+    "id": "markers3",
+    "fileName": "icon_markers3.png",
+    "name": "markers3",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 47
+  },
+  {
+    "id": "markers4",
+    "fileName": "icon_markers4.png",
+    "name": "markers4",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 50
+  },
+  {
+    "id": "markers5",
+    "fileName": "icon_markers5.png",
+    "name": "markers5",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 45
+  },
+  {
+    "id": "markers6",
+    "fileName": "icon_markers6.png",
+    "name": "markers6",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 41
+  },
+  {
+    "id": "markers7",
+    "fileName": "icon_markers7.png",
+    "name": "markers7",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 34
+  },
+  {
+    "id": "markers8",
+    "fileName": "icon_markers8.png",
+    "name": "markers8",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 47
+  },
+  {
+    "id": "markers9",
+    "fileName": "icon_markers9.png",
+    "name": "markers9",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 45
+  },
+  {
+    "id": "markers9_0",
+    "fileName": "icon_markers9_0.png",
+    "name": "markers9_0",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 39
+  },
+  {
+    "id": "nointernet",
+    "fileName": "icon_noInternet.png",
+    "name": "noInternet",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 29
+  },
+  {
+    "id": "star",
+    "fileName": "icon_star.png",
+    "name": "star",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 13
+  },
+  {
+    "id": "star_off",
+    "fileName": "icon_star_off.png",
+    "name": "star_off",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 31
+  },
+  {
+    "id": "star_on",
+    "fileName": "icon_star_on.png",
+    "name": "star_on",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 31
+  },
+  {
+    "id": "volleyball",
+    "fileName": "icon_volleyball.png",
+    "name": "volleyball",
+    "hasGlb": false,
+    "hasPhysicsShape": true,
+    "contourPointsCount": 19
+  }
+]
