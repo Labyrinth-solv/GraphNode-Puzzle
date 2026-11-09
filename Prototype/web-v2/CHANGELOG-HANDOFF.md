@@ -289,7 +289,7 @@ Theo yêu cầu của người dùng, cả 3 mảnh của **Màn 2 (`cardigan`)*
 | 8 | `bunny_head` (Mặt thỏ) | Medium | 10/10 | `[4, 7]` | **87.4%** | **95.0%** | 100.0% | ✅ Bắt buộc uốn đôi má mới thắng |
 | 9 | `bunny_bow` (Chiếc nơ) | Medium | 6/6 | `[2, 5]` | **70.7%** | **95.0%** | 100.0% | ✅ Bắt buộc uốn cánh nơ mới thắng |
 | 10 | `flower_bloom` (Bông hoa) | Hard | 10/10 | `[1, 4]` | **87.8%** | **96.0%** | 100.0% | ✅ Bắt buộc uốn cánh hoa mới thắng |
-| 11 | `flower_leaves` (Đôi lá số 8) | Hard | 6/6 | `[0, 2, 3, 5]` | **63.1%** | **96.0%** | 100.0% | ✅ Bắt buộc uốn 4 bầu lá mới thắng |
+| 11 | `flower_leaves` (Đôi lá số 8, 4 node từ mục 15) | Hard | 4/4 | `[1, 3]` | **32.8%** | **96.0%** | 100.0% | ✅ Bắt buộc uốn 4 bầu lá mới thắng |
 | 12 | `flower_pot` (Chậu hoa) | Hard | 8/8 | `[4]` | **77.4%** | **96.0%** | 100.0% | ✅ Bắt buộc uốn đáy chậu mới thắng |
 
 ---
@@ -679,3 +679,11 @@ Theo yêu cầu của người dùng, cả 3 mảnh của **Màn 2 (`cardigan`)*
    - Khoảng cách tối thiểu lúc đầu màn giữa node kéo được và node khác nâng từ 0,07 lên 0,12 (số tạm).
    - In cảnh báo khi không đạt. Hiện còn `heart` (47,5%) và `heartHole` (28,0%) thấp hơn khoảng 55–85% của tier dễ: chỉ riêng kim lệch 5% (mức tối thiểu của tier) cộng phạt dây thẳng 18 điểm đã đưa hai màn này xuống 53,9% và 36,0% khi mọi node đúng chốt. Cần chọn: nới khoảng độ khớp cho màn gấp, giảm độ lệch kim, hay ghi đè `gen` riêng từng màn.
 4. **Dọn code thừa:** bỏ `isMirror`, `applyMirror` (luôn trả về rỗng).
+
+### 15. Đôi lá đối xứng còn 4 node, mút lá do uốn cạnh (2026-11-09, sửa ở `web-demo` rồi chép sang `web-v2`)
+
+- Bỏ 2 node mút lá trái phải (`[0.08, 0.50]`, `[0.90, 0.50]`). Còn 4 node: `[0.29, 0.34]`, `[0.69, 0.66]`, `[0.69, 0.34]`, `[0.29, 0.66]` (vòng 0 → 1 vắt chéo, 1 → 2 cạnh dọc phải, 2 → 3 vắt chéo, 3 → 0 cạnh dọc trái). `free: [0, 1, 2, 3]`, `bendFree: [1, 3]`, vị trí đầu đặt tay giữ 4 node tương ứng của bản cũ.
+- Người chơi phải uốn hai cạnh dọc ra ngoài để tạo mút lá: cắm đủ chốt mà chưa uốn chỉ 32,8% (ngưỡng 96%).
+- Trường mới `solBendOverride: { 1: 0.16, 3: -0.16 }` trong `levels.js`, đọc ở `GN.prepare` (`core.js`): đặt tay độ uốn lời giải vì luật Catmull-Rom chỉ cho hai cạnh này phồng khoảng 0,05. Mút lá ở x 0,13 và 0,85 (bản cũ 0,08 và 0,90), trong giới hạn kéo dây ±0,18. Còn thắng khi độ uốn lệch tới ±0,018, nằm trong vùng hút dây 0,035.
+- Gân lá trang trí ở màn thưởng (`flowerLeafVeins`) dời đầu gân về `[0.16, 0.47]` và `[0.84, 0.47]` để nằm trong mút lá mới.
+- Kiểm tra: `node smoke.js` qua 5 sản phẩm; `node alt-solve.js` 7/7 (lá số 8 đặt xoay và soi gương đều thắng).

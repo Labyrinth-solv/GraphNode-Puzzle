@@ -91,7 +91,7 @@ Người dùng đổi cơ chế giải đố: vị trí đích của mọi node 
 
 Mỗi cạnh vòng có một **độ uốn** `h`: độ phồng của dây so với đoạn thẳng nối hai đầu, theo pháp tuyến của cạnh, đo theo bề rộng vải. Người chơi đổi độ uốn bằng cách kéo thân dây.
 
-- **Độ uốn lời giải:** tính một lần lúc vào màn từ hình lời giải theo luật tiếp tuyến Catmull-Rom (mục Luật tiếp tuyến của điểm cong): `h = 0,125 × ((T(a) − T(b)) · n)`, `n` là pháp tuyến đơn vị của cạnh. Cạnh có đầu `s` hoặc nằm ngoài đoạn cắt của màn gấp có độ uốn lời giải 0.
+- **Độ uốn lời giải:** tính một lần lúc vào màn từ hình lời giải theo luật tiếp tuyến Catmull-Rom (mục Luật tiếp tuyến của điểm cong): `h = 0,125 × ((T(a) − T(b)) · n)`, `n` là pháp tuyến đơn vị của cạnh. Cạnh có đầu `s` hoặc nằm ngoài đoạn cắt của màn gấp có độ uốn lời giải 0. Level có thể đặt tay độ uốn lời giải của từng cạnh bằng `solBendOverride` (mục Dữ liệu một level), dùng khi mút hay vòm của hình chỉ do uốn cạnh tạo nên. `h` đúng bằng độ phồng ở giữa dây.
 - **Hình dạng cạnh khi chơi:** Hermite bậc ba qua hai đầu, tiếp tuyến hai đầu pha giữa hướng dây thẳng và tiếp tuyến Catmull-Rom theo độ uốn hiện tại, rồi cộng thêm phần lệch theo pháp tuyến để chỗ phồng giữa dây bằng đúng `h`. Công thức chính xác lấy theo `edgePoly` của bản web 2 làm số liệu đối chiếu cho test.
 - **Cạnh uốn (`bendFree`):** những cạnh người chơi phải tự uốn. Chúng bắt đầu thẳng (độ uốn 0); mọi cạnh khác bắt đầu ở đúng độ uốn lời giải. Level ghi rõ danh sách này; nếu bỏ trống thì công cụ sinh chọn theo mức độ khó (tối đa 1 cạnh ở mức dễ, 2 ở mức vừa và khó; ưu tiên cạnh cong rõ và dài, có ít nhất một đầu kéo được).
 - **Mọi cạnh uốn được (đã chốt):** người chơi kéo được thân dây của bất kỳ cạnh nào, kể cả cạnh thẳng ở lời giải và cạnh giữa hai ghim khóa; uốn sai thì độ khớp giảm.
@@ -268,6 +268,7 @@ Level là dữ liệu, không phải scene: một scene gameplay dùng chung t�
 | bendFree | danh sách chỉ số cạnh vòng | Cạnh người chơi phải tự uốn, bắt đầu thẳng (mục Uốn cạnh). Ghi rõ trong file; để trống thì Level Editor chọn theo mức độ khó rồi ghi lại |
 | startBend | danh sách số, theo cạnh vòng | Độ uốn ban đầu của từng cạnh: 0 với cạnh uốn, độ uốn lời giải với cạnh còn lại. Level Editor sinh, game chỉ đọc |
 | keepStart | bool, tùy chọn | Giữ nguyên `startPos` do người thiết kế đặt tay, không sinh lại (bản web 2 dùng cho đôi lá số 8) |
+| solBendOverride | { chỉ số cạnh: độ uốn }, tùy chọn | Đặt tay độ uốn lời giải của cạnh khi hình mẫu cần chỗ phồng mà luật Catmull-Rom không cho ra (ví dụ mút lá chỉ do uốn cạnh tạo nên). Hình mẫu, đường cắt và phạt độ uốn đều dùng số này. Trong giới hạn kéo dây ±0,18 |
 | difficulty | `easy`, `medium`, `hard` | Mức độ khó, quyết định số node kéo được tối đa và quy luật sinh vị trí ban đầu (mục Độ khó) |
 | startSeed | int | Hạt giống của lần sinh vị trí ban đầu, để sinh lại đúng kết quả cũ |
 | startGenOverride | đối tượng, tùy chọn | Ghi đè từng tham số sinh của mức độ khó cho riêng màn này (khoảng lệch, khoảng độ khớp ban đầu, độ lệch kim) |
@@ -756,10 +757,10 @@ Bản web 2 (`Prototype/web-v2`, đồng bộ sang `Prototype/web-demo`) bỏ s�
 | Bé thỏ | Mặt thỏ (`bunny_head`) | vừa | 95% | 6 | 2 | 65,3% | 87,4% |
 | Bé thỏ | Chiếc nơ (`bunny_bow`) | vừa | 95% | 4 | 2 | 40,3% | 70,7% |
 | Chậu hoa | Bông hoa gấp đôi (`flower_bloom`) | khó | 96% | 7 | 2 | 25,2% | 87,8% |
-| Chậu hoa | Đôi lá số 8 (`flower_leaves`, vị trí đầu đặt tay) | khó | 96% | 6 | 4 | 25,0% | 63,1% |
+| Chậu hoa | Đôi lá số 8 (`flower_leaves`, 4 node, vị trí đầu đặt tay) | khó | 96% | 4 | 2 | 15,6% | 32,8% |
 | Chậu hoa | Chậu hoa (`flower_pot`) | khó | 96% | 6 | 1 | 26,1% | 77,4% |
 
-- **Đôi lá số 8:** 6 node tròn, không khóa node nào; lúc đầu là một vòng đơn, người chơi phải kéo hai nhánh vắt chéo qua tâm thành hình số 8 rồi uốn bốn bầu lá. Màn khó, vượt số cạnh uốn tối đa của mức (2) do đặt tay.
+- **Đôi lá số 8 (sửa 2026-11-09):** bỏ 2 node mút lá trái phải, còn 4 node tròn ở bầu trên và bầu dưới của hai lá, không khóa node nào. Lúc đầu là một vòng đơn; người chơi kéo hai nhánh vắt chéo qua tâm thành hình số 8, rồi **phải uốn hai cạnh dọc ra ngoài** để tạo mút lá mới thắng (cắm đủ chốt mà chưa uốn chỉ 32,8%). Luật Catmull-Rom chỉ cho hai cạnh này phồng khoảng 0,05, nên level đặt tay độ uốn lời giải ±0,16 (`solBendOverride`), mút lá ở x 0,13 và 0,85, trong giới hạn kéo dây ±0,18; còn thắng khi lệch tới ±0,018. Độ khớp ban đầu 15,6% thấp hơn khoảng 25–50% của mức khó vì vị trí đầu đặt tay (`keepStart`).
 - **Trái tim khoét lỗ:** lỗ phóng từ 0,42 lên 0,55 lần, cạnh uốn chuyển ra vòm vai ngoài (dài 35,5% bề rộng vải) thay cho cạnh trong lỗ quá ngắn; ở màn thưởng trái tim thường đặt ở tỉ lệ 0,55 để vừa khít lỗ.
 
 ### Ngưỡng các mảnh của bản web (đã chốt 2026-11-06; lịch sử, đã thay bằng ngưỡng theo mức độ khó ở bảng trên)

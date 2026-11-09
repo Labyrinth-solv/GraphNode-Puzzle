@@ -143,24 +143,23 @@
       ]
     },
     {
-      // Màn 5 - Mảnh 2 (index 11): Đôi lá đối xứng (6 node tròn 'c', không gấp đôi, kéo chéo nhau thành hình số 8 + uốn cong bầu lá)
-      id: 'flower_leaves', name: 'Đôi lá đối xứng', winThreshold: 0.96, tier: 'hard', free: [0, 1, 2, 3, 4, 5], bendFree: [0, 2, 3, 5], keepStart: true,
+      // Màn 5 - Mảnh 2 (index 11): Đôi lá đối xứng (4 node tròn, không gấp đôi). Đã bỏ 2 node mút lá trái phải:
+      // người chơi kéo vắt chéo hai nhánh thành hình số 8, rồi uốn cong hai cạnh dọc ra ngoài để tạo mút lá.
+      // Hai cạnh dọc có độ uốn lời giải đặt tay (solBendOverride), vì luật Catmull-Rom chỉ cho chỗ phồng khoảng 0,05.
+      id: 'flower_leaves', name: 'Đôi lá đối xứng', winThreshold: 0.96, tier: 'hard', free: [0, 1, 2, 3], bendFree: [1, 3], keepStart: true,
+      solBendOverride: { 1: 0.16, 3: -0.16 },
       pattern: { kind: 'stripes', base: '#60B872', deep: '#469958', accent: '#A8E0B4' },
-      types: ['c', 'c', 'c', 'c', 'c', 'c'],
-      ring: [0, 1, 2, 3, 4, 5], inner: [], locked: [],
+      types: ['c', 'c', 'c', 'c'],
+      ring: [0, 1, 2, 3], inner: [], locked: [],
       sol: [
-        [0.08, 0.50],
-        [0.29, 0.34],
-        [0.69, 0.66],
-        [0.90, 0.50],
-        [0.69, 0.34],
-        [0.29, 0.66]
+        [0.29, 0.34], // 0: bầu trên lá trái
+        [0.69, 0.66], // 1: vắt chéo qua tâm xuống bầu dưới lá phải
+        [0.69, 0.34], // 2: bầu trên lá phải (cạnh 1 phồng sang phải thành mút lá phải)
+        [0.29, 0.66]  // 3: vắt chéo qua tâm xuống bầu dưới lá trái (cạnh 3 phồng sang trái thành mút lá trái)
       ],
       start: [
-        [0.06, 0.29],
         [0.39, 0.06],
         [0.75, 0.43],
-        [0.94, 0.68],
         [0.62, 0.63],
         [0.13, 0.79]
       ]

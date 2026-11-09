@@ -146,6 +146,7 @@ function pentaF(step, oct) {
 ## 5. Thiết Kế Màn Lá Đối Xứng (`flower_leaves`) — Bỏ Mép Gấp, Kéo Chéo Hình Số 8 (`∞`)
 
 - Trong sản phẩm Chậu hoa (`flowerpot`), mảnh **Đôi lá đối xứng (`flower_leaves`, Màn 5 - Mảnh 2)** đã **bỏ hoàn toàn cơ chế gấp đôi vải (`fold`)** để giữ độ thử thách `tier: 'hard'`:
+  - > **Đã cũ (2026-11-09):** màn này nay còn 4 node, bỏ 2 node mút lá; mút lá do uốn hai cạnh dọc tạo nên. Xem CHANGELOG-HANDOFF mục 15. Nội dung dưới đây là bản 6 node cũ.
   - Sử dụng **6 node tròn `'c'` toàn bộ kéo tự do (`free: [0, 1, 2, 3, 4, 5]`, `locked: []`, `winThreshold: 0.92`)**.
   - **Lời giải (`sol`):** Các node đi vắt chéo qua tâm tạo thành **hình số 8 (`∞`)** gồm 2 chiếc lá đối xứng giao nhau ở giữa:
     ```js

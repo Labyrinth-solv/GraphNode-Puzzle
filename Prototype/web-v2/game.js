@@ -3163,7 +3163,7 @@
   function flowerLeafVeins(p, k, dir) {
     var baseP = ptOf(11, dir < 0 ? 0.44 : 0.56, 0.61);
     var midP  = ptOf(11, dir < 0 ? 0.24 : 0.76, 0.51);
-    var tipP  = ptOf(11, dir < 0 ? 0.08 : 0.92, 0.44);
+    var tipP  = ptOf(11, dir < 0 ? 0.16 : 0.84, 0.47); // mút lá do uốn cạnh tạo nên, nằm ở x 0,13 và 0,85
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(baseP[0], baseP[1]);
