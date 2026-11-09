@@ -69,7 +69,7 @@ Dựa trên yêu cầu mang lại cảm giác thỏa mãn cao (tương tự kho�
 
 ### 2.1. Khởi tạo bản clone sạch `Prototype/web-v2/`
 - Sao chép toàn bộ mã nguồn từ `Prototype/web-demo/web/` sang `Prototype/web-v2/`:
-  - `core.js`: Thuật toán hình học phẳng, đường cong Catmull-Rom (`GN.ringPath`), raster hóa vùng tô (`GN.region` trên lưới `96×96`), tính độ khớp `IoU` (`GN.iou`).
+  - `core.js`: Thuật toán hình học phẳng, đường cong Catmull-Rom (`GN.ringPath`), raster hóa vùng tô (`GN.region` trên lưới `200×200`), tính độ khớp `IoU` (`GN.iou`).
   - `levels.js`: Dữ liệu các mảnh ghép (`LEVELS`) và cấu hình sản phẩm (`PRODUCTS`).
   - `startgen.js`: Thuật toán sinh vị trí khởi đầu tất định (deterministic FNV-1a + Mulberry32 PRNG) theo 3 cấp độ khó `easy`, `medium`, `hard`.
   - `game.js`: Vòng lặp game, xử lý kéo thả, hiệu ứng cắt kéo, lật mở vải gấp (`unfold`), và màn thưởng khâu lắp ghép sản phẩm (`Reward Scene`).
@@ -144,11 +144,13 @@ Theo yêu cầu của người dùng, cả 3 mảnh của **Màn 2 (`cardigan`)*
      return out;
    }
    ```
+   > **Đã cũ (2026-11-09):** từ khi có uốn cạnh (`solBend`, `S.bend`), mọi cạnh trong vòng đều uốn được và mọi node đều vẽ là ghim tròn. `types` chỉ còn quyết định hình lời giải: cạnh có node `'s'` có độ uốn lời giải bằng 0 (thẳng ở đáp án), không còn bị khóa thẳng khi chơi. Đoạn mô tả cũ giữ lại bên dưới để đối chiếu.
+
    Một cạnh nối giữa 2 node `a` và `b` **chỉ được nội suy cong Catmull-Rom khi CẢ HAI node `a` và `b` đều có `type === 'c'`**. Nếu một trong hai node là `'s'` (tam giác), cả đoạn nối đó sẽ là **đường thẳng**. Do đó:
    - Muốn tạo một đoạn cong: cần ít nhất **2 node `'c'` liên tiếp**.
    - Muốn tạo một đỉnh nhọn (như chóp tai cáo, chóp mũi, đỉnh ngôi sao): đặt 1 node `'s'` tại đỉnh nhọn đó và 2 node `'c'` ở hai bên chân đỉnh.
 2. **Quy tắc Gấp đôi vải & Khoét rỗng (`buildFold` trong `game.js` dòng 126–146):**
-   - Khai báo trên level: `fold: { solX: 0.5, startX: 0.38, chains: [[0, a], [a+1, b]] }`.
+   - Khai báo trên level: `fold: { solX: 0.5, startX: 0.38, chains: [[0, a], [a+1, b]] }`. Code có hỗ trợ gấp theo trục ngang (`axis: 'y'`) nhưng chưa màn nào dùng nên chưa được kiểm chứng.
    - Người chơi chỉ thao tác với các node ở nửa bên trái (`x <= solX`) và kéo thanh trượt cây kim (`SLIDER_Y = 656`) đưa mép gấp từ `startX` về `solX = 0.5`.
    - Các node đầu và cuối của mỗi chain (`0`, `a`, `a+1`, `b`) nằm trên mép gấp (`x = solX`), tự động trượt theo cây kim.
    - `chains[0] = [0, a]` tạo thành **đường viền ngoài** sau khi đối xứng gương qua `solX`.
@@ -189,7 +191,7 @@ Theo yêu cầu của người dùng, cả 3 mảnh của **Màn 2 (`cardigan`)*
 
 ## 6. 🧪 Phần Mở Rộng Đang Trong Quá Trình Xem Xét: Hệ Thống Chốt Trên Viền Mẫu & Cân Bằng Tỷ Lệ Khớp (Experimental Extension Under Review)
 
-> **Ghi chú tiến độ**: Tính năng này hiện đã được triển khai, kiểm thử hoàn tất và chạy thực nghiệm trên bản song song **`Prototype/web-v3`** (xác minh qua `node Prototype/web-v3/smoke.js` và `scratch/verify_pin_mechanic.js` đạt 100% qua 13 màn chơi). Được lưu trữ tại đây dưới dạng phần mở rộng đang trong quá trình đánh giá và xem xét trước khi hợp nhất chính thức vào `web-v2`.
+> **Ghi chú tiến độ**: Tính năng này hiện đã được triển khai, kiểm thử hoàn tất và chạy thực nghiệm trên bản song song **`Prototype/web-v3`** (xác minh qua `node Prototype/web-v3/smoke.js` và `scratch/verify_pin_mechanic.js` đạt 100% qua 13 màn chơi; script `scratch/` này không có trong repo). Được lưu trữ tại đây dưới dạng phần mở rộng đang trong quá trình đánh giá và xem xét trước khi hợp nhất chính thức vào `web-v2`.
 
 ### 6.1. Bối cảnh & Mục tiêu Thiết kế
 1. **Vấn đề giải quyết**:
@@ -272,20 +274,22 @@ Theo yêu cầu của người dùng, cả 3 mảnh của **Màn 2 (`cardigan`)*
 > - Khi người chơi đang nắm giữ bất kỳ node nào (`S.drag !== null`) hoặc node đang trượt vào chốt (`S.settle !== null`), toàn bộ gợi ý uốn đường cong **hoàn toàn ẩn đi** để người chơi tập trung 00\%$ vào việc đặt chốt.
 > - Sau khi buông tay (`pointerup`) và node đã cắm khít vào chốt cuối cùng, hệ thống giữ một **nhịp dừng xúc giác êm dịu 0.25s** để âm thanh chốt (`pop/thock`) và viền xanh sage kích hoạt trọn vẹn, sau đó vầng hào quang tơ tằm và cúc len mới nhẹ nhàng nở sáng (`fadeIn 0.4s`).
 
+> Bảng đo lại 2026-11-09 bằng `node Prototype/web-demo/check.js` (cột "% Khớp khi mới vào chốt" là cắm đủ chốt nhưng dây uốn chưa đụng tới). Các màn không khai báo `bendFree` (`scoop`, `cardigan`, `shirt`, `heart`, `heartHole`) do `startgen.js` tự chọn cạnh uốn.
+
 | STT | Màn chơi (`id`) | Phân loại (`tier`) | Tổng số Chốt | Cạnh cần uốn (`bendFree`) | % Khớp khi mới vào chốt (chưa uốn cong) | Ngưỡng thắng mới (`winThreshold`) | % Khớp khi hoàn tất | Đánh giá |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
-| 0 | `scoop` (Viên kem) | Easy | 7/7 | `[2]` | **75.5%** | **94.0%** | 100.0% | ✅ Bắt buộc uốn vòm kem mới thắng |
+| 0 | `scoop` (Viên kem) | Easy | 7/7 | `[2]` | **83.5%** | **94.0%** | 100.0% | ✅ Bắt buộc uốn vòm kem mới thắng |
 | 1 | `cone` (Ốc quế) | Easy | 3/3 | `[]` | **100.0%** | **94.0%** | 100.0% | ✅ Hình đa giác thẳng, vào chốt là thắng |
 | 2 | `cardigan` (Thân áo) | Medium | 10/10 | `[4]` | **77.7%** | **95.0%** | 100.0% | ✅ Bắt buộc uốn vạt áo mới thắng |
-| 3 | `shirt` (Áo lót trong) | Medium | 6/6 | `[3, 4]` | **77.1%** | **95.0%** | 100.0% | ✅ Bắt buộc uốn cổ trong mới thắng |
+| 3 | `shirt` (Áo lót trong) | Medium | 5/5 | `[3]` | **73.5%** | **95.0%** | 100.0% | ✅ Bắt buộc uốn gấu chữ U mới thắng |
 | 4 | `collar` (Cổ áo) | Medium | 6/6 | `[]` | **100.0%** | **95.0%** | 100.0% | ✅ Hình đa giác thẳng, vào chốt là thắng |
-| 5 | `heart` (Trái tim gấp) | Easy | 4/4 | `[1]` | **74.9%** | **94.0%** | 100.0% | ✅ Bắt buộc uốn bầu tim mới thắng |
-| 6 | `heartHole` (Tim khoét lỗ) | Easy | 8/8 | `[5]` | **76.0%** | **94.0%** | 100.0% | ✅ Bắt buộc uốn lỗ khoét mới thắng |
-| 7 | `bunny_ears` (Đôi tai thỏ) | Medium | 11/11 | `[2, 7]` | **68.7%** | **95.0%** | 100.0% | ✅ Bắt buộc uốn chóp tai mới thắng |
-| 8 | `bunny_head` (Mặt thỏ) | Medium | 10/10 | `[4, 7]` | **83.2%** | **95.0%** | 100.0% | ✅ Bắt buộc uốn đôi má mới thắng |
-| 9 | `bunny_bow` (Chiếc nơ) | Medium | 6/6 | `[2, 5]` | **64.6%** | **95.0%** | 100.0% | ✅ Bắt buộc uốn cánh nơ mới thắng |
-| 10 | `flower_bloom` (Bông hoa) | Hard | 10/10 | `[1, 4]` | **81.5%** | **96.0%** | 100.0% | ✅ Bắt buộc uốn cánh hoa mới thắng |
-| 11 | `flower_leaves` (Đôi lá số 8) | Hard | 6/6 | `[0, 2, 3, 5]` | **58.7%** | **96.0%** | 100.0% | ✅ Bắt buộc uốn 4 bầu lá mới thắng |
+| 5 | `heart` (Trái tim gấp) | Easy | 4/4 | `[1]` | **74.7%** | **94.0%** | 100.0% | ✅ Bắt buộc uốn bầu tim mới thắng |
+| 6 | `heartHole` (Tim khoét lỗ) | Easy | 8/8 | `[1]` | **72.2%** | **94.0%** | 100.0% | ✅ Bắt buộc uốn vòm vai ngoài mới thắng |
+| 7 | `bunny_ears` (Đôi tai thỏ) | Medium | 11/11 | `[2, 7]` | **81.6%** | **95.0%** | 100.0% | ✅ Bắt buộc uốn chóp tai mới thắng |
+| 8 | `bunny_head` (Mặt thỏ) | Medium | 10/10 | `[4, 7]` | **87.4%** | **95.0%** | 100.0% | ✅ Bắt buộc uốn đôi má mới thắng |
+| 9 | `bunny_bow` (Chiếc nơ) | Medium | 6/6 | `[2, 5]` | **70.7%** | **95.0%** | 100.0% | ✅ Bắt buộc uốn cánh nơ mới thắng |
+| 10 | `flower_bloom` (Bông hoa) | Hard | 10/10 | `[1, 4]` | **87.8%** | **96.0%** | 100.0% | ✅ Bắt buộc uốn cánh hoa mới thắng |
+| 11 | `flower_leaves` (Đôi lá số 8, 4 node từ mục 15) | Hard | 4/4 | `[1, 3]` | **32.8%** | **96.0%** | 100.0% | ✅ Bắt buộc uốn 4 bầu lá mới thắng |
 | 12 | `flower_pot` (Chậu hoa) | Hard | 8/8 | `[4]` | **77.4%** | **96.0%** | 100.0% | ✅ Bắt buộc uốn đáy chậu mới thắng |
 
 ---
@@ -384,7 +388,7 @@ Theo yêu cầu của người dùng, cả 3 mảnh của **Màn 2 (`cardigan`)*
 ### 6.7. Khắc Phục Lỗi Snap Đường Cong Lơ Lửng & Nâng Cấp Hào Quang Bảy Màu Cozy Lõi Trắng Sáng
 
 > **Cập nhật ngày 2026-11-07 theo phản hồi & đánh giá của người chơi**:
-> 1. **Khắc phục triệt để lỗi đường cong lơ lửng tự phát sáng snap**: Trước đây, khi kéo độ cong của một cạnh tới giá trị khớp mẫu `solBend`, hệ thống chỉ kiểm tra `magH !== null` mà không kiểm tra xem hai đầu mút của cạnh đó đã được cắm vào đúng chốt mục tiêu hay chưa. Điều này khiến cho một cạnh đang bay lơ lửng giữa không trung khi bị kéo cong đúng biên độ vẫn kích hoạt hiệu ứng snap và tia zip. Đã khắc phục triệt để bằng hàm `isEdgeAnchoredToPins(k)` đảm bảo cả hai đầu mút đã cắm chính xác vào chốt mục tiêu (`PIN_SNAP_R + 0.015`) trước khi kích hoạt `triggerCurveSnap`.
+> 1. **Khắc phục triệt để lỗi đường cong lơ lửng tự phát sáng snap**: Trước đây, khi kéo độ cong của một cạnh tới giá trị khớp mẫu `solBend`, hệ thống chỉ kiểm tra `magH !== null` mà không kiểm tra xem hai đầu mút của cạnh đó đã được cắm vào đúng chốt mục tiêu hay chưa. Điều này khiến cho một cạnh đang bay lơ lửng giữa không trung khi bị kéo cong đúng biên độ vẫn kích hoạt hiệu ứng snap và tia zip. Đã khắc phục triệt để bằng hàm `isEdgeAnchoredToPins(k)` đảm bảo cả hai đầu mút đã cắm chính xác vào chốt mục tiêu (nay dùng bán kính chung `PIN_ON_R = 0.046`, xem mục 14) trước khi kích hoạt `triggerCurveSnap`.
 > 2. **Nâng cấp hào quang đạt ngưỡng thắng (Full-Contour Glow)**:
 >    - **Dải hào quang bảy màu Cozy (Iridescent Cozy Rainbow Halo)**: Chuyển màu ombre đa sắc mềm mại 5 tông len tự nhiên qua `cozyThreadRGB` (Hồng đào ấm $\to$ Vàng bơ $\to$ Xanh xô thơm $\to$ Xanh lam khói $\to$ Tím cà oải hương). Hào quang rộng $10\text{px} - 16\text{px}$ trôi nhẹ nhàng theo thời gian.
 >    - **Lõi tơ tằm trắng muốt sáng rực (Brilliant Pure White Silk Core)**: Lớp chỉ trắng tinh khiết (`#FFFFFF`, độ mờ $0.98$, bề rộng $3.6\text{px} - 5.0\text{px}$) được xếp lớp vẽ đè lên trên cùng của sợi chỉ vải (`drawEdges` $\to$ `drawReadyContourGlow`), tạo độ tương phản cao và độ chói sáng mãnh liệt tương tự tia chớp seam zip lúc khóa đường cong vào viền mẫu.
@@ -583,7 +587,7 @@ Theo yêu cầu của người dùng, cả 3 mảnh của **Màn 2 (`cardigan`)*
   - Ngăn chặn hoàn toàn hiện tượng dây nối vồ lấy cảm ứng khi ngón tay vô tình bấm sượt qua rìa ngoài của chốt.
 
 #### 4. Kết Quả Kiểm Thử Tự Động & Tiêu Chí Nghiệm Thu
-- **Unit Test Trọng Tài Cảm Ứng (`scratch/test_tap_arbitration.js`)**:
+- **Unit Test Trọng Tài Cảm Ứng (`scratch/test_tap_arbitration.js`, không có trong repo; các kết quả dưới đây chưa kiểm chứng lại được)**:
   - Chạm lệch tâm chốt $18\text{px}$ hướng về phía dây nối: Chốt được chọn $100\%$, dây nối hoàn toàn không bị kích hoạt (`curSt.drag = Node 1`, `curSt.edgeDrag = null`).
   - Chạm đúng đoạn giữa dây ($u \approx 0.5$): Nhận diện uốn dây tức thì (`curSt.edgeDrag = Edge 2`, `curSt.drag = null`).
   - Chạm sát đầu mút dây ($u = 0.12$): Dây bị chặn không kích hoạt.
@@ -637,9 +641,9 @@ Theo yêu cầu của người dùng, cả 3 mảnh của **Màn 2 (`cardigan`)*
 > 4. **Màn Thưởng Ghép Hình**:
 >    - Mảnh 1 (Trái tim đặc) đặt lọt khít $100\%$ vào lỗ khoét mới: `place[5] = [118.0, 334.8, 154.0]` (tỉ lệ $280 \times 0.55 = 154$).
 
-### 13. [ĐANG XEM XÉT / UNDER REVIEW] Nâng Cấp Khớp Dây Chuyền (Chained Wire Snap) & Hiển Thị Nút Kéo Dây Cục Bộ (Per-Edge Readiness)
+### 13. [ĐÃ DUYỆT / APPROVED] Nâng Cấp Khớp Dây Chuyền (Chained Wire Snap) & Hiển Thị Nút Kéo Dây Cục Bộ (Per-Edge Readiness)
 
-> **Trạng thái**: ĐANG XEM XÉT (Đã áp dụng trên bản `Prototype/web-v2/`, chờ kiểm tra thực tế trên mobile trước khi đồng bộ sang `web-v3`).  
+> **Trạng thái**: ĐÃ DUYỆT theo báo cáo chuyển giao 2026-11-09 (đã áp dụng trên `Prototype/web-v2/` và `Prototype/web-demo/`).  
 > **Vấn đề phản ánh từ người dùng**:
 > 1. Khi kéo đường cong khớp viền mẫu thì có phát âm thanh và phát sáng rất đã tay, nhưng khi kéo 1 node đang nối với 1 ghim khóa thì sợi dây nối với ghim không phát sáng và không có âm thanh khớp dây.
 > 2. Sau khi kéo node nối với ghim khóa, người chơi nhìn vào sợi dây thì thấy trơn tuột, nút cúc kéo uốn cong bị biến mất ("kéo dây không có nữa").
@@ -660,5 +664,59 @@ Theo yêu cầu của người dùng, cả 3 mảnh của **Màn 2 (`cardigan`)*
 >    - Xóa bỏ rào cản bắt buộc cắm đủ hết toàn màn.
 >    - Ngay khi **cả 2 đầu mút của cạnh cong đã vào vị trí** (ví dụ: Ghim khóa 1 + Node kéo 2 vừa cắm) $\to$ Nút bọ thêu cúc len (`drawPinchBeads`) và vầng hào quang viền (`drawBreathingCrescentGaps`) lập tức thở nhẹ và sáng lên trên sợi dây đó, mời gọi người chơi kéo uốn dây ngay tức thì!
 > 3. **Nới lỏng dung sai neo `isEdgeAnchoredToPins`**:
->    - Tự động công nhận ghim khóa neo chuẩn, dung sai cho node kéo trùm toàn bộ bán kính nam châm $\le 0.10$ ($36\text{px}$), đảm bảo $100\%$ các lần uốn dây vào viền mẫu đều snap dính mượt mà và phát sáng đầy đủ.
+>    - Tự động công nhận ghim khóa neo chuẩn, dung sai cho node kéo trùm toàn bộ bán kính nam châm $\le 0.10$ ($36\text{px}$) (đã thay bằng bán kính chung `PIN_ON_R = 0.046` ở mục 14, vì dung sai rộng làm nút kéo dây sáng khi bộ đếm chốt còn báo chưa cắm), đảm bảo $100\%$ các lần uốn dây vào viền mẫu đều snap dính mượt mà và phát sáng đầy đủ.
 
+### 14. Sửa lỗi luật trước khi chốt vào tài liệu (2026-11-09, sửa ở `web-demo` rồi chép sang `web-v2`; `web-v3` không sửa)
+
+1. **Ngõ cụt khi đặt node vào chốt theo thứ tự khác lời giải.** Node nào vào chốt nào cũng được, nhưng độ uốn, phạt độ uốn, nam châm dây và snap đều so theo số thứ tự cạnh, nên chỉ đúng một cách gán thắng được. Đo trên bản cũ: `flower_leaves` đặt xoay vòng tối đa 86,9% (ngưỡng 96%), `shirt` đặt soi gương 83,0%, `bunny_bow` soi gương 72,7%, dù hình nhìn đúng và bộ đếm báo đủ chốt.
+   - **Sửa:** `canonicalizePins()` trong `game.js`. Khi mọi chốt đã lấp và cách đặt là một vòng xoay hay soi gương của vòng lời giải (ghim khóa đứng yên, node mép gấp vẫn ở mép gấp), đánh số lại node và cạnh theo chốt. Dây chưa uốn nhận độ uốn ban đầu của cạnh mới; dây đã uốn giữ hình (đổi dấu nếu ngược chiều). Gọi lúc thả node vào chốt và lúc thả cây kim.
+   - **Test:** `node alt-solve.js` (đặt node theo 7 cách xoay hoặc soi gương rồi uốn dây; bản cũ thua 5/7, bản sửa thắng 7/7).
+   - Còn lại: lúc đang cầm node cuối theo thứ tự khác, quầng sáng "thả tay là thắng" chưa hiện; thả tay thì thắng bình thường.
+2. **Bốn bán kính "đã cắm vào chốt" khác nhau** (0,046 bộ đếm và thắng; 0,050 gợi ý; 0,073 nút kéo dây và hiệu ứng khớp dây; 0,038 chốt đã có node khi kéo). **Sửa:** dùng chung `PIN_ON_R = PIN_SNAP_R + 0.008 = 0.046`.
+3. **Sinh vị trí đầu lệch quy định tier** (`startgen.js`):
+   - Khoảng độ khớp của tier giờ so với số đã trừ phạt độ uốn (số người chơi thấy trên thanh).
+   - Node kéo được không bắt đầu trong vùng hút của chốt nào (`PIN_CLEAR = 0.06`, số tạm).
+   - Khoảng cách tối thiểu lúc đầu màn giữa node kéo được và node khác nâng từ 0,07 lên 0,12 (số tạm).
+   - In cảnh báo khi không đạt. Hiện còn `heart` (47,5%) và `heartHole` (28,0%) thấp hơn khoảng 55–85% của tier dễ: chỉ riêng kim lệch 5% (mức tối thiểu của tier) cộng phạt dây thẳng 18 điểm đã đưa hai màn này xuống 53,9% và 36,0% khi mọi node đúng chốt. Cần chọn: nới khoảng độ khớp cho màn gấp, giảm độ lệch kim, hay ghi đè `gen` riêng từng màn.
+4. **Dọn code thừa:** bỏ `isMirror`, `applyMirror` (luôn trả về rỗng).
+
+### 15. Đôi lá đối xứng còn 4 node, mút lá do uốn cạnh (2026-11-09, sửa ở `web-demo` rồi chép sang `web-v2`)
+
+- Bỏ 2 node mút lá trái phải (`[0.08, 0.50]`, `[0.90, 0.50]`). Còn 4 node: `[0.29, 0.34]`, `[0.69, 0.66]`, `[0.69, 0.34]`, `[0.29, 0.66]` (vòng 0 → 1 vắt chéo, 1 → 2 cạnh dọc phải, 2 → 3 vắt chéo, 3 → 0 cạnh dọc trái). `free: [0, 1, 2, 3]`, `bendFree: [1, 3]`, vị trí đầu đặt tay giữ 4 node tương ứng của bản cũ.
+- Người chơi phải uốn hai cạnh dọc ra ngoài để tạo mút lá: cắm đủ chốt mà chưa uốn chỉ 32,8% (ngưỡng 96%).
+- Trường mới `solBendOverride: { 1: 0.16, 3: -0.16 }` trong `levels.js`, đọc ở `GN.prepare` (`core.js`): đặt tay độ uốn lời giải vì luật Catmull-Rom chỉ cho hai cạnh này phồng khoảng 0,05. Mút lá ở x 0,13 và 0,85 (bản cũ 0,08 và 0,90), trong giới hạn kéo dây ±0,18. Còn thắng khi độ uốn lệch tới ±0,018, nằm trong vùng hút dây 0,035.
+- Gân lá trang trí ở màn thưởng (`flowerLeafVeins`) dời đầu gân về `[0.16, 0.47]` và `[0.84, 0.47]` để nằm trong mút lá mới.
+- Kiểm tra: `node smoke.js` qua 5 sản phẩm; `node alt-solve.js` 7/7 (lá số 8 đặt xoay và soi gương đều thắng).
+
+
+### 16. Đồng bộ từ web-demo sau khi người dùng thử và duyệt (2026-11-09)
+
+Các thay đổi dưới đây làm và thử ở `Prototype/web-demo` trước, người dùng duyệt rồi mới chép sang `web-v2`. Hai bản giờ giống nhau ở mọi file logic (`core.js`, `levels.js`, `startgen.js`, `game.js`, `mask.js`, `thresholds.js`). `web-v3` không cập nhật.
+
+**16.1. Đích độ uốn theo chốt (sửa "dây snap mà không khít viền" và "đường chéo không có gợi ý")**
+- Vấn đề: nam châm dây hút về `solBend[k]` theo số thứ tự cạnh, không xét hai đầu dây đang ở đâu. Hai đầu chưa ở chốt thì dây vẫn bị hút mà lệch viền; cắm chốt khác thứ tự thì bị hút về sai độ uốn. Gợi ý uốn chỉ vẽ cho cạnh `bendFree`, nên đường chéo của đôi lá bị uốn lệch không có gợi ý.
+- Sửa: `pinOf(i)` cho biết node đang nằm ở chốt nào (bán kính chung `PIN_ON_R`); `edgeTarget(k)` trả về đích độ uốn = độ uốn của cạnh lời giải giữa hai chốt mà hai đầu dây đang nằm (đổi dấu nếu ngược chiều), hoặc `null` khi chưa đủ hai đầu trên hai chốt liền nhau. Nam châm dây (`applyEdgeDrag`), hiệu ứng khớp dây khi thả, khớp dây khi cắm chốt (`checkChainedEdgeSnaps`), gợi ý ba tầng (`hintEdges`), sóng nhắc khi đứng yên và gợi ý booster đều dùng đích này. Cạnh chưa có đích thì không hút, không gợi ý.
+- Gợi ý hiện cho mọi cạnh có đích mà độ uốn lệch từ 0,012 trở lên; cạnh `bendFree` đậm, cạnh khác 75%. Viền đích vẽ giữa chính hai đầu dây (`bendsAt`).
+
+**16.2. Hiệu ứng khớp dây cho cả cạnh thẳng**
+- Trước đây chỉ phát khi đích là cạnh cong (`|h| > 0.01`), nên nắn đường chéo về thẳng không có hiệu ứng.
+- Nay phát khi thả vào vùng hút của đích, kể cả đích thẳng, với điều kiện dây thật sự được sửa: lúc bắt đầu kéo đã lệch đích từ 0,012, hoặc trong lúc kéo bị kéo ra khỏi vùng hút (`maxErr >= MAG_R`). Kéo nhẹ dây đang đúng thì không có hiệu ứng.
+
+**16.3. Vải hướng D: màu thật, vân theo chất liệu**
+- Trường `fabric: { mat, base, light, dark, detail }` cho cả 13 mảnh trong `levels.js`; `pattern` cũ giữ làm dự phòng. Chất liệu: `knit` (len đan, áo khoác và áo lót), `rib` (len gân, cổ áo), `felt` (nỉ, các mảnh còn lại); ốc quế có `detail: 'waffle'`.
+- `paintFabric` vẽ màu nền, ô vân lặp (`fabricPattern`, vẽ sẵn ở 2x mỗi mảnh một lần), ô bánh quế, ánh sáng trên sáng dưới tối, mép trong hơi tối. Kích thước vân cố định theo khung vải (`FS`), không theo cỡ mảnh; ô vân bám theo mảnh khi bay.
+- Nền khung vải giữ như cũ. Bảng so sánh: https://claude.ai/artifact/7nasb5KU1QQtN8Cp3ugUYz
+
+**16.4. Bỏ phóng khung vải khi kéo**
+- Bỏ ống kính thở 1,04 lần (mục 9, trụ cột 2): người chơi thử thấy chóng mặt. Khung vải và camera đứng yên khi kéo. Nâng node 22 px và bóng đổ khi nhấc giữ nguyên.
+
+**16.5. Màn 6 "Dâu tây" thử phong cách tranh tô màu (chưa chốt)**
+- Một mảnh, mức dễ, `free: [1, 2, 3]`, khóa 2 vai, sản phẩm `strawberry` chơi riêng (`standalone`), mở từ danh sách màn hoặc nút "Tiếp tục" sau màn 5.
+- `fabric.mat: 'flat'`: mảng màu phẳng chuyển sắc, vệt bóng trắng, viền đen dày (`fabric.line`), không vân vải, không chỉ khâu. Trang trí màn thưởng (`berryCap`, `berrySeeds`, mắt, má) viền đen dày. Hình tự thiết kế theo phong cách chung của dòng game tô màu, không lấy art của game khác.
+
+**16.6. Đã duyệt, làm ở lượt sau: khâu đắp mảnh lên vải nền ở màn thưởng**
+- Bỏ viền mực của mảnh ở màn thưởng (và mọi nơi mảnh vải hiện ra), thay bằng bóng đổ mỏng và mép trong hơi tối.
+- Hoạt ảnh kim chạy dọc mép từng mảnh (mảnh dưới trước), mũi khâu viền chăn (blanket stitch), có công tắc thử mũi chạy và mũi quấn mép; mũi cách mép vào trong đều khoảng 2,5% bề rộng vải (dời đường viền vào trong, không thu nhỏ quanh tâm như đường chỉ nét đứt hiện tại); màu chỉ tương phản nhẹ theo từng mảnh; cả lượt 2–2,5 s, tua tối đa 1,5 lần, giữ nhịp rút chỉ cuối. Bỏ đường may vàng giữa các mảnh.
+- Lý do: đường chỉ nét đứt hiện tại thu nhỏ đường viền 88% quanh tâm nên lệch ra ngoài hoặc cắt ngang mảnh ở hình có phần mảnh, lõm (tay áo, cổ chữ V, tai thỏ, lỗ tim); viền mực đậm co giãn theo cỡ mảnh làm sản phẩm mất chất vải; ba lớp nét chồng ở cùng mép.
+
+**Kiểm tra:** `node smoke.js` qua 6 sản phẩm; `node bend-target.js` 6/6 (mới, chép từ web-demo); `node alt-solve.js` 7/7.

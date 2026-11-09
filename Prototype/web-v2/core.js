@@ -43,6 +43,14 @@
         level.solBend.push(h);
       }
     }
+    // Độ uốn lời giải đặt tay theo cạnh ({ chỉ số cạnh: h }), dùng khi hình mẫu cần chỗ phồng mà luật Catmull-Rom
+    // không cho ra (ví dụ mút lá chỉ do uốn cạnh tạo nên, không có node ở mút)
+    if (level.solBendOverride) {
+      for (var ok in level.solBendOverride) {
+        var kk = +ok;
+        if (kk >= 0 && kk < n) { level.solBend[kk] = level.solBendOverride[ok]; level.wasCurved[kk] = true; }
+      }
+    }
     return level;
   }
 

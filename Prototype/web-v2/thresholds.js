@@ -3,6 +3,8 @@
 (function () {
   'use strict';
   var KEY = 'gn-thresholds-v3-tier';
+  // collection mới: collection 'thresholds' cũ còn ngưỡng trước khi chuẩn hóa theo tier, nếu đọc sẽ ghi đè số trong levels.js
+  var DB_COLL = 'thresholds_v2';
   var btn = document.getElementById('thrBtn'), panel = document.getElementById('thrPanel');
   var list = document.getElementById('thrList'), note = document.getElementById('thrNote'), dbRef = null;
 
@@ -76,7 +78,7 @@
     apply(map); writeLocal(map);
     if (!dbRef) { note.textContent = 'Đã lưu trên trình duyệt này.'; return; }
     note.textContent = 'Đang lưu…';
-    Promise.all(Object.keys(map).map(function (id) { return dbRef.collection('thresholds').doc(id).set({ value: map[id] }); }))
+    Promise.all(Object.keys(map).map(function (id) { return dbRef.collection(DB_COLL).doc(id).set({ value: map[id] }); }))
       .then(function () { note.textContent = 'Đã lưu.'; }, function () { note.textContent = 'Không lưu được lên artifact; đã lưu trên trình duyệt này.'; });
   });
 
@@ -85,7 +87,7 @@
     window.claude.use('db').then(function (db) {
       if (!db) return;
       dbRef = db;
-      db.collection('thresholds').get().then(function (snap) {
+      db.collection(DB_COLL).get().then(function (snap) {
         var map = {};
         snap.docs.forEach(function (d) { var x = d.data(); if (x && typeof x.value === 'number') map[d.id] = x.value; });
         apply(map);

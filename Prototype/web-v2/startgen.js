@@ -10,7 +10,10 @@
     medium: { maxFree: 6, maxBend: 2, dist: [0.12, 0.22], iou: [0.40, 0.70], needle: [0.08, 0.14] },
     hard:   { maxFree: 9, maxBend: 2, dist: [0.20, 0.35], iou: [0.25, 0.50], needle: [0.12, 0.20] }
   };
-  var MIN_GAP = 0.07, EDGE = 0.06, NEEDLE_MIN = 0.25;
+  // MIN_GAP: khoảng cách tối thiểu giữa một node kéo được và node khác lúc đầu màn (node rộng khoảng 0,075 nên dưới mức này
+  // hai node gần như chạm nhau). PIN_CLEAR: node kéo được không bắt đầu trong vùng hút của chốt nào (vùng hút 0,048).
+  // Cả hai là số tạm, chờ chốt.
+  var MIN_GAP = 0.12, PIN_CLEAR = 0.06, EDGE = 0.06, NEEDLE_MIN = 0.25;
 
   function rng(seedStr) {
     var h = 2166136261;
@@ -87,13 +90,22 @@
         if (l.free.indexOf(a2) < 0 && l.free.indexOf(b2) < 0) continue;
         if (Math.hypot(pos[a2][0] - pos[b2][0], pos[a2][1] - pos[b2][1]) < MIN_GAP) { ok = false; break; }
       }
+      for (var c2 = 0; c2 < l.free.length && ok; c2++) {
+        var fp = pos[l.free[c2]];
+        for (var j2 = 0; j2 < n; j2++) if (Math.hypot(fp[0] - l.sol[j2][0], fp[1] - l.sol[j2][1]) < PIN_CLEAR) { ok = false; break; }
+      }
       last = pos;
       if (!ok) continue;
-      var v = GN.iou(mask(l, pos, l.fold ? x0 : 0, tmpA, l.startBend), solMask);
+      // so khoảng độ khớp của tier với đúng số người chơi thấy trên thanh (đã trừ phạt độ uốn)
+      var v = Math.max(0, GN.iou(mask(l, pos, l.fold ? x0 : 0, tmpA, l.startBend), solMask) - bPen);
       var err = v > hi ? v - hi : (v < lo ? lo - v : 0);
       if (err < bestErr) { bestErr = err; best = pos; }
       if (err === 0) break;
       scale = clamp(scale * (v > hi ? 1.06 : 0.95), 0.5, 2.5);
+    }
+    if (typeof console !== 'undefined') {
+      if (!best) console.warn('startgen: ' + l.id + ' không có lần thử nào giữ đủ khoảng cách giữa node và tới chốt, dùng lần thử cuối');
+      else if (bestErr > 0) console.warn('startgen: ' + l.id + ' độ khớp ban đầu lệch khoảng tier ' + bestErr.toFixed(3));
     }
     if (!best) best = last;
     if (best) { l.start = best; l.startIou = Math.max(0, GN.iou(mask(l, best, l.fold ? x0 : 0, tmpA, l.startBend), solMask) - bPen); }

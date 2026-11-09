@@ -20,6 +20,9 @@
   // vị trí dọc viền vẫn do người chơi quyết định nên không tự giải hộ. (giá trị tạm)
   var MAG_R = 0.035, MAG_PULL = 0.5;
   var PIN_MAG_R = 0.048, PIN_SNAP_R = 0.038;
+  // Một bán kính duy nhất để coi node là đã cắm vào chốt: bộ đếm chốt, điều kiện thắng, gợi ý uốn, nút kéo dây,
+  // hiệu ứng khớp dây và chốt đã có người đều dùng chung, để không tín hiệu nào báo "đã cắm" khi tín hiệu khác báo chưa.
+  var PIN_ON_R = PIN_SNAP_R + 0.008;
   // Snap khi thắng: mọi node (và cây kim) đi cùng một tốc độ cố định, đi thẳng một mạch không tăng giảm tốc.
   // Phase dài theo node xa nhất, kẹp trong [MIN, MAX]; xa quá thì cả nhóm cùng nhanh lên một tốc độ chung. (giá trị tạm)
   var SNAP_SPEED = 0.4, SNAP_MIN = 0.2, SNAP_MAX = 0.5, SETTLE_T = 0.12;
@@ -424,7 +427,7 @@
     cam: { scale: 1.0, targetScale: 1.0, x: 0, y: 0, targetX: 0, targetY: 0 }
   };
   window.GNJumpTo = jumpTo;
-  window.GNState = function () { return { scene: S.scene, phase: S.phase, rphase: R ? R.phase : null, cam: S.cam, drag: S.drag, edgeDrag: S.edgeDrag, pos: S.pos, li: S.li, iouV: S.iouV, ready: S.ready }; };
+  window.GNState = function () { return { scene: S.scene, phase: S.phase, rphase: R ? R.phase : null, cam: S.cam, drag: S.drag, edgeDrag: S.edgeDrag, pos: S.pos, bend: S.bend, zips: S.seamZips ? S.seamZips.length : 0, li: S.li, iouV: S.iouV, ready: S.ready }; };
   window.GNWorldToScreen = worldToScreen;
   window.GNScreenToWorld = screenToWorld;
   function product() { return PRODUCTS[S.pi]; }
@@ -433,12 +436,33 @@
   function hasNext() { return !product().standalone && S.pi + 1 < PRODUCTS.length; }
   function nextLabel() { return PRODUCTS[S.pi + 1] && PRODUCTS[S.pi + 1].standalone ? 'Tiếp tục' : 'Màn tiếp'; }
   /* ---------- danh sách chọn màn để thử nhanh ---------- */
-  var MENU = [];
+  // Mỗi sản phẩm một khối: tiêu đề "Màn N", dưới là các nút mảnh xếp ngang, hết chỗ thì xuống dòng
+  // (danh sách một cột cũ cao hơn màn hình khi có 6 sản phẩm nên không chọn được các màn cuối).
+  var MENU = [], MENU_HEAD = [];
   PRODUCTS.forEach(function (p, pi) {
-    p.levels.forEach(function (li) { MENU.push({ label: p.label + ' · ' + LEVELS[li].name, pi: pi, li: li }); });
-    MENU.push({ label: p.label + ' · Ghép thành phẩm', pi: pi, li: -1 });
+    MENU_HEAD.push({ label: p.label + (p.standalone ? ' · thử riêng' : ''), pi: pi });
+    p.levels.forEach(function (li) { MENU.push({ label: LEVELS[li].name, pi: pi, li: li }); });
+    MENU.push({ label: 'Ghép thành phẩm', pi: pi, li: -1 });
   });
-  var MENU_X = 20, MENU_Y = 62, MENU_W = 240, ROW_H = 44;
+  var MENU_X = 16, MENU_Y = 62, MENU_W = 358, MENU_PAD = 12, CHIP_H = 40, CHIP_GAP = 6, HEAD_H = 22, MENU_H = 0;
+  // Tính vị trí từng nút (gọi mỗi lần vẽ, rẻ); nút cao 40 pt, vùng chạm nới thêm 2 pt mỗi phía cho đủ 44 pt.
+  function layoutMenu() {
+    var y = MENU_Y + MENU_PAD;
+    ctx.font = '600 14px ' + FONT;
+    MENU_HEAD.forEach(function (hd) {
+      hd.y = y; y += HEAD_H;
+      var x = MENU_X + MENU_PAD;
+      MENU.forEach(function (m) {
+        if (m.pi !== hd.pi) return;
+        var w = Math.ceil(ctx.measureText(m.label).width) + 26;
+        if (x + w > MENU_X + MENU_W - MENU_PAD) { x = MENU_X + MENU_PAD; y += CHIP_H + CHIP_GAP; }
+        m.r = [x, y, w, CHIP_H]; x += w + CHIP_GAP;
+      });
+      y += CHIP_H + 12;
+    });
+    MENU_H = y - MENU_Y - 12 + MENU_PAD;
+  }
+  window.GNMenuItems = function () { layoutMenu(); return MENU.map(function (m) { return { pi: m.pi, li: m.li, label: m.label, r: m.r }; }); };
   function menuCurrent(m) { return m.pi === S.pi && (m.li === -1 ? S.scene === 'reward' : (S.scene === 'play' && m.li === S.li)); }
   function jumpTo(m) {
     S.parts = []; S.ripples = []; S.seamZips = []; S.edgeBounces = {}; S.cam = { scale: 1.0, targetScale: 1.0, x: 0, y: 0, targetX: 0, targetY: 0 }; S.readyGlowT = -9; S.winFlashT = -9; S.pi = m.pi; S.done = []; R = null; activeId = null;
@@ -451,13 +475,18 @@
     if (!S.menu) return;
     ctx.save(); ctx.fillStyle = 'rgba(74,59,53,0.18)'; ctx.fillRect(0, 0, W, H); ctx.restore();
     ctx.save(); ctx.shadowColor = 'rgba(74,59,53,0.25)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 6;
-    rr(MENU_X, MENU_Y, MENU_W, MENU.length * ROW_H + 12, 16); ctx.fillStyle = C.card; ctx.fill(); ctx.restore();
-    rr(MENU_X, MENU_Y, MENU_W, MENU.length * ROW_H + 12, 16); ctx.lineWidth = 2; ctx.strokeStyle = C.ink; ctx.stroke();
-    MENU.forEach(function (m, k) {
-      var y = MENU_Y + 6 + k * ROW_H;
-      if (menuCurrent(m)) { rr(MENU_X + 6, y + 3, MENU_W - 12, ROW_H - 6, 10); ctx.fillStyle = C.chip; ctx.fill(); }
-      if (k > 0 && MENU[k - 1].pi !== m.pi) { ctx.fillStyle = rgba(C.ink, 0.15); ctx.fillRect(MENU_X + 14, y, MENU_W - 28, 1.5); }
-      text(m.label, MENU_X + 18, y + ROW_H / 2 + 1, 15, m.li === -1 ? 700 : 600, C.ink, 'left');
+    layoutMenu();
+    rr(MENU_X, MENU_Y, MENU_W, MENU_H, 16); ctx.fillStyle = C.card; ctx.fill(); ctx.restore();
+    rr(MENU_X, MENU_Y, MENU_W, MENU_H, 16); ctx.lineWidth = 2; ctx.strokeStyle = C.ink; ctx.stroke();
+    MENU_HEAD.forEach(function (hd, k) {
+      if (k > 0) { ctx.fillStyle = rgba(C.ink, 0.12); ctx.fillRect(MENU_X + MENU_PAD, hd.y - 7, MENU_W - MENU_PAD * 2, 1.5); }
+      text(hd.label, MENU_X + MENU_PAD + 2, hd.y + 9, 14, 800, C.inkSoft, 'left');
+    });
+    MENU.forEach(function (m) {
+      var r = m.r, cur = menuCurrent(m);
+      rr(r[0], r[1], r[2], r[3], 12); ctx.fillStyle = cur ? C.chip : C.paper; ctx.fill();
+      ctx.lineWidth = cur ? 2 : 1.4; ctx.strokeStyle = cur ? C.ink : rgba(C.ink, 0.25); ctx.stroke();
+      text(m.label, r[0] + r[2] / 2, r[1] + r[3] / 2 + 1, 14, m.li === -1 ? 700 : 600, C.ink, 'center');
     });
   }
   function loadProduct(p) { S.pi = p; S.done = []; S.scene = 'play'; R = null; loadLevel(PRODUCTS[p].levels[0]); }
@@ -490,8 +519,6 @@
   /* ---------- gấp đôi vải: người chơi xếp nửa trái, nửa phải là bản soi gương qua cây kim (mép gấp) ---------- */
   function foldOf() { return LV[S.li].def.fold || null; }
   function foldY() { var f = foldOf(); return !!(f && f.axis === 'y'); }
-  function isMirror(i) { return false; }
-  function applyMirror(pos) {}
   // node đầu và cuối của mỗi đoạn cắt nằm trên mép gấp, chạy theo cây kim và chỉ trượt dọc mép
   function onFold(i) { var f = foldOf(); return !!(f && f.chains.some(function (c) { return c[0] === i || c[1] === i; })); }
   function cutLen(lv) { return lv.solPath.total; }
@@ -502,7 +529,7 @@
     if (fo && Math.abs(S.foldX - fo.solX) > 0.025) return false;
     for (var i = 0; i < def.sol.length; i++) {
       var d = Math.hypot(pos[i][0] - def.sol[i][0], pos[i][1] - def.sol[i][1]);
-      if (d > PIN_SNAP_R + 0.012) return false;
+      if (d > PIN_ON_R) return false;
     }
     return true;
   }
@@ -519,41 +546,76 @@
     var p = (targetQ && nodeIdx === targetQ.i) ? targetQ.pos : S.pos[nodeIdx];
     if (!p) return false;
     var d = Math.hypot(p[0] - lv.sol[nodeIdx][0], p[1] - lv.sol[nodeIdx][1]);
-    return d <= PIN_MAG_R + 0.025; // trùm toàn bộ bán kính nam châm và nhịp settle
+    return d <= PIN_ON_R; // lúc thả vào chốt đã truyền vị trí chốt đích (targetQ) nên không cần nới cho nhịp settle
   }
 
   // Kiểm tra hai đầu mút của cạnh k có đang được cắm chính xác vào hai chốt mục tiêu hay không
   function isEdgeAnchoredToPins(k, targetQ) {
     var lv = LV[S.li] ? LV[S.li].def : null;
     if (!lv || !lv.ring) return false;
-    var r = lv.ring, n = r.length;
-    var ra = r[k], rb = r[(k + 1) % n];
-    return isPinAnchored(ra, targetQ) && isPinAnchored(rb, targetQ);
+    return edgeTarget(k, targetQ) !== null;
   }
 
+  // Chốt mà node đang nằm (bán kính "đã cắm" chung), hoặc -1. Ghim khóa luôn ở chốt của nó; node mép gấp chỉ tính
+  // khi kim đã về đúng trục. Không so theo số thứ tự node, vì node nào vào chốt nào cũng được.
+  function pinOf(i, targetQ) {
+    var def = LV[S.li].def, fo = foldOf();
+    if (onFold(i) && fo && Math.abs(S.foldX - fo.solX) > 0.025) return -1;
+    if (locked(i)) return i;
+    var p = (targetQ && i === targetQ.i) ? targetQ.pos : S.pos[i], best = -1, bd = PIN_ON_R;
+    for (var j = 0; j < def.sol.length; j++) {
+      var d = Math.hypot(p[0] - def.sol[j][0], p[1] - def.sol[j][1]);
+      if (d <= bd) { bd = d; best = j; }
+    }
+    return best;
+  }
+  // Đích độ uốn của cạnh k theo chốt mà hai đầu đang nằm: nếu hai chốt là hai đầu một cạnh lời giải thì đích là độ uốn
+  // lời giải của cạnh đó (đổi dấu nếu đi ngược chiều). Hai đầu chưa ở chốt, hoặc hai chốt không liền nhau trên viền mẫu,
+  // thì không có đích: dây không bị hút, không có gợi ý, không có hiệu ứng khớp dây.
+  function edgeTarget(k, targetQ) {
+    var def = LV[S.li].def, r = def.ring, n = r.length;
+    if (!GN.inFoldChain(def, k)) return null;
+    var pa = pinOf(r[k], targetQ), pb = pinOf(r[(k + 1) % n], targetQ);
+    if (pa < 0 || pb < 0 || pa === pb) return null;
+    for (var g = 0; g < n; g++) {
+      if (!GN.inFoldChain(def, g)) continue;
+      var a = r[g], b = r[(g + 1) % n];
+      if (a === pa && b === pb) return { g: g, h: def.solBend[g] || 0 };
+      if (a === pb && b === pa) return { g: g, h: -(def.solBend[g] || 0) };
+    }
+    return null;
+  }
+  // Mảng độ uốn để vẽ cạnh k ở đúng đích (đường viền mẫu giữa hai chốt), không kèm gợn sóng lúc kéo.
+  var tgtBendBuf = [];
+  function bendsAt(k, h) {
+    tgtBendBuf.length = 0;
+    for (var i = 0; i < S.bend.length; i++) tgtBendBuf.push(S.bend[i] || 0);
+    tgtBendBuf[k] = h;
+    return tgtBendBuf;
+  }
+  // Các cạnh cần gợi ý uốn: có đích theo chốt và độ uốn còn lệch đích từ 1,2% trở lên. Mọi cạnh đều xét (cạnh nào cũng
+  // uốn được); cạnh người chơi phải tự uốn (bendFree) hiện đậm, cạnh khác hơi nhạt hơn.
+  function hintEdges() {
+    var def = LV[S.li].def, out = [];
+    for (var k = 0; k < def.ring.length; k++) {
+      var tg = edgeTarget(k);
+      if (!tg || Math.abs((S.bend[k] || 0) - tg.h) < 0.012) continue;
+      out.push({ k: k, h: tg.h, emph: def.bendFree && def.bendFree.indexOf(k) >= 0 ? 1 : 0.75 });
+    }
+    return out;
+  }
+  window.GNHintEdges = function () { return hintEdges(); };
   // Tìm các cạnh kề với node vừa cắm mà cạnh đó vừa chính thức khép kín và khớp hoàn toàn vào viền mẫu
   function checkChainedEdgeSnaps(nodeIdx, targetPos) {
     var lv = LV[S.li] ? LV[S.li].def : null;
     if (!lv || !lv.ring || !lv.sol) return [];
     var tQ = { i: nodeIdx, pos: targetPos || S.pos[nodeIdx] };
-    if (!isPinAnchored(nodeIdx, tQ)) return [];
-
-    var r = lv.ring, n = r.length;
-    var completed = [];
+    if (pinOf(nodeIdx, tQ) < 0) return [];
+    var r = lv.ring, n = r.length, completed = [];
     for (var k = 0; k < n; k++) {
-      var ra = r[k], rb = r[(k + 1) % n];
-      if (ra === nodeIdx || rb === nodeIdx) {
-        var oth = (ra === nodeIdx ? rb : ra);
-        // Kiểm tra xem đầu mút kia đã cắm đúng chốt mục tiêu của nó chưa (ghim khóa tự động coi là đã neo)
-        if (isPinAnchored(oth, tQ)) {
-          // Kiểm tra độ cong của cạnh này có đang khớp với viền mẫu không
-          var curH = S.bend ? (S.bend[k] || 0) : 0;
-          var solH = lv.solBend ? (lv.solBend[k] || 0) : 0;
-          if (Math.abs(curH - solH) < 0.025) {
-            completed.push(k);
-          }
-        }
-      }
+      if (r[k] !== nodeIdx && r[(k + 1) % n] !== nodeIdx) continue;
+      var tg = edgeTarget(k, tQ);
+      if (tg && Math.abs((S.bend[k] || 0) - tg.h) < 0.025) completed.push(k);
     }
     return completed;
   }
@@ -568,7 +630,7 @@
     for (var j = 0; j < n; j++) {
       for (var i = 0; i < pos.length; i++) {
         var d = Math.hypot(pos[i][0] - sol[j][0], pos[i][1] - sol[j][1]);
-        if (d <= PIN_SNAP_R + 0.008) {
+        if (d <= PIN_ON_R) {
           pairs.push({ j: j, i: i, d: d });
         }
       }
@@ -592,6 +654,43 @@
       filledCount: count,
       totalPins: n
     };
+  }
+  // Node nào vào chốt nào cũng được, nhưng độ uốn, phạt độ uốn, nam châm dây và snap đều so theo số thứ tự cạnh.
+  // Khi mọi chốt đã lấp và cách đặt là một vòng xoay hay soi gương của vòng lời giải (ghim khóa đứng yên, node mép gấp
+  // vẫn ở mép gấp), đánh số lại node và cạnh theo chốt để mọi phép so khớp đúng cạnh. Node trông giống nhau nên người chơi
+  // không thấy gì. Dây chưa uốn thì nhận độ uốn ban đầu của cạnh mới; dây đã uốn giữ nguyên hình (đổi dấu nếu ngược chiều).
+  // Trả về bảng chỉ số node cũ -> mới, hoặc null khi không đổi (đã đúng thứ tự, chưa lấp đủ, hoặc hình bắt chéo).
+  function canonicalizePins() {
+    var def = LV[S.li].def, r = def.ring, n = r.length, i, k;
+    var st = checkPins(def, S.pos);
+    if (!st.allFilled) return null;
+    var perm = st.nodeMatched, same = true;
+    for (i = 0; i < perm.length; i++) {
+      if (perm[i] < 0) return null;
+      if (perm[i] !== i) same = false;
+      if ((locked(i) && perm[i] !== i) || onFold(i) !== onFold(perm[i])) return null;
+    }
+    if (same) return null;
+    var inv = []; for (i = 0; i < perm.length; i++) inv[perm[i]] = i;
+    var edgeOf = {}; for (k = 0; k < n; k++) edgeOf[r[k] + ',' + r[(k + 1) % n]] = k;
+    var map = [];
+    for (k = 0; k < n; k++) {
+      var a = inv[r[k]], b = inv[r[(k + 1) % n]], g = edgeOf[a + ',' + b], s = 1;
+      if (g === undefined) { g = edgeOf[b + ',' + a]; s = -1; }
+      if (g === undefined || GN.inFoldChain(def, g) !== GN.inFoldChain(def, k)) return null;
+      map.push({ g: g, s: s });
+    }
+    var dfl = def.startBend || def.solBend, nb = [];
+    for (k = 0; k < n; k++) {
+      var v = S.bend[map[k].g] || 0;
+      nb.push(Math.abs(v - (dfl[map[k].g] || 0)) < 1e-6 ? (dfl[k] || 0) : map[k].s * v);
+    }
+    nb._waves = [];
+    function permute(arr) { var out = arr.slice(); for (var j = 0; j < perm.length; j++) out[perm[j]] = arr[j]; return out; }
+    S.pos = permute(S.pos); S.sc = permute(S.sc); S.pl = permute(S.pl); S.shake = permute(S.shake);
+    S.bend = nb; S.edgeWake = r.map(function () { return -9; }); S.seamZips = []; S.edgeBounces = {}; S.hint = null;
+    S.dirty = true;
+    return perm;
   }
   // Kim chỉ đi theo chiều vuông góc với chính nó (kim dọc thì đi trái phải, kim ngang thì đi lên xuống).
   function needleMove(p) {
@@ -668,9 +767,13 @@
     if (activeId !== null) return; // chỉ một ngón
     var p = toLogical(e);
     if (S.menu) {
-      var row = Math.floor((p[1] - MENU_Y - 6) / ROW_H);
-      if (inRect(p, MENU_X, MENU_Y, MENU_W, MENU.length * ROW_H + 12) && row >= 0 && row < MENU.length) jumpTo(MENU[row]);
-      S.menu = false; return;
+      layoutMenu();
+      var hit = null;
+      MENU.forEach(function (m) { if (!hit && inRect(p, m.r[0] - 2, m.r[1] - 2, m.r[2] + 4, m.r[3] + 4)) hit = m; });
+      if (hit) { jumpTo(hit); S.menu = false; return; }
+      // chạm vào khoảng trống trong bảng thì giữ bảng mở; chạm ra ngoài thì đóng
+      if (!inRect(p, MENU_X, MENU_Y, MENU_W, MENU_H)) S.menu = false;
+      return;
     }
     if (inRect(p, 14, 16, (S.chipW || 100) + 12, 44)) { S.menu = true; S.drag = null; pop(noteF(1), 0.04); return; }
     if (inRect(p, 326, 16, 44, 44)) { soundOn = !soundOn; S.toast = 1.2; if (soundOn) pop(noteF(4), 0.06); vib(8); return; }
@@ -727,7 +830,7 @@
       k: rk, a: ra, b: rb, sx: fx, sy: fy,
       ax: A[0], ay: A[1], tx: edx / eL, ty: edy / eL, eL: eL,
       nx: -edy / eL, ny: edx / eL,
-      h0: S.bend[rk] || 0,
+      h0: S.bend[rk] || 0, tgt: edgeTarget(rk),
       u: uInit, uSmooth: uInit, lastSoundU: uInit, rip: 0,
       fx: pw[0], fy: pw[1], startX: p[0], startY: p[1], lastP: [p[0], p[1]], moved: false, inMag: false, inSnap0: false, magH: null,
       isTouch: isTouch
@@ -761,7 +864,7 @@
     }
     for (var i = 0; i < S.pos.length; i++) {
       var d = Math.hypot(fx - S.pos[i][0], fy - S.pos[i][1]);
-      if (!isMirror(i) && d < pickRadius(i) && d < bd) { bd = d; best = i; }
+      if (d < pickRadius(i) && d < bd) { bd = d; best = i; }
     }
     var bestEdge = hitTestEdge(fx, fy);
     // [ĐÃ DUYỆT CHÍNH THỨC / APPROVED] BỘ LỌC CẢM ỨNG 3 LỚP (SMART 3-LAYER TAP ARBITRATION):
@@ -838,7 +941,7 @@
     for (var k = 0; k < S.pos.length; k++) {
       if (k === d.i) continue;
       for (var pj = 0; pj < n; pj++) {
-        if (Math.hypot(S.pos[k][0] - sol[pj][0], S.pos[k][1] - sol[pj][1]) <= PIN_SNAP_R) occ[pj] = true;
+        if (Math.hypot(S.pos[k][0] - sol[pj][0], S.pos[k][1] - sol[pj][1]) <= PIN_ON_R) occ[pj] = true;
       }
     }
     var bestD = 9, bestPin = null, bestJ = -1;
@@ -862,7 +965,7 @@
     if (d.inPrev !== undefined && inPrev !== d.inPrev && !inMag) { softTone(pentaF(inPrev ? 1 : 0, -1), 0.045, 0.12); }
     d.inPrev = inPrev;
     d.inMag = inMag; d.magQ = inMag ? q : null;
-    S.pos[d.i] = raw; applyMirror(S.pos);
+    S.pos[d.i] = raw;
     var pw = screenToWorld(p);
     d.fx = pw[0]; d.fy = pw[1];
     S.dirty = true;
@@ -885,9 +988,11 @@
     var uGain = 1 / clamp(4 * uCur * (1 - uCur) * (1 + 4.8 * (uCur - 0.5) * (uCur - 0.5)), 0.72, 1.08);
     var rawH = clamp(ed.h0 + deltaH * uGain, -0.18, 0.18);
     var lv = LV[S.li].def;
-    var solH = lv.solBend[ed.k] || 0;
+    // chỉ hút khi hai đầu dây đã ở hai chốt liền nhau trên viền mẫu; đích là độ uốn của cạnh lời giải giữa hai chốt đó
+    var solH = ed.tgt ? ed.tgt.h : 0;
     var inMag = false, inSnap0 = false, magH = null, w0 = 0;
-    var dm = Math.abs(rawH - solH);
+    var dm = ed.tgt ? Math.abs(rawH - solH) : 9;
+    if (ed.tgt) ed.maxErr = Math.max(ed.maxErr || 0, dm); // để biết dây có thật sự bị kéo lệch rồi nắn lại không
     if (dm < MAG_R) {
       inMag = true;
       w0 = MAG_PULL * (1 - dm / MAG_R);
@@ -931,7 +1036,7 @@
       var dragDist = Math.hypot(p[0] - ed.startX, p[1] - ed.startY);
       if (dragDist > 8) {
         ed.moved = true;
-        S.cam.targetScale = 1.04;
+        // đã bỏ phóng 1,04 lần khi kéo (2026-11-09): người chơi thử thấy chóng mặt
         S.cam.targetX = 0;
         S.cam.targetY = 0;
       }
@@ -944,7 +1049,7 @@
     var dragDist = Math.hypot(p[0] - d.startX, p[1] - d.startY);
     if (dragDist > 8) {
       d.moved = true;
-      S.cam.targetScale = 1.04;
+      // đã bỏ phóng 1,04 lần khi kéo (2026-11-09): người chơi thử thấy chóng mặt
       S.cam.targetX = 0;
       S.cam.targetY = 0;
     }
@@ -958,13 +1063,13 @@
       var nd = S.needle; S.needle = null; pop(noteF(1) * 0.5, 0.085, 0, 0.15); vib(6);
       if (cancel || !nd.moved) return;
       if (nd.inMag) {
-        var x0 = S.foldX; setNeedle(foldOf().solX); recompute();
+        var x0 = S.foldX; setNeedle(foldOf().solX); canonicalizePins(); recompute();
         var winN = (S.iouV >= S.thr) && checkPins(LV[S.li].def, S.pos).allFilled; setNeedle(x0);
         if (winN) { startWin(); return; }
         S.needleSettle = { from: x0, to: foldOf().solX, t: 0 };
         return;
       }
-      recompute(); if (S.iouV >= S.thr && checkPins(LV[S.li].def, S.pos).allFilled) startWin();
+      canonicalizePins(); recompute(); if (S.iouV >= S.thr && checkPins(LV[S.li].def, S.pos).allFilled) startWin();
       return;
     }
     if (S.edgeDrag) {
@@ -976,10 +1081,12 @@
         S.dirty = true; return;
       }
       var lv = LV[S.li].def;
-      var isBendEdge = lv.bendFree && (lv.bendFree.indexOf(ed.k) !== -1) && (Math.abs(lv.solBend[ed.k] || 0) > 0.01);
-      var isSnappingToSol = (ed.magH !== null && Math.abs(ed.magH - (lv.solBend[ed.k] || 0)) < 1e-4);
-      var isAnchored = isEdgeAnchoredToPins(ed.k);
-      var isTrueContourSnap = isBendEdge && isSnappingToSol && isAnchored;
+      // khớp viền thật: dây có đích theo chốt và thả đúng vào vùng hút của đích, kể cả khi đích là đoạn thẳng
+      // (cạnh nào cũng uốn được nên nắn dây thẳng về viền cũng là một lần khớp). Chỉ tính khi dây thật sự được sửa:
+      // lúc bắt đầu kéo đã lệch đích từ 1,2%, hoặc trong lúc kéo bị kéo ra khỏi vùng hút; chạm nhẹ dây đang đúng thì không.
+      var tg = ed.tgt;
+      var wasOff = !!tg && (Math.abs(ed.h0 - tg.h) >= 0.012 || (ed.maxErr || 0) >= MAG_R);
+      var isTrueContourSnap = !!tg && wasOff && ed.magH !== null && Math.abs(ed.magH - tg.h) < 1e-4;
 
       if (isTrueContourSnap) {
         var curH = S.bend[ed.k]; S.bend[ed.k] = ed.magH; recompute();
@@ -1029,14 +1136,17 @@
       vib([8, 14, 10]);
 
       // chấm thắng theo vị trí đã đặt hẳn lên viền, nhưng hình vẽ trượt dần tới đó
-      var rawP = S.pos[d.i].slice(); S.pos[d.i] = d.magQ.slice(); recompute();
-      var win = (S.iouV >= S.thr) && checkPins(LV[S.li].def, S.pos).allFilled; S.pos[d.i] = rawP; S.dirty = true;
+      var rawP = S.pos[d.i].slice(); S.pos[d.i] = d.magQ.slice();
+      // chốt cuối vừa lấp theo thứ tự khác lời giải: đánh số lại trước khi chấm
+      var perm = canonicalizePins(), di = perm ? perm[d.i] : d.i;
+      recompute();
+      var win = (S.iouV >= S.thr) && checkPins(LV[S.li].def, S.pos).allFilled; S.pos[di] = rawP; S.dirty = true;
       if (win) { startWin(); return; }
-      S.settle = { i: d.i, from: rawP, to: d.magQ.slice(), t: 0 };
+      S.settle = { i: di, from: rawP, to: d.magQ.slice(), t: 0 };
       S.ripples.push({ x: X(d.magQ[0]), y: Y(d.magQ[1]), t0: now(), c: C.mustard, world: true });
 
       // NHỊP BỒI TRỖI DÂY (Chained Edge Snap): Nếu cạnh nối với chốt này vừa được hoàn tất khớp viền
-      var chainedEdges = checkChainedEdgeSnaps(d.i, d.magQ);
+      var chainedEdges = checkChainedEdgeSnaps(di, d.magQ);
       if (chainedEdges.length > 0) {
         var tSnap = now() + 0.05;
         chainedEdges.forEach(function (ek) {
@@ -1066,17 +1176,18 @@
     if (S.hints <= 0) { vib(20); pop(200, 0.05, 0, 0.1); return; }
     var lv = LV[S.li].def, bi = -1, bd = -1, bk = -1, be = -1;
     for (var i = 0; i < S.pos.length; i++) {
-      if (locked(i) || isMirror(i)) continue;
+      if (locked(i)) continue;
       var d = Math.hypot(S.pos[i][0] - lv.sol[i][0], S.pos[i][1] - lv.sol[i][1]);
       if (d > bd) { bd = d; bi = i; }
     }
+    var bh = 0;
     for (var k = 0; k < lv.ring.length; k++) {
-      if (!GN.inFoldChain(lv, k)) continue;
-      var ediff = Math.abs((S.bend[k] || 0) - (lv.solBend[k] || 0)) * 2.2;
-      if (ediff > be) { be = ediff; bk = k; }
+      var tg = edgeTarget(k); if (!tg) continue; // chỉ gợi ý dây khi biết đích theo chốt
+      var ediff = Math.abs((S.bend[k] || 0) - tg.h) * 2.2;
+      if (ediff > be) { be = ediff; bk = k; bh = tg.h; }
     }
     S.hints--;
-    if (be > bd && be > 0.015) S.hint = { edge: bk, t0: now() };
+    if (be > bd && be > 0.015) S.hint = { edge: bk, th: bh, t0: now() };
     else S.hint = { i: bi, t0: now() };
     chord([2, 4], 0.05, 0.06); vib(10);
   }
@@ -1135,7 +1246,7 @@
       if (!lv.def.fold && bd > lv.solPath.total - 1e-4) bd = 0;
       out.push({ i: i, d: bd });
     }
-    out.filter(function (o) { return !isMirror(o.i); }).sort(function (a, b) { return a.d - b.d; }).forEach(function (o, r) { o.rank = r; });
+    out.slice().sort(function (a, b) { return a.d - b.d; }).forEach(function (o, r) { o.rank = r; });
     out.forEach(function (o) { if (o.rank === undefined) o.rank = 0; });
     return out;
   }
@@ -1196,13 +1307,14 @@
         fitFactor = uFit * uFit * (3 - 2 * uFit);
       }
       var isPinchingK = (S.edgeDrag && S.edgeDrag.k === k) || (S.waveSettle && S.waveSettle.k === k);
-      var isUnbentFreeEdge = allFilledIdle && level.bendFree && (level.bendFree.indexOf(k) !== -1);
+      // dây nhắc nhẹ về phía đích khi người chơi đứng yên: mọi cạnh có đích theo chốt mà còn lệch, không chỉ bendFree
+      var bTg = allFilledIdle && LV[S.li] && LV[S.li].def === level ? edgeTarget(k) : null;
       var beckonWave = 0;
-      if (isUnbentFreeEdge) {
-        var bsolH = (level.solBend && level.solBend[k] !== undefined) ? level.solBend[k] : 0;
+      if (bTg) {
+        var bsolH = bTg.h;
         var bcurH = (S.bend && S.bend[k] !== undefined) ? S.bend[k] : 0;
         if (Math.abs(bcurH - bsolH) > 0.012) {
-          var dirSign = (bsolH >= 0 ? 1 : -1);
+          var dirSign = (bsolH - bcurH >= 0 ? 1 : -1);
           var pulse = 0.5 + 0.5 * Math.sin(idleAge * 3.2 + k * 0.7);
           beckonWave = (pulse * 1.5 * dirSign) / FS;
         }
@@ -1396,7 +1508,6 @@
       var L = cutLen(lv) * clamp(S.t / cutDur(lv), 0, 1);
       for (var q = 0; q < S.cutD.length; q++) {
         var cd = S.cutD[q];
-        if (isMirror(cd.i)) continue;
         if (S.cutLast < cd.d && cd.d <= L) {
           pop(risingF(cd.rank), 0.07, 0, 0.3); S.cutHit[cd.i] = now(); S.pl[cd.i] = 1;
           S.ripples.push({ x: X(S.pos[cd.i][0]), y: Y(S.pos[cd.i][1]), t0: now(), c: C.cream, world: true });
@@ -1488,7 +1599,7 @@
     rr(20, 80, 140, 148, 18); ctx.fillStyle = C.card; ctx.fill(); ctx.lineWidth = 2.2; ctx.strokeStyle = C.ink; ctx.stroke();
     text('Hình mẫu', 90, 101, 13, 700, C.inkSoft, 'center');
     var lv = LV[S.li], tf = fitTf(lv, 90, 165, 92);
-    outlinePath(lv.outline, tf.ox, tf.oy, tf.s); ctx.fillStyle = rgba(lv.def.pattern.base, 0.45); ctx.fill();
+    outlinePath(lv.outline, tf.ox, tf.oy, tf.s); ctx.fillStyle = rgba((lv.def.fabric || lv.def.pattern).base, 0.45); ctx.fill();
     ctx.setLineDash([5, 4]); ctx.lineWidth = 2; ctx.strokeStyle = C.ink; ctx.stroke(); ctx.setLineDash([]);
 
     rr(172, 80, 198, 148, 18); ctx.fillStyle = C.card; ctx.fill();
@@ -2029,7 +2140,7 @@
       var rk = h.edge, ra = lv.ring[rk], rb = lv.ring[(rk + 1) % lv.ring.length];
       var pCur = GN.edgePoly(lv, S.pos, ra, rb, 20, polyBuf, S.bend), mCur = Math.floor(pCur.length / 4) * 2;
       a = [pCur[mCur], pCur[mCur + 1]];
-      var pSol = GN.edgePoly(lv, lv.sol, ra, rb, 20, hitPolyBuf, lv.solBend), mSol = Math.floor(pSol.length / 4) * 2;
+      var pSol = GN.edgePoly(lv, S.pos, ra, rb, 20, hitPolyBuf, bendsAt(rk, h.th)), mSol = Math.floor(pSol.length / 4) * 2;
       b = [pSol[mSol], pSol[mSol + 1]];
     } else {
       a = S.pos[h.i]; b = lv.sol[h.i];
@@ -2066,8 +2177,11 @@
       if (fill < 1) { ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.fillRect(ox + b[0] * s - 4, top, (b[2] - b[0]) * s + 8, 3); }
     }
     ctx.restore();
-    outlinePath(pts, ox, oy, s); ctx.lineWidth = Math.max(1.4, 2.6 * Math.min(1, s / 200)); ctx.strokeStyle = C.ink; ctx.lineJoin = 'round'; ctx.stroke();
-    if (stitchA > 0) {
+    var flat = lv.def.fabric && lv.def.fabric.mat === 'flat';
+    // tranh tô màu: viền đen dày đều; vải: viền mực mảnh hơn
+    outlinePath(pts, ox, oy, s); ctx.lineWidth = flat ? Math.max(2, 4.2 * Math.min(1, s / 200)) : Math.max(1.4, 2.6 * Math.min(1, s / 200));
+    ctx.strokeStyle = flat ? lv.def.fabric.line : C.ink; ctx.lineJoin = 'round'; ctx.stroke();
+    if (stitchA > 0 && !flat) {
       var cx = ox + lv.cen[0] * s, cy = oy + lv.cen[1] * s, k = 0.88;
       ctx.save(); ctx.translate(cx, cy); ctx.scale(k, k); ctx.translate(-cx, -cy);
       outlinePath(pts, ox, oy, s); ctx.setLineDash([5 / k * Math.min(1, s / 200) + 1, 4 / k * Math.min(1, s / 200) + 1]);
@@ -2076,7 +2190,98 @@
   }
   // Mỗi mảnh một họa tiết riêng: chấm bi, kẻ caro, cốm rắc, ô bánh quế. Không mảnh nào trùng màu hay họa tiết.
   var SPR = ['#FFFFFF', '#E3A6A1', '#E9C46A', '#A9C1A0'];
+  /* ---------- vải hướng D: màu thật, vân theo chất liệu (chốt 2026-11-09) ---------- */
+  // Vân vẽ sẵn thành một ô lặp cho mỗi mảnh (vẽ ở 2x cho nét trên màn hình dày điểm ảnh), mỗi khung hình chỉ tô lại.
+  // Kích thước vân cố định theo khung vải (FS), không co giãn theo cỡ mảnh: mảnh nhỏ vẫn có mũi đan cùng cỡ như vải thật.
+  var fabricCache = {};
+  function fabricRand(seed) { var h = seed >>> 0; return function () { h += 0x6D2B79F5; var t = h; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  function fabricPattern(i) {
+    if (fabricCache[i] !== undefined) return fabricCache[i];
+    var fb = LV[i].def.fabric, k = 2, tw, th;
+    // len đan: mũi rộng 1,7% và cao 1,4% bề rộng vải; nỉ: ô 96 pt; len gân: gân 2,2%
+    var sw = Math.round(FS * 0.017), sh = Math.round(FS * 0.014), rw = Math.round(FS * 0.022);
+    if (fb.mat === 'knit') { tw = sw * 10; th = sh * 10; } else if (fb.mat === 'rib') { tw = rw * 2; th = 16; } else { tw = th = 96; }
+    var c = document.createElement('canvas'); c.width = tw * k; c.height = th * k;
+    var g = c.getContext('2d'); g.scale(k, k);
+    g.fillStyle = fb.base; g.fillRect(0, 0, tw, th);
+    if (fb.mat === 'knit') {
+      for (var j = 0; j <= 10; j++) for (var q = 0; q < 10; q++) {
+        var cx = q * sw + sw / 2, cy = j * sh;
+        [[-1, 0.5], [1, -0.5]].forEach(function (lg) {
+          g.save(); g.translate(cx + lg[0] * sw * 0.22, cy); g.rotate(lg[1]);
+          g.beginPath(); g.ellipse(0, 0, sw * 0.2, sh * 0.62, 0, 0, 7);
+          g.fillStyle = rgba(fb.light, 0.55); g.fill(); g.lineWidth = 0.6; g.strokeStyle = rgba(fb.dark, 0.35); g.stroke();
+          g.restore();
+        });
+      }
+    } else if (fb.mat === 'rib') {
+      for (var x = 0; x < tw; x += rw) {
+        var gr = g.createLinearGradient(x, 0, x + rw, 0);
+        gr.addColorStop(0, rgba(fb.dark, 0.45)); gr.addColorStop(0.5, rgba(fb.light, 0.55)); gr.addColorStop(1, rgba(fb.dark, 0.45));
+        g.fillStyle = gr; g.fillRect(x, 0, rw, th);
+      }
+    } else {
+      // nỉ: sợi lông ngắn cùng tông; sợi gần mép vẽ lặp sang ô bên cạnh để ô lặp không lộ đường nối
+      var r = fabricRand(i * 7919 + 13), n = Math.round(tw * th / 7);
+      g.lineCap = 'round'; g.lineWidth = 0.7;
+      for (var f = 0; f < n; f++) {
+        var fx = r() * tw, fy = r() * th, a = r() * Math.PI, l = (0.004 + r() * 0.008) * FS, col = r() < 0.5 ? rgba(fb.light, 0.5) : rgba(fb.dark, 0.32);
+        for (var dx = -1; dx <= 1; dx++) for (var dy = -1; dy <= 1; dy++) {
+          var px = fx + dx * tw, py = fy + dy * th;
+          if (px < -l || px > tw + l || py < -l || py > th + l) continue;
+          g.strokeStyle = col; g.beginPath(); g.moveTo(px, py);
+          g.quadraticCurveTo(px + Math.cos(a + 0.6) * l * 0.5, py + Math.sin(a + 0.6) * l * 0.5, px + Math.cos(a) * l, py + Math.sin(a) * l); g.stroke();
+        }
+      }
+    }
+    var pat = ctx.createPattern(c, 'repeat');
+    if (pat && pat.setTransform && window.DOMMatrix) pat.setTransform(new DOMMatrix().scale(1 / k));
+    fabricCache[i] = pat;
+    return pat;
+  }
+  function paintFabric(i, ox, oy, s, deep) {
+    var fb = LV[i].def.fabric, b = LV[i].bbox, x0 = ox + b[0] * s, y0 = oy + b[1] * s, w = (b[2] - b[0]) * s, h = (b[3] - b[1]) * s;
+    ctx.fillStyle = fb.base; ctx.fillRect(x0 - 4, y0 - 4, w + 8, h + 8);
+    if (fb.mat === 'flat') { paintFlat(fb, x0, y0, w, h, deep); return; }
+    // ô vân bám theo mảnh (dịch theo mảnh khi bay, không trượt trên mảnh)
+    var pat = fabricPattern(i);
+    if (pat) { ctx.save(); ctx.translate(ox, oy); ctx.fillStyle = pat; ctx.fillRect(x0 - ox - 4, y0 - oy - 4, w + 8, h + 8); ctx.restore(); }
+    if (fb.detail === 'waffle') {
+      // chi tiết vật thật: ô bánh quế, cùng tông, khoảng ô cố định theo khung vải
+      var gq = FS * 0.055;
+      for (var pass = 0; pass < 2; pass++) {
+        ctx.beginPath();
+        for (var d = -h; d < w + h; d += gq) {
+          var o = pass ? 1 : 0;
+          ctx.moveTo(x0 + d + o, y0 - 4); ctx.lineTo(x0 + d + h + 8 + o, y0 + h + 4);
+          ctx.moveTo(x0 + d + o, y0 + h + 4); ctx.lineTo(x0 + d + h + 8 + o, y0 - 4);
+        }
+        ctx.lineWidth = FS * 0.007; ctx.strokeStyle = pass ? rgba(fb.light, 0.5) : rgba(fb.dark, 0.6); ctx.stroke();
+      }
+    }
+    // ánh sáng chung: sáng phía trên, tối dần về mép dưới, mép trong viền hơi tối để mảnh có khối
+    var lg = ctx.createLinearGradient(0, y0, 0, y0 + h);
+    lg.addColorStop(0, 'rgba(255,255,255,0.18)'); lg.addColorStop(0.45, 'rgba(255,255,255,0)'); lg.addColorStop(1, rgba(fb.dark, 0.22));
+    ctx.fillStyle = lg; ctx.fillRect(x0 - 4, y0 - 4, w + 8, h + 8);
+    outlinePath(LV[i].outline, ox, oy, s); ctx.lineWidth = 6; ctx.strokeStyle = rgba(fb.dark, 0.25); ctx.stroke();
+    // bước lên màu đầy ở màn thưởng: đậm hơn một chút, không đổi màu
+    if (deep > 0) { ctx.fillStyle = rgba(fb.dark, 0.12 * deep); ctx.fillRect(x0 - 4, y0 - 4, w + 8, h + 8); }
+  }
+  // Phong cách tranh tô màu (thử, màn 6): mảng màu phẳng tươi, chuyển sắc nhẹ từ sáng (trên trái) sang tối (dưới),
+  // một vệt bóng trắng cong; không vân vải. Viền đen dày và bỏ chỉ khâu do drawPiece lo.
+  function paintFlat(fb, x0, y0, w, h, deep) {
+    var rg = ctx.createRadialGradient(x0 + w * 0.32, y0 + h * 0.28, Math.min(w, h) * 0.05, x0 + w * 0.5, y0 + h * 0.55, Math.max(w, h) * 0.75);
+    rg.addColorStop(0, fb.light); rg.addColorStop(0.55, fb.base); rg.addColorStop(1, fb.dark);
+    ctx.fillStyle = rg; ctx.fillRect(x0 - 4, y0 - 4, w + 8, h + 8);
+    ctx.save(); ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.ellipse(x0 + w * 0.3, y0 + h * 0.36, w * 0.09, h * 0.16, -0.35, Math.PI * 1.05, Math.PI * 1.75);
+    ctx.lineWidth = Math.max(2, w * 0.035); ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.stroke();
+    ctx.beginPath(); ctx.arc(x0 + w * 0.36, y0 + h * 0.2, Math.max(1.5, w * 0.018), 0, 7); ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.fill();
+    ctx.restore();
+    if (deep > 0) { ctx.fillStyle = rgba(fb.dark, 0.08 * deep); ctx.fillRect(x0 - 4, y0 - 4, w + 8, h + 8); }
+  }
   function paintPattern(i, ox, oy, s, deep) {
+    if (LV[i].def.fabric) { paintFabric(i, ox, oy, s, deep); return; }
     var pt = LV[i].def.pattern, b = LV[i].bbox, x0 = ox + b[0] * s, y0 = oy + b[1] * s, w = (b[2] - b[0]) * s, h = (b[3] - b[1]) * s, u = s / 324;
     ctx.fillStyle = mix(pt.base, pt.deep, deep); ctx.fillRect(x0 - 4, y0 - 4, w + 8, h + 8);
     var row, xx, yy;
@@ -2358,7 +2563,7 @@
 
   function drawBreathingCrescentGaps(intro) {
     var lv = LV[S.li];
-    if (!lv || !lv.def || !lv.def.bendFree || !lv.def.bendFree.length) return;
+    if (!lv || !lv.def) return;
     var def = lv.def;
     if (S.iouV >= S.thr) return;
     if (S.phase !== 'play' && S.phase !== 'verify') return;
@@ -2373,17 +2578,13 @@
     var idleTime = clk - (S.lastAction || 0);
     var isIdle = (idleTime > 1.8);
 
-    for (var bi = 0; bi < def.bendFree.length; bi++) {
-      var k = def.bendFree[bi];
-      if (!isEdgeAnchoredToPins(k)) continue;
-      var solH = def.solBend ? (def.solBend[k] || 0) : 0;
-      var curH = S.bend ? (S.bend[k] || 0) : 0;
-      var bendErr = Math.abs(curH - solH);
-      if (bendErr < 0.012) continue; // Cạnh này đã uốn đúng hoặc gần khít, không cần gợi ý
-
+    var list = hintEdges();
+    for (var bi = 0; bi < list.length; bi++) {
+      var k = list[bi].k;
       var ra = def.ring[k], rb = def.ring[(k + 1) % def.ring.length];
       var pCur = GN.edgePoly(def, S.pos, ra, rb, 24, gapCurBuf, S.bend);
-      var pSol = GN.edgePoly(def, def.sol, ra, rb, 24, gapSolBuf, def.solBend);
+      // viền đích vẽ giữa chính hai đầu dây, ở độ uốn đích theo chốt
+      var pSol = GN.edgePoly(def, S.pos, ra, rb, 24, gapSolBuf, bendsAt(k, list[bi].h));
       if (!pCur || pCur.length < 4 || !pSol || pSol.length < 4) continue;
 
       var breath = 0.5 + 0.5 * Math.sin(clk * 3.2 + bi * 0.8);
@@ -2391,6 +2592,7 @@
       var aFill = (0.28 + 0.22 * breath * depth) * intro * fadeIn;
 
       ctx.save();
+      ctx.globalAlpha = list[bi].emph;
 
       // 1. TẦNG NỀN: Mảng khuyết hình trăng khuyết khép kín giữa sợi dây và viền mẫu
       ctx.beginPath();
@@ -2487,7 +2689,7 @@
   // Vẽ trên mặt sợi dây để người chơi có điểm chạm xúc giác (Affordance) rõ ràng
   function drawPinchBeads(intro) {
     var lv = LV[S.li];
-    if (!lv || !lv.def || !lv.def.bendFree || !lv.def.bendFree.length) return;
+    if (!lv || !lv.def) return;
     var def = lv.def;
     if (S.iouV >= S.thr) return;
     if (S.phase !== 'play' && S.phase !== 'verify') return;
@@ -2502,14 +2704,9 @@
     var idleTime = clk - (S.lastAction || 0);
     var isIdle = (idleTime > 1.8);
 
-    for (var bi = 0; bi < def.bendFree.length; bi++) {
-      var k = def.bendFree[bi];
-      if (!isEdgeAnchoredToPins(k)) continue;
-      var solH = def.solBend ? (def.solBend[k] || 0) : 0;
-      var curH = S.bend ? (S.bend[k] || 0) : 0;
-      var bendErr = Math.abs(curH - solH);
-      if (bendErr < 0.012) continue;
-
+    var list = hintEdges();
+    for (var bi = 0; bi < list.length; bi++) {
+      var k = list[bi].k;
       var ra = def.ring[k], rb = def.ring[(k + 1) % def.ring.length];
       var pCur = GN.edgePoly(def, S.pos, ra, rb, 24, gapCurBuf, S.bend);
       if (!pCur || pCur.length < 4) continue;
@@ -2520,6 +2717,7 @@
       var r = (5.2 + 0.8 * breath) * (0.4 + 0.6 * fadeIn);
 
       ctx.save();
+      ctx.globalAlpha = list[bi].emph;
       // Quầng thở phát sáng nhẹ quanh cúc len
       ctx.beginPath(); ctx.arc(bx, by, r + 4.5 * breath, 0, Math.PI * 2);
       ctx.lineWidth = 1.4;
@@ -3005,8 +3203,40 @@
       { at: function () { return ptOf(11, 0.75, 0.52); }, draw: function (p, k) { flowerLeafVeins(p, k, 1); } },
       { at: function () { return ptOf(10, 0.50, 0.50); }, draw: function (p, k) { flowerCenterDisc(p, k); } },
       { at: function () { return ptOf(10, 0.50, 0.50); }, draw: function (p, k) { flowerFaceFeatures(p, k); } }
+    ],
+    // màn 6, thử phong cách tranh tô màu: chi tiết viền đen dày, màu phẳng tươi
+    strawberry: [
+      { at: function () { return ptOf(13, 0.50, 0.25); }, draw: function (p, k) { berryCap(p, k); } },
+      { at: function () { return ptOf(13, 0.50, 0.38); }, draw: function (p, k) { berrySeeds([[0.32, 0.40], [0.50, 0.37], [0.68, 0.40]], k); } },
+      { at: function () { return ptOf(13, 0.50, 0.56); }, draw: function (p, k) { berrySeeds([[0.25, 0.56], [0.75, 0.56]], k); } },
+      { at: function () { return ptOf(13, 0.50, 0.76); }, draw: function (p, k) { berrySeeds([[0.37, 0.73], [0.63, 0.73], [0.50, 0.82]], k); } },
+      { at: function () { return ptOf(13, 0.42, 0.52); }, draw: function (p, k) { eye(p, k * 1.1); } },
+      { at: function () { return ptOf(13, 0.58, 0.52); }, draw: function (p, k) { eye(p, k * 1.1); } },
+      { at: function () { return ptOf(13, 0.50, 0.61); }, draw: function (p, k) { smile(p, k, 24); } }
     ]
   };
+  var BERRY_LINE = '#2A2326';
+  function berryCap(p, k) {
+    ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(k, k); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    // cuống
+    ctx.beginPath(); ctx.moveTo(0, -4); ctx.quadraticCurveTo(2, -16, 8, -24); ctx.lineWidth = 7; ctx.strokeStyle = BERRY_LINE; ctx.stroke();
+    ctx.lineWidth = 3.6; ctx.strokeStyle = '#5DBB63'; ctx.stroke();
+    // đài lá năm cánh nhọn
+    ctx.beginPath();
+    for (var q = 0; q < 10; q++) { var a = Math.PI + q / 10 * Math.PI * 2 - Math.PI / 2, rad = q % 2 ? 9 : 30; ctx.lineTo(Math.cos(a) * rad * 1.1, Math.sin(a) * rad * 0.5 + 4); }
+    ctx.closePath(); ctx.fillStyle = '#4CB860'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = BERRY_LINE; ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(-6, 0, 7, 2.4, -0.2, 0, 7); ctx.fillStyle = 'rgba(255,255,255,0.45)'; ctx.fill();
+    ctx.restore();
+  }
+  function berrySeeds(list, k) {
+    list.forEach(function (uv) {
+      var q = ptOf(13, uv[0], uv[1]);
+      ctx.save(); ctx.translate(q[0], q[1]); ctx.scale(k, k);
+      ctx.beginPath(); ctx.moveTo(0, -5.5); ctx.quadraticCurveTo(4.2, 0, 0, 4.5); ctx.quadraticCurveTo(-4.2, 0, 0, -5.5);
+      ctx.fillStyle = '#FFD54A'; ctx.fill(); ctx.lineWidth = 1.8; ctx.strokeStyle = BERRY_LINE; ctx.stroke();
+      ctx.restore();
+    });
+  }
   function coatButton(p, k) {
     ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(k, k);
     ctx.beginPath(); ctx.arc(0, 0, 6.5, 0, 7); ctx.fillStyle = '#3F5F5C'; ctx.fill(); ctx.lineWidth = 1.6; ctx.strokeStyle = C.ink; ctx.stroke();
@@ -3123,7 +3353,7 @@
   function flowerLeafVeins(p, k, dir) {
     var baseP = ptOf(11, dir < 0 ? 0.44 : 0.56, 0.61);
     var midP  = ptOf(11, dir < 0 ? 0.24 : 0.76, 0.51);
-    var tipP  = ptOf(11, dir < 0 ? 0.08 : 0.92, 0.44);
+    var tipP  = ptOf(11, dir < 0 ? 0.16 : 0.84, 0.47); // mút lá do uốn cạnh tạo nên, nằm ở x 0,13 và 0,85
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(baseP[0], baseP[1]);
