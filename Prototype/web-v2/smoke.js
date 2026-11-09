@@ -75,7 +75,7 @@ function solve(li) {
     const gx = sx + (g[0] - s[0]) * FS, gy = sy + (g[1] - s[1]) * FS;
     L.pointerdown(ev(sx, sy)); step(1);
     L.pointermove(ev(gx, gy)); step(2);
-    L.pointerup(ev(gx, gy)); step(2);
+    L.pointerup(ev(gx, gy)); step(25);
   }
   for (const k of (lv.bendFree || [])) {
     const a = lv.ring[k], b = lv.ring[(k + 1) % lv.ring.length];
@@ -87,7 +87,7 @@ function solve(li) {
     const gx = FX + (mx + nx * h) * FS, gy = FY + (my + ny * h) * FS;
     L.pointerdown(ev(sx, sy)); step(1);
     L.pointermove(ev(gx, gy)); step(2);
-    L.pointerup(ev(gx, gy)); step(2);
+    L.pointerup(ev(gx, gy)); step(25);
   }
 }
 

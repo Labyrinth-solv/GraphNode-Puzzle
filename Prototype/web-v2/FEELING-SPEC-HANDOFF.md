@@ -1,7 +1,7 @@
 # Đặc Tả Feeling & Logic Đã Chốt (`web-v3` Feeling Specification & Handoff)
 
 > **Mục đích tài liệu:** Dùng để chuyển giao cho một session/phiên bản khác (có thể đang dùng kiến trúc hoặc logic nền khác) nhằm **đồng nhất toàn bộ cảm giác chơi (Game Feel / Juice), giao diện sợi chỉ, âm thanh ngũ cung, màn thưởng khâu ráp và thiết kế màn Lá số 8** thành một bản cuối cùng duy nhất.
-> **File tham chiếu chuẩn:** `Prototype/web-v3/game.js` và `Prototype/web-v3/levels.js`.
+> **File tham chiếu chuẩn:** `Prototype/web-v2/game.js` và `Prototype/web-v2/levels.js` (từ 2026-11-09 bản v2 là bản đích; `web-v3` không còn cập nhật).
 
 ---
 
@@ -169,3 +169,133 @@ function pentaF(step, oct) {
     ]
     ```
   - **Trải nghiệm giải đố:** Khi mới vào màn (`start`), 6 node tạo thành một vòng tròn/bầu dục đơn **không tự cắt**. Người chơi phải nhận ra quy luật **kéo vắt chéo 2 nhánh dây qua nhau như hình số 8** thì điểm giao ở tâm mới thắt lại thành 2 chiếc lá đối xứng.
+
+---
+
+## 6. Cơ Chế Uốn Cong Tự Do (`bendFree`), Hào Quang Bảy Màu & Chớp Sáng Chiến Thắng
+
+### 6.1. Uốn cong viền tự do (`bendFree`) & Nhịp bồi dây viền (`chainedEdgeSnaps`)
+1. **Pinch Anywhere + Smart Hit-Box**:
+   - Cho phép người chơi chạm vào bất kỳ điểm nào dọc theo thân dây để kéo uốn cong. (Số cũ $u \in [0.12, 0.88]$ và $bd < 0.044$ đã thay bằng bộ lọc chạm 3 lớp ở mục 7.5: $u \in [0.25, 0.75]$, ưu tiên chốt trong $0.068$.)
+   - Bán kính bắt chạm thân dây uốn cong `bestEdge.d` được mở rộng lên $0.085$ (vùng tìm kiếm $0.088$) giúp thao tác bằng ngón tay cái trên điện thoại cực kỳ nhạy bén.
+2. **Khóa chống lơ lửng (`isEdgeAnchoredToPins`)**:
+   - Chỉ khi cả hai đầu mút của cạnh uốn đã cắm chặt vào chốt mục tiêu thì mới kích hoạt hiệu ứng snap viền (tia may vàng `Seam Zip Flash`, âm rút chỉ tơ tằm `sweep`, nốt Kalimba thanh thoát và nhịp nảy đàn hồi vi mô).
+   - Nếu hai đầu chưa cắm chốt: Dây vẫn trượt êm ái về vị trí uốn mà không phát hiệu ứng snap giả.
+3. **Chặn gợi ý khi cắm sai chốt (`areAllPinsInCorrectPosition`)**:
+   - Ẩn hoàn toàn các đốm len tròn và mảng khuyết gợi ý nếu các chốt chưa được cắm đúng vị trí giải đố, loại bỏ triệt để nhầm lẫn cho người chơi.
+4. **Nhịp bồi khi cắm chốt nối liền dây viền (`chainedEdgeSnaps`)**:
+   - Khi một node được cắm vào chốt và cạnh nối với nó vô tình khớp hoàn toàn viền mẫu, hệ thống tự động kích hoạt tia may và tiếng rút chỉ trễ $50\text{ms}$ sau tiếng cắm chốt.
+
+### 6.2. Hào quang bảy màu Ombre thanh mảnh & Chớp sáng buông tay chiến thắng
+1. **Hào quang bảy màu thanh mảnh (`drawReadyContourGlow`)**:
+   - Bề rộng quầng bảy màu ombre dịu dàng: $6.6\text{px} - 8.6\text{px}$ (đỉnh $11.2\text{px}$ khi buông tay chiến thắng).
+   - Lõi tơ tằm trắng muốt: Bề rộng $2.8\text{px} - 3.6\text{px}$ bám sát sống lưng sợi chỉ, tôn trọn vẹn nét đẹp mộc mạc của hoa văn thủ công.
+2. **Chớp sáng buông tay chiến thắng (Victory Release Flash & Graceful Fade - $480\text{ms}$)**:
+   - Khi buông tay đạt ngưỡng thắng: Bùng nổ chớp sáng ăn mừng rực rỡ ($t = 0 \to 80\text{ms}$ attack lên 1.0).
+   - Sau đó ánh sáng dịu dần theo hàm mũ bậc hai $(1 - p)^2$ trong $400\text{ms}$ tiếp theo rồi vụt tắt hoàn toàn vào nền vải êm ái.
+   - Khi ánh sáng đã hoàn toàn tĩnh lặng, cây kéo mới xuất hiện và tiến hành nghi thức cắt may hoa văn (`cut`).
+
+---
+
+## 7. Công Thái Học Di Động: Micro-Breathing Focus Lens ($1.04\text{x}$), Nhấc Bóng Vật Lý 3D & Touch Y-Offset
+
+Đặc tả toàn diện giải pháp công thái học màn hình dọc di động (Portrait Ergonomics) đã được phê duyệt:
+
+### 7.1. Micro-Breathing Focus Lens ($1.04\text{x}$) & Khóa Cứng Pan = 0
+- **Khóa cứng Camera Pan ($\text{Pan} = 0$)**: Camera đứng yên $100\%$ tại tâm khung vải (`FCX = 195, FCY = 437`), không trôi dạt theo ngón tay, triệt tiêu $100\%$ nguy cơ gây choáng hay say chuyển động (Cybersickness).
+- **Mức zoom vi mô $1.04\text{x}$**: Khung vải chỉ nở nhẹ đúng $7\text{px}$ mỗi cạnh, hoạt động như ống kính máy ảnh khẽ nín thở siết nét (Focus Breath) một nhịp nhẹ nhàng.
+- **Tốc độ lerp thở $3.5$**: Chuyển tiếp mượt mà qua hàm lerp `cam.scale += (targetScale - cam.scale) * Math.min(1, dt * 3.5)`. Khi buông tay, camera tự động thở nhẹ về $1.0\text{x}$.
+- **Static HUD**: Thẻ hình mẫu mục tiêu, thanh tiến trình % khớp và các nút bổ trợ bên dưới được giữ cố định nguyên vị trí trên màn hình. Chỉ có khung tranh vải bên trong được lấy nét.
+
+### 7.2. Bóng Đổ Vật Lý 3D Tách Lớp (Lifted Drop Shadow)
+- **Node tự nở $+15\%$**: Khi được ngón tay nhấc lên, node tự nở từ bán kính $13.5\text{px} \to 15.5\text{px}$.
+- **Tách bóng 3D**:
+  - Trạng thái nghỉ: Bóng đổ nằm sát chân ghim ($1.5\text{px}$).
+  - Trạng thái kéo: Bóng đổ tách tụt xuống dưới mặt vải $6.5\text{px}$ và mờ rộng ra (`ctx.ellipse(x, y + 6.5, 15.5, 8.5, 0, 0, Math.PI * 2)`, màu `rgba(C.ink, 0.26)`).
+  - Não bộ người chơi nhận thức rõ ràng vật thể đang cầm mà không cần phóng to cả thế giới xung quanh.
+
+### 7.3. Nâng Chốt Nổi Khỏi Ngón Tay (Touch Y-Offset – $22\text{px}$)
+- **Ramp-up mượt mà**:
+  ```js
+  var dragDist = Math.hypot(p[0] - d.startX, p[1] - d.startY);
+  var ramp = clamp(dragDist / 14, 0, 1);
+  var yLift = (d.isTouch ? 22 : 0) * ramp;
+  var sNode = [p[0] + d.grabOff[0], p[1] + d.grabOff[1] - yLift];
+  var wNode = screenToWorld(sNode);
+  ```
+- Chốt nổi cao hơn điểm chạm $22\text{px}$, nằm ngay trên móng tay, giải quyết triệt để vấn đề ngón tay to che khuất mục tiêu.
+- Tọa độ logic cắm chốt và xét hút nam châm tính theo đúng vị trí hình ảnh nổi, đảm bảo sự đồng nhất tuyệt đối giữa thị giác và cơ chế game.
+- Phân tách thiết bị: Chỉ kích hoạt trên màn hình cảm ứng di động (`e.pointerType === 'touch'`). Trên chuột máy tính, con trỏ giữ node ngay đầu mũi tên tự nhiên.
+
+### 7.4. Mở Rộng Vùng Chạm & Kích Thước Chốt (Hitbox Expansion)
+- Bán kính node: $13.5\text{px}$ (đường kính $27\text{px}$).
+- Đệm nỉ chốt thêu dấu × vàng bơ mật ong: Bán kính đệm $8.8\text{px}$ (viền ngoài $10.2\text{px}$), cánh thêu $4.6\text{px}$, hạt French knot $1.8\text{px}$.
+- Bán kính chọn node `PICK_MIN / PICK_MAX`: $0.088 / 0.22$ (đường kính chạm thực tế $\approx 64\text{px}$).
+- Khoảng cách bắt chạm thân dây: $0.088 / 0.085$.
+
+
+### 7.5. [ĐÃ DUYỆT CHÍNH THỨC / APPROVED] Bộ Lọc Cảm Ứng 3 Lớp (Smart 3-Layer Tap Arbitration) Chống Chạm Nhầm Dây Thay Vì Chốt
+
+- **Bối cảnh thực tế**: Trên điện thoại di động, ngón tay cái có diện tích tiếp xúc lớn. Khi người chơi muốn chạm kéo chốt nhưng vị trí chạm hơi lệch về phía sợi dây nối, đường cong rất dễ cướp cảm ứng khiến người chơi uốn nhầm dây thay vì di chuyển chốt.
+- **Triết lý tương tác tự nhiên**:
+  1. Người chơi uốn cong một đường chỉ bằng cách kéo ở **phần giữa thân dây**, không bao giờ kéo sát hai đầu ghim.
+  2. Khi ngón tay chạm vào vùng phụ cận của một chốt mở, ý định tự nhiên $99\%$ của người chơi là muốn kéo chiếc chốt đó đi.
+- **Quy tắc phân xử 3 lớp (3-Layer Arbitration Rules)**:
+  - **Lớp 1 - Vùng chết đầu mút ($u \in [0.25, 0.75]$)**: Chỉ nhận diện thao tác kéo dây khi điểm chạm nằm trong đoạn giữa dây ($u$ từ $0.25$ đến $0.75$). Loại bỏ hoàn toàn $25\%$ chiều dài ở mỗi đầu chốt.
+  - **Lớp 2 - Ưu tiên chốt mở ($R_{node} = 0.068 \approx 25\text{px}$)**: Nếu điểm chạm cách tâm một chốt mở dưới $25\text{px}$, chốt được ưu tiên $100\%$, dây nối bị vô hiệu hóa hoàn toàn. Nếu chạm xa hơn $25\text{px}$ và nằm sát thân dây hơn tâm chốt (`bestEdge.d < bd`), dây mới nhận quyền kéo.
+  - **Lớp 3 - Bong bóng bảo vệ 2 đầu chốt ($R_{safe} = 0.085 \approx 31\text{px}$)**: Khi điểm chạm nằm ở khoảng trống lân cận ngoài vùng chốt, nếu khoảng cách tới một đầu chốt mở nhỏ hơn $0.085$, dây nối không được phép kích hoạt để tránh cướp cảm ứng lúc ngón tay bấm lệch rìa ngoài.
+  - **Locked Node Pass-Through**: Chạm sát chốt đã khóa nhưng trúng đoạn giữa dây nối thì tự động uốn dây, tránh đơ thao tác.
+- **Trạng thái**: Đã nghiệm thu và đồng bộ hóa 100% trên cả hai bản **`Prototype/web-v2/`** và **`Prototype/web-v3/`**.
+
+
+### 7.6. [ĐÃ DUYỆT CHÍNH THỨC / APPROVED] Bộ Quy Chuẩn Thiết Kế Khoảng Cách An Toàn (Ergonomic Standards) & Tối Ưu Vạt Áo Chữ U
+
+- **Nguyên nhân cần chuẩn hóa**: Màn hình điện thoại có kích thước nhỏ ($390\text{px}$), trong khi ngón tay cái có diện tích tiếp xúc lớn ($44 - 50\text{px}$). Nếu khoảng cách giữa 2 node hoặc chiều dài cạnh uốn cong quá ngắn, ngón tay sẽ che lấp toàn bộ chi tiết và gây xung đột cảm ứng.
+- **Bảng quy chuẩn khoảng cách công thái học di động**:
+  1. **Khoảng cách giữa 2 Node ($L_{node-node}$)**:
+     - Tối thiểu tuyệt đối: $0.20$ ($72\text{px}$).
+     - Khuyến nghị: $0.25 - 0.35$ ($90 - 125\text{px}$).
+     - Đảm bảo 2 chốt thêu và ghim gỗ không chạm đè vào nhau.
+  2. **Chiều dài cạnh uốn cong ($L_{bendFree}$)**:
+     - Tối thiểu tuyệt đối: $0.28$ ($100\text{px}$).
+     - Đoạn giữa khả dụng ($u \in [0.25, 0.75]$) phải đạt $\ge 50\text{px}$ để vừa vặn tiết diện tiếp xúc của ngón tay cái.
+  3. **Nguyên tắc Topology đường cong**:
+     - Với đường cong liên tục (gấu áo bo tròn, cánh hoa, tai thỏ), dùng **1 cạnh cong duy nhất uốn `solBend`**, tuyệt đối không cắm thêm node ở đỉnh đường cong.
+     - Chỉ đặt node tại các điểm gãy góc nhọn $\ge 45^\circ$.
+- **Áp dụng thực tế trên Màn 2 (Áo lót trong)**:
+  - Bỏ chốt giữa dư thừa, giảm từ 6 nodes $\to$ 5 nodes.
+  - Mở rộng thân áo từ $87\text{px} \to 116\text{px}$, cạnh cong đáy đạt $116\text{px}$ ($58\text{px}$ vùng kéo uốn).
+  - Vạt áo cong chữ U bo tròn mượt mà, cảm giác uốn dây phóng khoáng, đã tay và thỏa mãn.
+
+### 7.7. [CHÍNH THỨC ĐÃ DUYỆT / OFFICIALLY APPROVED] Tối Ưu Màn 3 (Trái Tim Khoét Lỗ): Giải Phóng Cụm Chốt Giữa & Kéo Uốn Vòm Vai Ngoài
+
+> **Trạng thái**: ĐÃ DUYỆT CHÍNH THỨC (Người dùng đã test thực tế trên mobile và duyệt).
+
+- **Hiện tượng trên di động**:
+  - Tại Màn 3 (`heartHole`), cụm 4 đầu ghim gỗ ở trung tâm nằm san sát nhau ($40 - 49\text{px}$), gây cảm giác chật chội và dễ bấm nhầm.
+  - Sợi dây uốn cong được đặt ở mép trong lỗ khoét (Cạnh 5) chỉ dài $53.8\text{px}$, khi trừ $25\%$ vùng đệm ở mỗi đầu chốt chỉ còn $26.9\text{px}$ khả dụng. Ngón tay cái người chơi đè lên cả 2 chốt khiến việc kéo uốn bị chặn.
+- **Tiêu chuẩn Game Feel áp dụng**:
+  1. **Tận dụng cạnh cong chủ đạo có biên độ lớn**:
+     - Thay vì bắt người chơi uốn một đoạn dây cụt ngủn ở góc kẹt bên trong, chuyển trọng tâm tương tác sang **Vòm vai lớn bên ngoài (Cạnh 1)**.
+     - Chiều dài cạnh uốn cong tăng lên **$128.5\text{px}$** ($L = 0.355$). Vùng kéo uốn khả dụng $64.2\text{px}$ vượt trội so với kích thước ngón tay cái, mang lại cảm giác vuốt dây cực kỳ êm ái và đã tay.
+  2. **Giải phóng không gian thị giác (Visual Breathing Space)**:
+     - Phóng to lỗ khoét từ $42\% \to 55\%$, dãn cách các chốt ghim lên $\ge 58 - 71\text{px}$.
+     - Hai đầu ghim đối xứng qua nếp gấp cách nhau $91.9\text{px}$, không còn hiện tượng chốt ghim chồng lấn vào nhau.
+  3. **Khớp nối thành phẩm (Reward Screen Assembly)**:
+     - Tỉ lệ thu nhỏ của Mảnh 1 được đồng bộ chính xác với tỉ lệ lỗ khoét mới ($s = 0.55$, toạ độ `[118.0, 334.8, 154.0]`), đảm bảo trải nghiệm may vá mượt mà, thỏa mãn khi hoàn thành màn chơi.
+
+### 7.8. [ĐÃ DUYỆT / APPROVED] Cảm Giác Khớp Dây Nối Với Ghim Khóa & Hiển Thị Nút Cúc Kéo Dây Tức Thì
+
+> **Trạng thái**: ĐÃ DUYỆT theo báo cáo chuyển giao 2026-11-09. Điều kiện "đã neo" dùng bán kính chung `PIN_ON_R = 0.046` (xem CHANGELOG mục 14).
+
+- **Nguyên lý nhịp bồi âm thanh & thị giác (Chained Audio-Visual Resonance)**:
+  - Khi ngón tay thả chốt kéo vào lỗ cắm, chốt phát ra tiếng cúc bấm gỗ (`pinSnapSound`).
+  - Đúng $50\text{ms}$ sau (nhịp bồi trôi chảy): Sợi dây nối giữa chốt mới và ghim khóa phát sáng rực rỡ (`Seam Zip Flash`), sợi dây nảy nhẹ như dây đàn guitar (`Edge Bounce`), và tiếng rút chỉ giòn tan (`sweep` $1.3\text{kHz} \to 3.2\text{kHz}$) cùng nốt Kalimba trong trẻo vang lên.
+  - Người chơi cảm nhận rõ ràng: **"Sợi chỉ vừa được thợ may kéo thẳng thớm và may cố định vào cọc ghim"**.
+
+- **Quy chuẩn sẵn sàng theo từng cạnh (Per-Edge Readiness Standard)**:
+  - Tuyệt đối không bắt người chơi phải hoàn thành toàn bộ các node khác mới hiển thị nút kéo uốn dây.
+  - Điều kiện hiển thị cúc kéo dây (`Pinch Bead`) và mảng thở khuyết (`Breathing Crescent Gap`):
+    $$\text{Ready}(k) = \text{isPinAnchored}(ra) \land \text{isPinAnchored}(rb) \land (|h - h_{sol}| \ge 0.012)$$
+  - Ngay khi 2 đầu mút của cạnh cong đã được neo vững (dù là chốt kéo vừa cắm hay ghim khóa), nút bọ thêu cúc len lập tức xuất hiện, nhấp nháy thở nhẹ với quầng hào quang màu kem bơ, trao toàn quyền kiểm soát cho người chơi uốn dây bất cứ khi nào họ muốn.
+

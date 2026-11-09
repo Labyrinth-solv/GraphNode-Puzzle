@@ -11,6 +11,7 @@
   var FONT = '"Baloo 2", system-ui, -apple-system, "Segoe UI", sans-serif';
   // Tấm vải vuông trong thẻ trắng, rộng gần hết chiều ngang màn hình (362/390 ≈ 93%) để node và viền dễ nhìn, dễ chạm.
   var FX = 14, FY = 256, FS = 362;
+  var FCX = FX + FS * 0.5, FCY = FY + FS * 0.5;
   var THR_DEFAULT = 0.92, M1 = 0.70, M2 = 0.85;     // ngưỡng mặc định của đặc tả và hai mốc màu; ngưỡng thật lấy theo level
   var RUN_SPEED = 0.68;                              // bề rộng vải mỗi giây
   // Cảnh cắt khi thắng: hệ số tốc độ theo chu vi để cắt hết trong khoảng CUT_TARGET giây, kẹp trong [MIN, MAX] (giá trị tạm).
@@ -19,6 +20,9 @@
   // vị trí dọc viền vẫn do người chơi quyết định nên không tự giải hộ. (giá trị tạm)
   var MAG_R = 0.035, MAG_PULL = 0.5;
   var PIN_MAG_R = 0.048, PIN_SNAP_R = 0.038;
+  // Một bán kính duy nhất để coi node là đã cắm vào chốt: bộ đếm chốt, điều kiện thắng, gợi ý uốn, nút kéo dây,
+  // hiệu ứng khớp dây và chốt đã có người đều dùng chung, để không tín hiệu nào báo "đã cắm" khi tín hiệu khác báo chưa.
+  var PIN_ON_R = PIN_SNAP_R + 0.008;
   // Snap khi thắng: mọi node (và cây kim) đi cùng một tốc độ cố định, đi thẳng một mạch không tăng giảm tốc.
   // Phase dài theo node xa nhất, kẹp trong [MIN, MAX]; xa quá thì cả nhóm cùng nhanh lên một tốc độ chung. (giá trị tạm)
   var SNAP_SPEED = 0.4, SNAP_MIN = 0.2, SNAP_MAX = 0.5, SETTLE_T = 0.12;
@@ -32,7 +36,7 @@
   var CUT_TARGET = 1.5, CUT_MULT_MIN = 1.6, CUT_MULT_MAX = 2.5;
   // v3: chạm trong các cảnh tự chạy (snap, cắt, lật, bay, khâu) thì tua nhanh cố định 1,5 lần, không tăng thêm.
   var FAST = 1.5;
-  var PICK_MIN = 0.071, PICK_MAX = 0.19, MOVE_EPS = 0.016;
+  var PICK_MIN = 0.088, PICK_MAX = 0.22, MOVE_EPS = 0.016;
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   var cv = document.getElementById('game'), ctx = cv.getContext('2d'), wrap = document.getElementById('stage');
@@ -50,6 +54,22 @@
   resize();
 
   /* ---------- tiện ích ---------- */
+  function screenToWorld(p) {
+    var c = S.cam;
+    if (!c || (c.scale === 1 && c.x === 0 && c.y === 0)) return [p[0], p[1]];
+    return [
+      FCX + (p[0] - FCX - c.x) / c.scale,
+      FCY + (p[1] - FCY - c.y) / c.scale
+    ];
+  }
+  function worldToScreen(w) {
+    var c = S.cam;
+    if (!c || (c.scale === 1 && c.x === 0 && c.y === 0)) return [w[0], w[1]];
+    return [
+      FCX + (w[0] - FCX) * c.scale + c.x,
+      FCY + (w[1] - FCY) * c.scale + c.y
+    ];
+  }
   function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
   function lerp(a, b, t) { return a + (b - a) * t; }
   function easeOut(t) { t = clamp(t, 0, 1); return 1 - Math.pow(1 - t, 3); }
@@ -403,9 +423,13 @@
     iouV: 0, lastIou: 0, dv: 0, dirty: true, drag: null, hints: 3, hint: null, done: [false, false],
     runK: 0, runT: 0, runDist: 0, path: null, lit: [], sc: [], pl: [], shake: [], ripples: [], parts: [],
     speed: 1, firstTouch: false, toast: 0, flash: 0, readyPulse: 0, fade: 0, snipPhase: 0, pi: 0,
-    ready: false, slack: 2.5, pluckT: -9, moveAcc: 0, lastAction: 0, lastPinReleaseT: 0
+    ready: false, slack: 2.5, pluckT: -9, moveAcc: 0, lastAction: 0, lastPinReleaseT: 0,
+    cam: { scale: 1.0, targetScale: 1.0, x: 0, y: 0, targetX: 0, targetY: 0 }
   };
-  window.GNState = function () { return { scene: S.scene, phase: S.phase, rphase: R ? R.phase : null }; };
+  window.GNJumpTo = jumpTo;
+  window.GNState = function () { return { scene: S.scene, phase: S.phase, rphase: R ? R.phase : null, cam: S.cam, drag: S.drag, edgeDrag: S.edgeDrag, pos: S.pos, li: S.li, iouV: S.iouV, ready: S.ready }; };
+  window.GNWorldToScreen = worldToScreen;
+  window.GNScreenToWorld = screenToWorld;
   function product() { return PRODUCTS[S.pi]; }
   // Sản phẩm thử riêng (standalone) không nằm trong chuỗi Màn tiếp; chơi xong thì chơi lại chính nó.
   // Hết chuỗi màn chính (màn 3) thì nút cuối là "Tiếp tục", đưa sang màn thử riêng (màn 4) thay vì chơi lại từ đầu.
@@ -420,7 +444,7 @@
   var MENU_X = 20, MENU_Y = 62, MENU_W = 240, ROW_H = 44;
   function menuCurrent(m) { return m.pi === S.pi && (m.li === -1 ? S.scene === 'reward' : (S.scene === 'play' && m.li === S.li)); }
   function jumpTo(m) {
-    S.parts = []; S.ripples = []; S.seamZips = []; S.edgeBounces = {}; S.readyGlowT = -9; S.winFlashT = -9; S.pi = m.pi; S.done = []; R = null; activeId = null;
+    S.parts = []; S.ripples = []; S.seamZips = []; S.edgeBounces = {}; S.cam = { scale: 1.0, targetScale: 1.0, x: 0, y: 0, targetX: 0, targetY: 0 }; S.readyGlowT = -9; S.winFlashT = -9; S.pi = m.pi; S.done = []; R = null; activeId = null;
     var lv = PRODUCTS[m.pi].levels;
     if (m.li === -1) { lv.forEach(function (l) { S.done[l] = true; }); S.scene = 'reward'; startReward(); }
     else { for (var k = 0; k < lv.indexOf(m.li); k++) S.done[lv[k]] = true; S.scene = 'play'; loadLevel(m.li); }
@@ -469,8 +493,6 @@
   /* ---------- gấp đôi vải: người chơi xếp nửa trái, nửa phải là bản soi gương qua cây kim (mép gấp) ---------- */
   function foldOf() { return LV[S.li].def.fold || null; }
   function foldY() { var f = foldOf(); return !!(f && f.axis === 'y'); }
-  function isMirror(i) { return false; }
-  function applyMirror(pos) {}
   // node đầu và cuối của mỗi đoạn cắt nằm trên mép gấp, chạy theo cây kim và chỉ trượt dọc mép
   function onFold(i) { var f = foldOf(); return !!(f && f.chains.some(function (c) { return c[0] === i || c[1] === i; })); }
   function cutLen(lv) { return lv.solPath.total; }
@@ -481,29 +503,41 @@
     if (fo && Math.abs(S.foldX - fo.solX) > 0.025) return false;
     for (var i = 0; i < def.sol.length; i++) {
       var d = Math.hypot(pos[i][0] - def.sol[i][0], pos[i][1] - def.sol[i][1]);
-      if (d > PIN_SNAP_R + 0.012) return false;
+      if (d > PIN_ON_R) return false;
     }
     return true;
   }
 
   // Kiểm tra hai đầu mút của cạnh k có đang được cắm chính xác vào hai chốt mục tiêu hay không
-  function isEdgeAnchoredToPins(k) {
+  function isPinAnchored(nodeIdx, targetQ) {
     var lv = LV[S.li] ? LV[S.li].def : null;
-    if (!lv || !lv.ring || !lv.sol) return false;
+    if (!lv || !lv.sol) return false;
+    var fo = foldOf();
+    if (onFold(nodeIdx)) {
+      if (fo && Math.abs(S.foldX - fo.solX) > 0.025) return false;
+    }
+    if (locked(nodeIdx)) return true;
+    var p = (targetQ && nodeIdx === targetQ.i) ? targetQ.pos : S.pos[nodeIdx];
+    if (!p) return false;
+    var d = Math.hypot(p[0] - lv.sol[nodeIdx][0], p[1] - lv.sol[nodeIdx][1]);
+    return d <= PIN_ON_R; // lúc thả vào chốt đã truyền vị trí chốt đích (targetQ) nên không cần nới cho nhịp settle
+  }
+
+  // Kiểm tra hai đầu mút của cạnh k có đang được cắm chính xác vào hai chốt mục tiêu hay không
+  function isEdgeAnchoredToPins(k, targetQ) {
+    var lv = LV[S.li] ? LV[S.li].def : null;
+    if (!lv || !lv.ring) return false;
     var r = lv.ring, n = r.length;
     var ra = r[k], rb = r[(k + 1) % n];
-    var da = Math.hypot(S.pos[ra][0] - lv.sol[ra][0], S.pos[ra][1] - lv.sol[ra][1]);
-    var db = Math.hypot(S.pos[rb][0] - lv.sol[rb][0], S.pos[rb][1] - lv.sol[rb][1]);
-    return (da <= PIN_SNAP_R + 0.015) && (db <= PIN_SNAP_R + 0.015);
+    return isPinAnchored(ra, targetQ) && isPinAnchored(rb, targetQ);
   }
 
   // Tìm các cạnh kề với node vừa cắm mà cạnh đó vừa chính thức khép kín và khớp hoàn toàn vào viền mẫu
-  function checkChainedEdgeSnaps(nodeIdx) {
+  function checkChainedEdgeSnaps(nodeIdx, targetPos) {
     var lv = LV[S.li] ? LV[S.li].def : null;
     if (!lv || !lv.ring || !lv.sol) return [];
-    // Đảm bảo chính node vừa thả cũng đã nằm đúng trong chốt mục tiêu của nó
-    var dNode = Math.hypot(S.pos[nodeIdx][0] - lv.sol[nodeIdx][0], S.pos[nodeIdx][1] - lv.sol[nodeIdx][1]);
-    if (dNode > PIN_SNAP_R + 0.015) return [];
+    var tQ = { i: nodeIdx, pos: targetPos || S.pos[nodeIdx] };
+    if (!isPinAnchored(nodeIdx, tQ)) return [];
 
     var r = lv.ring, n = r.length;
     var completed = [];
@@ -511,9 +545,8 @@
       var ra = r[k], rb = r[(k + 1) % n];
       if (ra === nodeIdx || rb === nodeIdx) {
         var oth = (ra === nodeIdx ? rb : ra);
-        // Kiểm tra xem đầu mút kia đã cắm đúng chốt mục tiêu của nó chưa
-        var dOth = Math.hypot(S.pos[oth][0] - lv.sol[oth][0], S.pos[oth][1] - lv.sol[oth][1]);
-        if (dOth <= PIN_SNAP_R + 0.015) {
+        // Kiểm tra xem đầu mút kia đã cắm đúng chốt mục tiêu của nó chưa (ghim khóa tự động coi là đã neo)
+        if (isPinAnchored(oth, tQ)) {
           // Kiểm tra độ cong của cạnh này có đang khớp với viền mẫu không
           var curH = S.bend ? (S.bend[k] || 0) : 0;
           var solH = lv.solBend ? (lv.solBend[k] || 0) : 0;
@@ -536,7 +569,7 @@
     for (var j = 0; j < n; j++) {
       for (var i = 0; i < pos.length; i++) {
         var d = Math.hypot(pos[i][0] - sol[j][0], pos[i][1] - sol[j][1]);
-        if (d <= PIN_SNAP_R + 0.008) {
+        if (d <= PIN_ON_R) {
           pairs.push({ j: j, i: i, d: d });
         }
       }
@@ -560,6 +593,43 @@
       filledCount: count,
       totalPins: n
     };
+  }
+  // Node nào vào chốt nào cũng được, nhưng độ uốn, phạt độ uốn, nam châm dây và snap đều so theo số thứ tự cạnh.
+  // Khi mọi chốt đã lấp và cách đặt là một vòng xoay hay soi gương của vòng lời giải (ghim khóa đứng yên, node mép gấp
+  // vẫn ở mép gấp), đánh số lại node và cạnh theo chốt để mọi phép so khớp đúng cạnh. Node trông giống nhau nên người chơi
+  // không thấy gì. Dây chưa uốn thì nhận độ uốn ban đầu của cạnh mới; dây đã uốn giữ nguyên hình (đổi dấu nếu ngược chiều).
+  // Trả về bảng chỉ số node cũ -> mới, hoặc null khi không đổi (đã đúng thứ tự, chưa lấp đủ, hoặc hình bắt chéo).
+  function canonicalizePins() {
+    var def = LV[S.li].def, r = def.ring, n = r.length, i, k;
+    var st = checkPins(def, S.pos);
+    if (!st.allFilled) return null;
+    var perm = st.nodeMatched, same = true;
+    for (i = 0; i < perm.length; i++) {
+      if (perm[i] < 0) return null;
+      if (perm[i] !== i) same = false;
+      if ((locked(i) && perm[i] !== i) || onFold(i) !== onFold(perm[i])) return null;
+    }
+    if (same) return null;
+    var inv = []; for (i = 0; i < perm.length; i++) inv[perm[i]] = i;
+    var edgeOf = {}; for (k = 0; k < n; k++) edgeOf[r[k] + ',' + r[(k + 1) % n]] = k;
+    var map = [];
+    for (k = 0; k < n; k++) {
+      var a = inv[r[k]], b = inv[r[(k + 1) % n]], g = edgeOf[a + ',' + b], s = 1;
+      if (g === undefined) { g = edgeOf[b + ',' + a]; s = -1; }
+      if (g === undefined || GN.inFoldChain(def, g) !== GN.inFoldChain(def, k)) return null;
+      map.push({ g: g, s: s });
+    }
+    var dfl = def.startBend || def.solBend, nb = [];
+    for (k = 0; k < n; k++) {
+      var v = S.bend[map[k].g] || 0;
+      nb.push(Math.abs(v - (dfl[map[k].g] || 0)) < 1e-6 ? (dfl[k] || 0) : map[k].s * v);
+    }
+    nb._waves = [];
+    function permute(arr) { var out = arr.slice(); for (var j = 0; j < perm.length; j++) out[perm[j]] = arr[j]; return out; }
+    S.pos = permute(S.pos); S.sc = permute(S.sc); S.pl = permute(S.pl); S.shake = permute(S.shake);
+    S.bend = nb; S.edgeWake = r.map(function () { return -9; }); S.seamZips = []; S.edgeBounces = {}; S.hint = null;
+    S.dirty = true;
+    return perm;
   }
   // Kim chỉ đi theo chiều vuông góc với chính nó (kim dọc thì đi trái phải, kim ngang thì đi lên xuống).
   function needleMove(p) {
@@ -666,7 +736,7 @@
   }
   var hitPolyBuf = [];
   function hitTestEdge(fx, fy) {
-    var lv = LV[S.li].def, r = lv.ring, n = r.length, best = null, bd = 0.072;
+    var lv = LV[S.li].def, r = lv.ring, n = r.length, best = null, bd = 0.088;
     for (var k = 0; k < n; k++) {
       if (!GN.inFoldChain(lv, k)) continue;
       var poly = GN.edgePoly(lv, S.pos, r[k], r[(k + 1) % n], 20, hitPolyBuf, S.bend);
@@ -676,7 +746,7 @@
         var dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
         var t = l2 > 0 ? clamp(((fx - ax) * dx + (fy - ay) * dy) / l2, 0, 1) : 0;
         var u = (s + t) / m;
-        if (u < 0.12 || u > 0.88) continue;
+        if (u < 0.25 || u > 0.75) continue;
         var d = Math.hypot(fx - (ax + dx * t), fy - (ay + dy * t));
         if (d < bd) { bd = d; best = { k: k, d: d, u: u }; }
       }
@@ -688,14 +758,17 @@
     var A = S.pos[ra], B = S.pos[rb], edx = B[0] - A[0], edy = B[1] - A[1], eL = Math.hypot(edx, edy) || 1;
     if (S.phase === 'intro') setPhase('play');
     activeId = e.pointerId; try { cv.setPointerCapture(e.pointerId); } catch (er) {}
-    var uInit = clamp(u0 !== undefined ? u0 : (((fx - A[0]) * edx + (fy - A[1]) * edy) / (eL * eL)), 0.14, 0.86);
+    var uInit = clamp(u0 !== undefined ? u0 : (((fx - A[0]) * edx + (fy - A[1]) * edy) / (eL * eL)), 0.25, 0.75);
+    var pw = screenToWorld(p);
+    var isTouch = (e && (e.pointerType === 'touch' || e.pointerType === 'pen')) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || !!window.__FORCE_TOUCH_OFFSET;
     S.edgeDrag = {
       k: rk, a: ra, b: rb, sx: fx, sy: fy,
       ax: A[0], ay: A[1], tx: edx / eL, ty: edy / eL, eL: eL,
       nx: -edy / eL, ny: edx / eL,
       h0: S.bend[rk] || 0,
       u: uInit, uSmooth: uInit, lastSoundU: uInit, rip: 0,
-      fx: p[0], fy: p[1], moved: false, inMag: false, inSnap0: false, magH: null
+      fx: pw[0], fy: pw[1], startX: p[0], startY: p[1], lastP: [p[0], p[1]], moved: false, inMag: false, inSnap0: false, magH: null,
+      isTouch: isTouch
     };
     S.bend._waves = S.bend._waves || [];
     S.bend._waves[rk] = { u: uInit, skew: (uInit - 0.5), rip: 0 };
@@ -710,7 +783,8 @@
     if (S.phase !== 'play' && S.phase !== 'intro') { if (['snap', 'cut', 'unfold', 'lift', 'fill', 'fly'].indexOf(S.phase) >= 0) S.speedTarget = FAST; return; }
     if (S.phase === 'intro' && S.t < 0.5) return;
     finishSettle();
-    var fx = (p[0] - FX) / FS, fy = (p[1] - FY) / FS, best = -1, bd = 9, isY = foldY();
+    var pw = screenToWorld(p);
+    var fx = (pw[0] - FX) / FS, fy = (pw[1] - FY) / FS, best = -1, bd = 9, isY = foldY();
     var nrg = foldOf() ? needleRange() : null;
     var hitBar = nrg && (isY
       ? (Math.abs(p[0] - SLIDER_X) < SLIDER_HIT && p[1] > Y(nrg[0]) - 26 && p[1] < Y(nrg[1]) + 26)
@@ -725,27 +799,37 @@
     }
     for (var i = 0; i < S.pos.length; i++) {
       var d = Math.hypot(fx - S.pos[i][0], fy - S.pos[i][1]);
-      if (!isMirror(i) && d < pickRadius(i) && d < bd) { bd = d; best = i; }
+      if (d < pickRadius(i) && d < bd) { bd = d; best = i; }
     }
     var bestEdge = hitTestEdge(fx, fy);
-    // Smart Hit-Box + Pinch Anywhere (Hướng 1):
-    // 1. Nắm kéo tại bất kỳ vị trí nào dọc theo thân dây (u trong [0.12, 0.88]) trừ khi bấm trực tiếp lên đầu ghim của node mở (bd < 0.044)
-    if (bestEdge && bestEdge.u >= 0.12 && bestEdge.u <= 0.88 && bestEdge.d < 0.065) {
-      if (!(best >= 0 && !locked(best) && bd < 0.044)) {
+    // [ĐÃ DUYỆT CHÍNH THỨC / APPROVED] BỘ LỌC CẢM ỨNG 3 LỚP (SMART 3-LAYER TAP ARBITRATION):
+    // Lớp 1 (Mid-Span): hitTestEdge đã lọc chặt chẽ chỉ nhận điểm u trong [0.25, 0.75] (loại bỏ 25% vùng đầu mút sát chốt).
+    // Lớp 2 (Node-First Priority):
+    // - Khi chạm trong bán kính ưu tiên của Node MỞ (bd < NODE_PRIOR_R = 0.068 ~ 25px): Node thắng 100%, dây tuyệt đối không cướp cảm ứng.
+    // - Chỉ khi chạm ở đoạn giữa dây (u in [0.25, 0.75]) và điểm chạm nằm gần dây hơn tâm chốt (bestEdge.d < bd): Mới nhận diện kéo uốn dây.
+    // - Locked Node Pass-Through: Nếu chạm gần chốt KHÓA mà trúng đoạn giữa dây thì bắt vào dây để uốn cong.
+    var NODE_PRIOR_R = 0.068; // ~25px trên màn hình
+    var preferEdge = bestEdge && (best < 0 || locked(best) || (bd >= NODE_PRIOR_R && bestEdge.d < bd));
+    if (preferEdge) {
+      if (best < 0) {
+        // Lớp 3 (Endpoint Protective Bubble): Khi không chạm trúng node nào, kiểm tra khoảng cách an toàn tới 2 đầu chốt
+        var lvDef = LV[S.li].def, rRing = lvDef.ring, nRing = rRing.length;
+        var ra = rRing[bestEdge.k], rb = rRing[(bestEdge.k + 1) % nRing];
+        var distToA = Math.hypot(fx - S.pos[ra][0], fy - S.pos[ra][1]);
+        var distToB = Math.hypot(fx - S.pos[rb][0], fy - S.pos[rb][1]);
+        var safeR = 0.085;
+        if ((!locked(ra) && distToA < safeR) || (!locked(rb) && distToB < safeR)) {
+          // Nằm trong bong bóng an toàn của chốt mở -> không uốn dây, tránh cướp cảm ứng khi người chơi bấm lệch ngoài rìa chốt
+        } else {
+          startEdgeDrag(e, p, fx, fy, bestEdge.k, bestEdge.u);
+          return;
+        }
+      } else {
         startEdgeDrag(e, p, fx, fy, bestEdge.k, bestEdge.u);
         return;
       }
-    }
-    // 2. Locked Node Pass-Through: chạm gần node khóa nhưng sát dây nối thì tự động bắt vào dây để uốn cong
-    if (best >= 0 && locked(best) && bestEdge) {
-      startEdgeDrag(e, p, fx, fy, bestEdge.k, bestEdge.u);
-      return;
     }
     if (best < 0) {
-      if (bestEdge) {
-        startEdgeDrag(e, p, fx, fy, bestEdge.k, bestEdge.u);
-        return;
-      }
       var hitFoldLine = foldOf() && (isY ? (Math.abs(fy - S.foldX) < NEEDLE_HIT && fx > 0 && fx < 1) : (Math.abs(fx - S.foldX) < NEEDLE_HIT && fy > 0 && fy < 1));
       if (hitFoldLine) {
         if (S.phase === 'intro') setPhase('play');
@@ -759,100 +843,49 @@
     if (S.phase === 'intro') setPhase('play');
     if (locked(best)) { S.shake[best] = now(); vib(18); pop(220, 0.05, 0, 0.12); return; }
     activeId = e.pointerId; try { cv.setPointerCapture(e.pointerId); } catch (er) {}
-    S.drag = { i: best, sx: fx, sy: fy, p0: S.pos[best].slice(), fx: p[0], fy: p[1], moved: false };
+    var nodeW = [FX + S.pos[best][0] * FS, FY + S.pos[best][1] * FS];
+    var nodeS = worldToScreen(nodeW);
+    var grabOff = [nodeS[0] - p[0], nodeS[1] - p[1]];
+    var isTouch = (e && (e.pointerType === 'touch' || e.pointerType === 'pen')) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || !!window.__FORCE_TOUCH_OFFSET;
+    S.drag = {
+      i: best, sx: fx, sy: fy, p0: S.pos[best].slice(),
+      fx: pw[0], fy: pw[1], startX: p[0], startY: p[1],
+      grabOff: grabOff, isTouch: isTouch, lastP: [p[0], p[1]], moved: false
+    };
     S.firstTouch = true; S.hint = null;
     S.ready = (S.iouV >= S.thr) && checkPins(LV[S.li].def, S.pos).allFilled; humStart();
     pop(noteF(1) * 0.5, 0.08, 0, 0.14); vib(6);
   }
-  function playMove(p) {
-    if (S.needle) { needleMove(p); return; }
-    if (S.edgeDrag) {
-      var ed = S.edgeDrag, lv = LV[S.li].def;
-      var fx0 = (p[0] - FX) / FS, fy0 = (p[1] - FY) / FS;
-      if (Math.hypot(fx0 - ed.sx, fy0 - ed.sy) > MOVE_EPS * 0.5) ed.moved = true;
-      S.moveAcc += Math.hypot(p[0] - ed.fx, p[1] - ed.fy);
-      ed.fx = p[0]; ed.fy = p[1];
-      var uRaw = ((fx0 - ed.ax) * ed.tx + (fy0 - ed.ay) * ed.ty) / ed.eL;
-      var uCur = clamp(uRaw, 0.14, 0.86);
-      var du = uCur - ed.u;
-      ed.u = uCur;
-      ed.uSmooth += (uCur - ed.uSmooth) * 0.55;
-      var deltaH = (fx0 - ed.sx) * ed.nx + (fy0 - ed.sy) * ed.ny;
-      var uGain = 1 / clamp(4 * uCur * (1 - uCur) * (1 + 4.8 * (uCur - 0.5) * (uCur - 0.5)), 0.72, 1.08);
-      var rawH = clamp(ed.h0 + deltaH * uGain, -0.18, 0.18);
-      var solH = lv.solBend[ed.k] || 0;
-      var inMag = false, inSnap0 = false, magH = null, w0 = 0;
-      var dm = Math.abs(rawH - solH);
-      if (dm < MAG_R) {
-        inMag = true;
-        w0 = MAG_PULL * (1 - dm / MAG_R);
-        rawH = rawH + (solH - rawH) * w0;
-        magH = solH;
-      }
-      if (!inMag && Math.abs(rawH) < 0.018) {
-        inSnap0 = true;
-        rawH = 0;
-      } else if (inMag && Math.abs(solH) < 1e-4 && Math.abs(rawH) < 0.022) {
-        inSnap0 = true;
-        rawH = 0;
-        magH = 0;
-      }
-      var dirSign = (rawH >= 0 ? 1 : -1);
-      var waveScale = Math.max(0.024, Math.min(0.065, Math.abs(rawH) * 0.6 + 0.020));
-      ed.rip = clamp(ed.rip + du * 1.6 * waveScale * dirSign, -0.045, 0.045);
-      if (Math.abs(uCur - ed.lastSoundU) > 0.095) {
-        ed.lastSoundU = uCur;
-        softTone(pentaF(Math.min(4, Math.floor(uCur * 5)), -1), 0.028, 0.08); vib(2);
-      }
-      // Khi đang kéo đến mép viền: giữ êm ái, không phát âm thanh trước
-      if (inMag && !ed.inMag) { vib(3); }
-      if (inSnap0 && !ed.inSnap0) { vib(2); }
-      ed.inMag = inMag; ed.inSnap0 = inSnap0; ed.magH = magH;
-      S.bend[ed.k] = rawH;
-      var skewFactor = inMag ? (1 - w0 * 0.7) : 1;
-      S.bend._waves = S.bend._waves || [];
-      S.bend._waves[ed.k] = {
-        u: ed.uSmooth,
-        skew: (ed.uSmooth - 0.5) * skewFactor,
-        rip: ed.rip * (inMag ? 0.5 : 1)
-      };
-      S.dirty = true;
-      return;
-    }
-    var d = S.drag; if (!d) return;
-    var fx = (p[0] - FX) / FS, fy = (p[1] - FY) / FS;
-    if (Math.hypot(fx - d.sx, fy - d.sy) > MOVE_EPS) d.moved = true;
-    S.moveAcc += Math.hypot(p[0] - d.fx, p[1] - d.fy);
-    d.fx = p[0]; d.fy = p[1];
-    var raw = [clamp(d.p0[0] + fx - d.sx, 0.04, 0.96), clamp(d.p0[1] + fy - d.sy, 0.04, 0.96)];
+  function applyNodeDrag(d) {
+    if (!d || !d.lastP) return;
+    var p = d.lastP;
+    var dragDist = Math.hypot(p[0] - d.startX, p[1] - d.startY);
+    if (dragDist > 8) d.moved = true;
+    var ramp = clamp(dragDist / 14, 0, 1);
+    var yLift = (d.isTouch ? 22 : 0) * ramp;
+    var sNode = [p[0] + d.grabOff[0], p[1] + d.grabOff[1] - yLift];
+    var wNode = screenToWorld(sNode);
+    var raw = [clamp((wNode[0] - FX) / FS, 0.04, 0.96), clamp((wNode[1] - FY) / FS, 0.04, 0.96)];
     var fo = foldOf(), isY = foldY();
     if (fo) {
       if (isY) raw[1] = onFold(d.i) ? S.foldX : clamp(raw[1], 2 * S.foldX - FABRIC_EDGE, S.foldX);
       else raw[0] = onFold(d.i) ? S.foldX : clamp(raw[0], 2 * S.foldX - FABRIC_EDGE, S.foldX);
     }
     var lv = LV[S.li], sol = lv.def.sol, n = sol.length;
-    // Tìm các chốt đã bị node khác chiếm giữ
     var occ = new Array(n).fill(false);
     for (var k = 0; k < S.pos.length; k++) {
       if (k === d.i) continue;
       for (var pj = 0; pj < n; pj++) {
-        if (Math.hypot(S.pos[k][0] - sol[pj][0], S.pos[k][1] - sol[pj][1]) <= PIN_SNAP_R) {
-          occ[pj] = true;
-        }
+        if (Math.hypot(S.pos[k][0] - sol[pj][0], S.pos[k][1] - sol[pj][1]) <= PIN_ON_R) occ[pj] = true;
       }
     }
-    // Tìm chốt ứng viên gần nhất chưa bị chiếm
     var bestD = 9, bestPin = null, bestJ = -1;
     for (var j = 0; j < n; j++) {
       if (occ[j]) continue;
       if (fo && onFold(d.i) && !onFold(j)) continue;
       if (fo && !onFold(d.i) && (isY ? sol[j][1] : sol[j][0]) > S.foldX + 1e-6) continue;
       var dist = Math.hypot(raw[0] - sol[j][0], raw[1] - sol[j][1]);
-      if (dist < bestD) {
-        bestD = dist;
-        bestPin = sol[j];
-        bestJ = j;
-      }
+      if (dist < bestD) { bestD = dist; bestPin = sol[j]; bestJ = j; }
     }
     var inMag = bestD < PIN_MAG_R;
     var q = inMag ? bestPin : null;
@@ -860,7 +893,6 @@
       var w = MAG_PULL * (1 - bestD / PIN_MAG_R);
       raw = [raw[0] + (q[0] - raw[0]) * w, raw[1] + (q[1] - raw[1]) * w];
     }
-    // vừa kéo chạm vùng hút chốt mẫu: âm chốt gỗ đanh nhẹ rõ nét
     if (inMag && !d.inMag) { pinHoverSound(bestJ); vib(5); }
     var gx = clamp(Math.floor((raw[0] - GN.LO) / (GN.HI - GN.LO) * GN.N), 0, GN.N - 1);
     var gy = clamp(Math.floor((raw[1] - GN.LO) / (GN.HI - GN.LO) * GN.N), 0, GN.N - 1);
@@ -868,22 +900,109 @@
     if (d.inPrev !== undefined && inPrev !== d.inPrev && !inMag) { softTone(pentaF(inPrev ? 1 : 0, -1), 0.045, 0.12); }
     d.inPrev = inPrev;
     d.inMag = inMag; d.magQ = inMag ? q : null;
-    S.pos[d.i] = raw; applyMirror(S.pos);
+    S.pos[d.i] = raw;
+    var pw = screenToWorld(p);
+    d.fx = pw[0]; d.fy = pw[1];
     S.dirty = true;
+  }
+
+  function applyEdgeDrag(ed) {
+    if (!ed || !ed.lastP) return;
+    var p = ed.lastP;
+    var dragDist = Math.hypot(p[0] - ed.startX, p[1] - ed.startY);
+    if (dragDist > 8) ed.moved = true;
+    var pw = screenToWorld(p);
+    var fx0 = (pw[0] - FX) / FS, fy0 = (pw[1] - FY) / FS;
+    ed.fx = pw[0]; ed.fy = pw[1];
+    var uRaw = ((fx0 - ed.ax) * ed.tx + (fy0 - ed.ay) * ed.ty) / ed.eL;
+    var uCur = clamp(uRaw, 0.14, 0.86);
+    var du = uCur - ed.u;
+    ed.u = uCur;
+    ed.uSmooth += (uCur - ed.uSmooth) * 0.55;
+    var deltaH = (fx0 - ed.sx) * ed.nx + (fy0 - ed.sy) * ed.ny;
+    var uGain = 1 / clamp(4 * uCur * (1 - uCur) * (1 + 4.8 * (uCur - 0.5) * (uCur - 0.5)), 0.72, 1.08);
+    var rawH = clamp(ed.h0 + deltaH * uGain, -0.18, 0.18);
+    var lv = LV[S.li].def;
+    var solH = lv.solBend[ed.k] || 0;
+    var inMag = false, inSnap0 = false, magH = null, w0 = 0;
+    var dm = Math.abs(rawH - solH);
+    if (dm < MAG_R) {
+      inMag = true;
+      w0 = MAG_PULL * (1 - dm / MAG_R);
+      rawH = rawH + (solH - rawH) * w0;
+      magH = solH;
+    }
+    if (!inMag && Math.abs(rawH) < 0.018) {
+      inSnap0 = true;
+      rawH = 0;
+    } else if (inMag && Math.abs(solH) < 1e-4 && Math.abs(rawH) < 0.022) {
+      inSnap0 = true;
+      rawH = 0;
+      magH = 0;
+    }
+    var dirSign = (rawH >= 0 ? 1 : -1);
+    var waveScale = Math.max(0.024, Math.min(0.065, Math.abs(rawH) * 0.6 + 0.020));
+    ed.rip = clamp(ed.rip + du * 1.6 * waveScale * dirSign, -0.045, 0.045);
+    if (Math.abs(uCur - ed.lastSoundU) > 0.095) {
+      ed.lastSoundU = uCur;
+      softTone(pentaF(Math.min(4, Math.floor(uCur * 5)), -1), 0.028, 0.08); vib(2);
+    }
+    if (inMag && !ed.inMag) { vib(3); }
+    if (inSnap0 && !ed.inSnap0) { vib(2); }
+    ed.inMag = inMag; ed.inSnap0 = inSnap0; ed.magH = magH;
+    S.bend[ed.k] = rawH;
+    var skewFactor = inMag ? (1 - w0 * 0.7) : 1;
+    S.bend._waves = S.bend._waves || [];
+    S.bend._waves[ed.k] = {
+      u: ed.uSmooth,
+      skew: (ed.uSmooth - 0.5) * skewFactor,
+      rip: ed.rip * (inMag ? 0.5 : 1)
+    };
+    S.dirty = true;
+  }
+
+  function playMove(p) {
+    if (S.needle) { needleMove(p); return; }
+    if (S.edgeDrag) {
+      var ed = S.edgeDrag;
+      ed.lastP = [p[0], p[1]];
+      var dragDist = Math.hypot(p[0] - ed.startX, p[1] - ed.startY);
+      if (dragDist > 8) {
+        ed.moved = true;
+        S.cam.targetScale = 1.04;
+        S.cam.targetX = 0;
+        S.cam.targetY = 0;
+      }
+      S.moveAcc += Math.hypot(p[0] - ed.fx, p[1] - ed.fy);
+      applyEdgeDrag(ed);
+      return;
+    }
+    var d = S.drag; if (!d) return;
+    d.lastP = [p[0], p[1]];
+    var dragDist = Math.hypot(p[0] - d.startX, p[1] - d.startY);
+    if (dragDist > 8) {
+      d.moved = true;
+      S.cam.targetScale = 1.04;
+      S.cam.targetX = 0;
+      S.cam.targetY = 0;
+    }
+    S.moveAcc += Math.hypot(p[0] - d.fx, p[1] - d.fy);
+    applyNodeDrag(d);
   }
   function playUp(cancel) {
     humStop();
+    if (S.cam) { S.cam.targetScale = 1.0; S.cam.targetX = 0; S.cam.targetY = 0; }
     if (S.needle) {
       var nd = S.needle; S.needle = null; pop(noteF(1) * 0.5, 0.085, 0, 0.15); vib(6);
       if (cancel || !nd.moved) return;
       if (nd.inMag) {
-        var x0 = S.foldX; setNeedle(foldOf().solX); recompute();
+        var x0 = S.foldX; setNeedle(foldOf().solX); canonicalizePins(); recompute();
         var winN = (S.iouV >= S.thr) && checkPins(LV[S.li].def, S.pos).allFilled; setNeedle(x0);
         if (winN) { startWin(); return; }
         S.needleSettle = { from: x0, to: foldOf().solX, t: 0 };
         return;
       }
-      recompute(); if (S.iouV >= S.thr && checkPins(LV[S.li].def, S.pos).allFilled) startWin();
+      canonicalizePins(); recompute(); if (S.iouV >= S.thr && checkPins(LV[S.li].def, S.pos).allFilled) startWin();
       return;
     }
     if (S.edgeDrag) {
@@ -948,23 +1067,34 @@
       vib([8, 14, 10]);
 
       // chấm thắng theo vị trí đã đặt hẳn lên viền, nhưng hình vẽ trượt dần tới đó
-      var rawP = S.pos[d.i].slice(); S.pos[d.i] = d.magQ.slice(); recompute();
-      var win = (S.iouV >= S.thr) && checkPins(LV[S.li].def, S.pos).allFilled; S.pos[d.i] = rawP; S.dirty = true;
+      var rawP = S.pos[d.i].slice(); S.pos[d.i] = d.magQ.slice();
+      // chốt cuối vừa lấp theo thứ tự khác lời giải: đánh số lại trước khi chấm
+      var perm = canonicalizePins(), di = perm ? perm[d.i] : d.i;
+      recompute();
+      var win = (S.iouV >= S.thr) && checkPins(LV[S.li].def, S.pos).allFilled; S.pos[di] = rawP; S.dirty = true;
       if (win) { startWin(); return; }
-      S.settle = { i: d.i, from: rawP, to: d.magQ.slice(), t: 0 };
-      S.ripples.push({ x: X(d.magQ[0]), y: Y(d.magQ[1]), t0: now(), c: C.mustard });
+      S.settle = { i: di, from: rawP, to: d.magQ.slice(), t: 0 };
+      S.ripples.push({ x: X(d.magQ[0]), y: Y(d.magQ[1]), t0: now(), c: C.mustard, world: true });
 
       // NHỊP BỒI TRỖI DÂY (Chained Edge Snap): Nếu cạnh nối với chốt này vừa được hoàn tất khớp viền
-      var chainedEdges = checkChainedEdgeSnaps(d.i);
+      var chainedEdges = checkChainedEdgeSnaps(di, d.magQ);
       if (chainedEdges.length > 0) {
         var tSnap = now() + 0.05;
         chainedEdges.forEach(function (ek) {
           triggerSeamZip(ek, 0.5, tSnap);
           triggerEdgeBounce(ek, 1, tSnap);
+          var lvDef = LV[S.li] ? LV[S.li].def : null;
+          if (lvDef && lvDef.ring) {
+            var ra = lvDef.ring[ek], rb = lvDef.ring[(ek + 1) % lvDef.ring.length];
+            var pA = S.pos[ra], pB = S.pos[rb];
+            var mx = (pA[0] + pB[0]) * 0.5, my = (pA[1] + pB[1]) * 0.5;
+            lint(X(mx), Y(my), -Math.PI / 2, 4);
+          }
         });
-        // Âm bồi rút chỉ vải thanh thoát êm dịu trễ 50ms
-        sweep(0.10, 0.05, 1400, 3000, 0.05);
-        pluck(pentaF(step + 1, 0), 0.065, 0.055);
+        // Âm bồi rút chỉ may giòn tan thanh thoát kèm nốt Kalimba ngân vang trễ 50ms
+        sweep(0.12, 0.08, 1300, 3200, 0.05);
+        pluck(pentaF(step + 1, 0), 0.10, 0.055);
+        vib([6, 12, 8]);
       }
       return;
     }
@@ -977,7 +1107,7 @@
     if (S.hints <= 0) { vib(20); pop(200, 0.05, 0, 0.1); return; }
     var lv = LV[S.li].def, bi = -1, bd = -1, bk = -1, be = -1;
     for (var i = 0; i < S.pos.length; i++) {
-      if (locked(i) || isMirror(i)) continue;
+      if (locked(i)) continue;
       var d = Math.hypot(S.pos[i][0] - lv.sol[i][0], S.pos[i][1] - lv.sol[i][1]);
       if (d > bd) { bd = d; bi = i; }
     }
@@ -996,6 +1126,7 @@
   function startWin() {
     finishSettle();
     S.drag = null; S.edgeDrag = null;
+    if (S.cam) { S.cam.targetScale = 1.0; S.cam.targetX = 0; S.cam.targetY = 0; }
     S.snapFrom = S.pos.map(function (p) { return p.slice(); });
     S.bendFrom = S.bend.slice();
     // mỗi node hút vào điểm gần nhất trên viền mẫu, giữ đúng bố cục người chơi đã xếp; node khóa đứng yên
@@ -1045,7 +1176,7 @@
       if (!lv.def.fold && bd > lv.solPath.total - 1e-4) bd = 0;
       out.push({ i: i, d: bd });
     }
-    out.filter(function (o) { return !isMirror(o.i); }).sort(function (a, b) { return a.d - b.d; }).forEach(function (o, r) { o.rank = r; });
+    out.slice().sort(function (a, b) { return a.d - b.d; }).forEach(function (o, r) { o.rank = r; });
     out.forEach(function (o) { if (o.rank === undefined) o.rank = 0; });
     return out;
   }
@@ -1173,7 +1304,7 @@
         if (S.edgeWake) S.edgeWake[S.runK] = now();
         S.runK = (S.runK + 1) % n; S.runT = 0;
         var node = lv.ring[S.runK];
-        S.pl[node] = 1; S.ripples.push({ x: X(S.pos[node][0]), y: Y(S.pos[node][1]), t0: now(), c: C.cream });
+        S.pl[node] = 1; S.ripples.push({ x: X(S.pos[node][0]), y: Y(S.pos[node][1]), t0: now(), c: C.cream, world: true });
         var vol = (0.045 + 0.045 * S.dv) * ((S.drag || S.edgeDrag) ? 0.6 : 1);
         pop(noteF(S.runK + (ver ? 2 : 0)), vol, 0, 0.26);
       }
@@ -1194,6 +1325,18 @@
   }
 
   function update(dt) {
+    if (!S.cam) S.cam = { scale: 1.0, targetScale: 1.0, x: 0, y: 0, targetX: 0, targetY: 0 };
+    var cam = S.cam;
+    var zSpeed = Math.min(1, dt * 3.5);
+    var pSpeed = Math.min(1, dt * 5.0);
+    cam.scale += (cam.targetScale - cam.scale) * zSpeed;
+    cam.x += (cam.targetX - cam.x) * pSpeed;
+    cam.y += (cam.targetY - cam.y) * pSpeed;
+    if (Math.abs(cam.scale - 1) < 0.005 && Math.abs(cam.x) < 0.25 && Math.abs(cam.y) < 0.25 && cam.targetScale === 1.0) {
+      cam.scale = 1.0; cam.x = 0; cam.y = 0;
+    }
+    if (S.drag) applyNodeDrag(S.drag);
+    if (S.edgeDrag) applyEdgeDrag(S.edgeDrag);
     for (var i = 0; i < S.pl.length; i++) S.pl[i] = Math.max(0, S.pl[i] - dt * 3);
     S.toast = Math.max(0, S.toast - dt); S.flash = Math.max(0, S.flash - dt * 3);
     updateParts(dt);
@@ -1294,11 +1437,10 @@
       var L = cutLen(lv) * clamp(S.t / cutDur(lv), 0, 1);
       for (var q = 0; q < S.cutD.length; q++) {
         var cd = S.cutD[q];
-        if (isMirror(cd.i)) continue;
         if (S.cutLast < cd.d && cd.d <= L) {
           pop(risingF(cd.rank), 0.07, 0, 0.3); S.cutHit[cd.i] = now(); S.pl[cd.i] = 1;
-          S.ripples.push({ x: X(S.pos[cd.i][0]), y: Y(S.pos[cd.i][1]), t0: now(), c: C.cream });
-          if (foldOf() && !onFold(cd.i)) { pop(risingF(cd.rank) * 2, 0.045, 0, 0.3); S.ripples.push({ x: X(foldY() ? S.pos[cd.i][0] : 2 * S.foldX - S.pos[cd.i][0]), y: Y(foldY() ? 2 * S.foldX - S.pos[cd.i][1] : S.pos[cd.i][1]), t0: now(), c: C.cream }); }
+          S.ripples.push({ x: X(S.pos[cd.i][0]), y: Y(S.pos[cd.i][1]), t0: now(), c: C.cream, world: true });
+          if (foldOf() && !onFold(cd.i)) { pop(risingF(cd.rank) * 2, 0.045, 0, 0.3); S.ripples.push({ x: X(foldY() ? S.pos[cd.i][0] : 2 * S.foldX - S.pos[cd.i][0]), y: Y(foldY() ? 2 * S.foldX - S.pos[cd.i][1] : S.pos[cd.i][1]), t0: now(), c: C.cream, world: true }); }
         }
       }
       var ch = runnerHead(lv.solPath, L);
@@ -1791,11 +1933,24 @@
     var x = X(S.pos[i][0]), y = Y(S.pos[i][1]), s = S.sc[i] * (size || 1) * (1 + 0.3 * S.pl[i]), lk = locked(i);
     var st = now() - S.shake[i]; if (st >= 0 && st < 0.35) x += Math.sin(st * 60) * 4 * (1 - st / 0.35);
     if (s < 0.02) return;
+    var liftK = clamp((S.sc[i] - 1.0) / 0.15, 0, 1);
+    if (liftK > 0.02 && alpha > 0.1) {
+      ctx.save();
+      var shadowOffsetY = lerp(1.5, 6.5, liftK);
+      var shadowRadiusX = lerp(12.5, 15.5, liftK);
+      var shadowRadiusY = lerp(6.5, 8.5, liftK);
+      var shadowAlpha = lerp(0.16, 0.26, liftK) * alpha;
+      ctx.beginPath();
+      ctx.ellipse(x, y + shadowOffsetY, shadowRadiusX, shadowRadiusY, 0, 0, Math.PI * 2);
+      ctx.fillStyle = rgba(C.ink, shadowAlpha);
+      ctx.fill();
+      ctx.restore();
+    }
     ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y); ctx.scale(s, s);
     if (S.phase === 'verify' && S.lit[i]) { ctx.beginPath(); ctx.arc(0, 0, 16, 0, 7); ctx.lineWidth = 3; ctx.strokeStyle = C.mustard; ctx.stroke(); }
     ctx.lineJoin = 'round';
     // Toàn bộ node đồng nhất là ghim tròn ('c'); đã bỏ hoàn toàn node tam giác ('s')
-    ctx.beginPath(); ctx.arc(0, 0, 10.5, 0, 7);
+    ctx.beginPath(); ctx.arc(0, 0, 13.5, 0, 7);
     ctx.lineWidth = 2.4 + NODE_HALO * 2; ctx.strokeStyle = rgba(C.halo, NODE_HALO_A); ctx.stroke();
     ctx.fillStyle = lk ? '#E9E1D6' : C.rose; ctx.fill();
     ctx.lineWidth = 2.4; ctx.strokeStyle = lk ? C.mute : C.ink; ctx.stroke();
@@ -2075,7 +2230,7 @@
       // 1. KHI ĐANG KÉO NODE: Sóng tỏa dẫn đường bám theo thao tác
       if (draggingNode && !isFilled) {
         var phase = ((clk * 1.8 + j * 0.16) % 1.0);
-        var r1 = 6.5 + 20 * phase;
+        var r1 = 8.5 + 24 * phase;
         var a1 = (1 - phase) * 0.78 * intro;
         ctx.save();
         ctx.beginPath(); ctx.arc(px, py, r1, 0, Math.PI * 2);
@@ -2084,14 +2239,14 @@
 
         if (phase > 0.38) {
           var p2 = (phase - 0.38) / 0.62;
-          var r2 = 6.5 + 20 * p2;
+          var r2 = 8.5 + 24 * p2;
           var a2 = (1 - p2) * 0.5 * intro;
           ctx.beginPath(); ctx.arc(px, py, r2, 0, Math.PI * 2);
           ctx.lineWidth = 1.6; ctx.strokeStyle = rgba(C.cream, a2); ctx.stroke();
         }
 
         var haloPulse = 0.5 + 0.5 * Math.sin(clk * 7.5 + j);
-        ctx.beginPath(); ctx.arc(px, py, 8.5 + 2.5 * haloPulse, 0, Math.PI * 2);
+        ctx.beginPath(); ctx.arc(px, py, 10.5 + 3.0 * haloPulse, 0, Math.PI * 2);
         ctx.fillStyle = rgba('#E8B868', (0.28 + 0.18 * haloPulse) * intro);
         ctx.fill();
         ctx.restore();
@@ -2100,7 +2255,7 @@
       // 2. KHI KHÔNG THAO TÁC MỘT KHOẢNG THỜI GIAN (> 2.8s): Sóng xung phát sáng gợi ý chốt còn trống
       if (isIdle && !isFilled) {
         var idlePhase = ((idleAge * 0.85 + j * 0.18) % 1.4) / 1.4;
-        var ir1 = 6.5 + 24 * idlePhase;
+        var ir1 = 8.5 + 26 * idlePhase;
         var ia1 = (1 - idlePhase) * 0.82 * intro;
         ctx.save();
         ctx.beginPath(); ctx.arc(px, py, ir1, 0, Math.PI * 2);
@@ -2109,7 +2264,7 @@
 
         if (idlePhase > 0.35) {
           var ip2 = (idlePhase - 0.35) / 0.65;
-          var ir2 = 6.5 + 24 * ip2;
+          var ir2 = 8.5 + 26 * ip2;
           var ia2 = (1 - ip2) * 0.55 * intro;
           ctx.beginPath(); ctx.arc(px, py, ir2, 0, Math.PI * 2);
           ctx.lineWidth = 1.6; ctx.strokeStyle = rgba('#FFF8E8', ia2); ctx.stroke();
@@ -2117,7 +2272,7 @@
 
         // Quầng thở nhịp nhàng tại tâm chốt để thu hút ánh nhìn
         var breath = 0.5 + 0.5 * Math.sin(idleAge * 4.5 + j * 0.7);
-        ctx.beginPath(); ctx.arc(px, py, 9.0 + 3.0 * breath, 0, Math.PI * 2);
+        ctx.beginPath(); ctx.arc(px, py, 11.0 + 3.5 * breath, 0, Math.PI * 2);
         ctx.fillStyle = rgba('#D89838', (0.32 + 0.22 * breath) * intro);
         ctx.fill();
         ctx.restore();
@@ -2132,20 +2287,20 @@
       if (!isFilled) {
         // --- CHỐT CHƯA LẤP: Đệm khuy bơ kem & Mũi thêu dấu × ---
         // Vòng đệm tròn bằng vải kem bơ sáng (Butter Cream Felt Pad)
-        ctx.beginPath(); ctx.arc(px, py, 6.8, 0, Math.PI * 2);
+        ctx.beginPath(); ctx.arc(px, py, 8.8, 0, Math.PI * 2);
         ctx.fillStyle = rgba('#FFF2CF', 0.96 * intro); ctx.fill();
         ctx.lineWidth = 1.6;
         ctx.strokeStyle = rgba('#DFB15B', 0.98 * intro);
         ctx.stroke();
 
         // Viền may chỉ dệt mảnh bên ngoài (Woven Stitch Rim #A87A2C)
-        ctx.beginPath(); ctx.arc(px, py, 7.8, 0, Math.PI * 2);
+        ctx.beginPath(); ctx.arc(px, py, 10.2, 0, Math.PI * 2);
         ctx.lineWidth = 1.0;
         ctx.strokeStyle = rgba('#A87A2C', 0.55 * intro);
         ctx.stroke();
 
         // Mũi thêu chữ thập dấu × (Cross-Stitch Marker #C88E3E)
-        var arm = 3.6; // Bán kính tay chữ thập
+        var arm = 4.6; // Bán kính tay chữ thập
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
 
@@ -2174,21 +2329,21 @@
         ctx.stroke();
 
         // Hạt thêu con bọ French knot tại tâm giao thoa của dấu ×
-        ctx.beginPath(); ctx.arc(px, py, 1.4, 0, Math.PI * 2);
+        ctx.beginPath(); ctx.arc(px, py, 1.8, 0, Math.PI * 2);
         ctx.fillStyle = rgba('#DFB15B', 0.98 * intro); ctx.fill();
         ctx.lineWidth = 0.8;
         ctx.strokeStyle = rgba('#A87A2C', 0.85 * intro); ctx.stroke();
       } else {
         // --- CHỐT ĐÃ LẤP ĐẦY ---
         // Vòng đệm khuy ôm khít chân ghim tròn với sắc xanh xô thơm hòa nhã
-        ctx.beginPath(); ctx.arc(px, py, 6.6, 0, Math.PI * 2);
+        ctx.beginPath(); ctx.arc(px, py, 8.6, 0, Math.PI * 2);
         ctx.fillStyle = rgba('#FFF8EC', 0.75 * intro); ctx.fill();
         ctx.lineWidth = 1.6;
         ctx.strokeStyle = rgba(C.sageDeep, 0.88 * intro);
         ctx.stroke();
 
         // Mũi chữ thập thu nhỏ nhẹ nhàng bên dưới node
-        var armF = 2.4;
+        var armF = 3.2;
         ctx.lineCap = 'round';
         ctx.beginPath();
         ctx.moveTo(px - armF, py - armF); ctx.lineTo(px + armF, py + armF);
@@ -2204,10 +2359,10 @@
         var mpx = isY ? px : X(2 * S.foldX - p[0]);
         var mpy = isY ? Y(2 * S.foldX - p[1]) : py;
         ctx.save();
-        ctx.beginPath(); ctx.arc(mpx, mpy, 5.6, 0, Math.PI * 2);
+        ctx.beginPath(); ctx.arc(mpx, mpy, 7.2, 0, Math.PI * 2);
         ctx.fillStyle = rgba('#FFF2CF', 0.35 * intro); ctx.fill();
         ctx.lineWidth = 1.2; ctx.strokeStyle = rgba('#DFB15B', 0.45 * intro); ctx.stroke();
-        var marm = 2.4;
+        var marm = 3.2;
         ctx.lineCap = 'round';
         ctx.beginPath();
         ctx.moveTo(mpx - marm, mpy - marm); ctx.lineTo(mpx + marm, mpy + marm);
@@ -2245,8 +2400,7 @@
     var lv = LV[S.li];
     if (!lv || !lv.def || !lv.def.bendFree || !lv.def.bendFree.length) return;
     var def = lv.def;
-    var pinSt = checkPins(def, S.pos);
-    if (!pinSt.allFilled || !areAllPinsInCorrectPosition(def, S.pos) || S.iouV >= S.thr) return;
+    if (S.iouV >= S.thr) return;
     if (S.phase !== 'play' && S.phase !== 'verify') return;
     // Chỉ gợi ý sau khi người chơi đã thả tay cắm chốt cuối hoàn toàn (không còn drag hay settle node)
     if (S.drag !== null || S.settle !== null) return;
@@ -2261,6 +2415,7 @@
 
     for (var bi = 0; bi < def.bendFree.length; bi++) {
       var k = def.bendFree[bi];
+      if (!isEdgeAnchoredToPins(k)) continue;
       var solH = def.solBend ? (def.solBend[k] || 0) : 0;
       var curH = S.bend ? (S.bend[k] || 0) : 0;
       var bendErr = Math.abs(curH - solH);
@@ -2374,8 +2529,7 @@
     var lv = LV[S.li];
     if (!lv || !lv.def || !lv.def.bendFree || !lv.def.bendFree.length) return;
     var def = lv.def;
-    var pinSt = checkPins(def, S.pos);
-    if (!pinSt.allFilled || !areAllPinsInCorrectPosition(def, S.pos) || S.iouV >= S.thr) return;
+    if (S.iouV >= S.thr) return;
     if (S.phase !== 'play' && S.phase !== 'verify') return;
     // Chỉ gợi ý sau khi người chơi đã thả tay cắm chốt cuối hoàn toàn (không còn drag hay settle node)
     if (S.drag !== null || S.settle !== null) return;
@@ -2390,6 +2544,7 @@
 
     for (var bi = 0; bi < def.bendFree.length; bi++) {
       var k = def.bendFree[bi];
+      if (!isEdgeAnchoredToPins(k)) continue;
       var solH = def.solBend ? (def.solBend[k] || 0) : 0;
       var curH = S.bend ? (S.bend[k] || 0) : 0;
       var bendErr = Math.abs(curH - solH);
@@ -2442,6 +2597,13 @@
   /* ---------- màn chơi: vẽ ---------- */
   function drawPlay() {
     var lv = LV[S.li], ph = S.phase, t = S.t;
+    ctx.save();
+    var cam = S.cam;
+    if (cam && (cam.scale !== 1 || cam.x !== 0 || cam.y !== 0)) {
+      ctx.translate(FCX + cam.x, FCY + cam.y);
+      ctx.scale(cam.scale, cam.scale);
+      ctx.translate(-FCX, -FCY);
+    }
     drawFabric();
     var intro = ph === 'intro' ? clamp(t / 0.5, 0, 1) : 1;
     var gone = ph === 'next' ? clamp(1 - t / 0.4, 0, 1) : 1;
@@ -2554,6 +2716,7 @@
         drawPiece(S.li, lerp(ox0, tf.ox, u), lerp(oy0, tf.oy, u) - 70 * Math.sin(Math.PI * u), lerp(s0, tf.s, u), 1, u < 0.8, 1 - u, 0);
       }
     }
+    ctx.restore();
   }
 
   /* ---------- màn thưởng: ghép các mảnh thành sản phẩm ---------- */
@@ -3238,7 +3401,16 @@
     ctx.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
     ctx.fillStyle = C.bg; ctx.fillRect(0, 0, W, H);
     drawTop();
-    if (S.scene === 'play') { drawInfo(); drawPlay(); drawBoosters(); }
+    if (S.scene === 'play') {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 230, W, 492);
+      ctx.clip();
+      drawPlay();
+      ctx.restore();
+      drawInfo();
+      drawBoosters();
+    }
     else drawReward();
     drawRipples();
     drawParts();
