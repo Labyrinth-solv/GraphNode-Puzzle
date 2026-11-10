@@ -789,3 +789,33 @@ Các thay đổi dưới đây làm và thử ở `Prototype/web-demo` trước,
    - `node alt-solve.js`, `bend-target.js`, `check.js`: **PASS 100%**.
    - Đã đồng bộ toàn bộ mã nguồn sang máy local tại `D:\Work\Unity-project\GraphNode Puzzle\Prototype\web-v2\`.
    - Cam kết giữ vững: **Không thay đổi bất kỳ file nào trong `Prototype/web-demo`**.
+
+### 20. [CHÍNH THỨC ĐÃ DUYỆT / OFFICIALLY APPROVED] Nâng Cấp Màu Vải Tươi Sáng & Cơ Chế Viền "Mảnh Sau Đè Lên Che Viền Chỉ Mảnh Trước" (2026-11-10)
+
+1. **Bối cảnh & Yêu cầu của người chơi**:
+   - *Về màu sắc*: Người chơi nhận xét các màn Dâu Tây (`strawberry`) và Cà Rốt (`carrot`) có màu sắc rất tươi sáng, đẹp mắt; trong khi các màn cũ trông tối và xỉn màu hơn. Người chơi yêu cầu: **Bỏ vệt sáng trắng (specular highlight), giữ màu tươi sáng** — màu sắc căng tươi, chuyển sắc mềm mại, sáng sủa, không bị lóa trắng bóng kính.
+   - *Về phần viền & lỗi đè viền chỉ ở màn 2*: Người chơi đề xuất ý tưởng khắc phục triệt để và tự nhiên: **Hình mảnh sau sẽ đè lên viền chỉ của mảnh trước và che phần chỉ của mảnh trước**, như thế hình ảnh sẽ được khắc phục một cách tự nhiên nhất mà không cần các can thiệp phức tạp.
+   - *Về phong cách nét viền*: Giữ viền nét bút chì màu sạch sẽ (`clean colored-pencil line`), trùng tông màu hình nhưng đậm hơn một chút để định hình rõ khối, không nham nhở, không tạo nếp nhăn giả.
+
+2. **Các cải tiến kỹ thuật cụ thể**:
+   - **Bỏ vệt sáng trắng & Giữ màu tươi sáng (`paintFlat` & `paintFabric`)**:
+     - Trong `paintFlat`: Bỏ vệt cong elip trắng (`ellipse`) và chấm sáng (`arc`), giữ lại **Radial Gradient đa sắc** tỏa từ góc trên trái đón sáng `(0.32w, 0.28h)` đến thân màu căng mọng và rìa bóng đổ 3D.
+     - Trong `paintFabric`: Loại bỏ hoàn toàn lớp gradient đen dìm tối $22\%$ `rgba(fb.dark, 0.22)` ở đáy và gỡ bỏ viền đen trong $25\%$ dày 6px gây bẩn/xỉn màu. Thay bằng **ánh sáng ấm chiếu từ trên xuống** (`rgba(255,255,255,0.22)` đỉnh $\to$ $0$ đáy) và viền bóng siêu mỏng $0.08$.
+     - Nâng cấp bảng màu cho toàn bộ 7 sản phẩm trong `levels.js`: Viên kem dâu sữa ngọt `#FF7B9B`, Ốc quế mật ong `#E2A855`, Áo len xanh bạc hà tươi `#48C774`, Áo lót trắng kem sạch `#FFF8EB`, Cổ áo xanh tươi `#3CB867`, Trái tim san hô `#FF5E7E`, Bé thỏ ngọc trai `#FFFDFC`, Chậu hoa terracotta ấm `#E87D48`, Sen đá ngọc bích `#58C774`. Toàn bộ sản phẩm bừng sáng tươi tắn, đồng bộ với Dâu Tây & Cà Rốt.
+   - **Cơ chế viền phân tầng "Mảnh sau đè lên che viền chỉ mảnh trước" (Layered Piece-over-Seam Rendering)**:
+     - Trước đây: Toàn bộ các mảnh được vẽ xong, sau đó hàm `drawSeam` vẽ toàn bộ đường may đè lên trên cùng. Dẫn tới ở Màn 2, đường may dọc của áo lót bị vẽ đè lên trên cổ áo chữ V.
+     - Cơ chế mới: Trong `drawReward` (ở các pha `stitch`, `cinch`, `tapReady` và pha hoàn thành `deep`), vòng lặp duyệt theo thứ tự lớp từ dưới lên trên `backToFront()` (`order`):
+       1. Vẽ mảnh thứ $k$.
+       2. Vẽ các đường may thuộc sở hữu của mảnh $k$ (`drawSeam(p, pc.i)`).
+       3. Mảnh tiếp theo $k+1$ (mảnh sau) được vẽ đè lên $\to$ lớp vải của mảnh sau tự nhiên che phủ hoàn toàn bất kỳ phần viền chỉ nào của mảnh trước nằm bên dưới nó!
+       4. Vẽ đường may của mảnh $k+1$.
+     - Kết quả: Áo lót vẽ trước $\to$ đường may áo lót vẽ xong $\to$ Cổ áo vẽ đè lên trên $\to$ Cổ áo tự nhiên che khuất toàn bộ phần đường may áo lót bên dưới, hai đường may cổ áo V nổi bật sắc nét trên cùng. Khắc phục 100% tự nhiên, đúng nguyên lý may mặc thực tế!
+   - **Nét viền bút chì màu sạch sẽ (Clean Colored-Pencil Seam Line)**:
+     - Nét viền $2.2\text{px}$ dạng bút chì màu (`tn.pencil = darken(dark, 0.25)`), kèm bóng mờ nhẹ $3.0\text{px}$ bên dưới.
+     - Không có nét đứt nham nhở, không tạo nếp nhăn/dimples giả làm dơ hình.
+
+3. **Kiểm thử tự động & Đồng bộ**:
+   - `node smoke.js`: **PASS 100% cả 7 sản phẩm** (`icecream`, `cardigan`, `heart`, `bunny`, `flowerpot`, `strawberry`, `carrot`).
+   - `node alt-solve.js`, `bend-target.js`, `check.js`: **PASS 100%**.
+   - Đã đồng bộ mã nguồn sang máy local tại `D:\Work\Unity-project\GraphNode Puzzle\Prototype\web-v2\`.
+   - Cam kết giữ vững: **Không thay đổi bất kỳ file nào trong `Prototype/web-demo`**.

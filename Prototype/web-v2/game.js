@@ -78,6 +78,7 @@
   function hex(c) { return [parseInt(c.substr(1, 2), 16), parseInt(c.substr(3, 2), 16), parseInt(c.substr(5, 2), 16)]; }
   function mix(a, b, t) { var A = hex(a), B = hex(b); return 'rgb(' + Math.round(lerp(A[0], B[0], t)) + ',' + Math.round(lerp(A[1], B[1], t)) + ',' + Math.round(lerp(A[2], B[2], t)) + ')'; }
   function rgba(c, a) { var A = hex(c); return 'rgba(' + A[0] + ',' + A[1] + ',' + A[2] + ',' + a + ')'; }
+  function darken(c, f) { var A = hex(c); return 'rgb(' + Math.round(A[0] * (1 - f)) + ',' + Math.round(A[1] * (1 - f)) + ',' + Math.round(A[2] * (1 - f)) + ')'; }
   function X(x) { return FX + x * FS; }
   function Y(y) { return FY + y * FS; }
   function rr(x, y, w, h, r) {
@@ -2259,25 +2260,20 @@
         ctx.lineWidth = FS * 0.007; ctx.strokeStyle = pass ? rgba(fb.light, 0.5) : rgba(fb.dark, 0.6); ctx.stroke();
       }
     }
-    // ánh sáng chung: sáng phía trên, tối dần về mép dưới, mép trong viền hơi tối để mảnh có khối
+    // ánh sáng chung: sáng nhẹ phía trên, giữ màu tươi sáng tự nhiên, không dìm đen mép dưới
     var lg = ctx.createLinearGradient(0, y0, 0, y0 + h);
-    lg.addColorStop(0, 'rgba(255,255,255,0.18)'); lg.addColorStop(0.45, 'rgba(255,255,255,0)'); lg.addColorStop(1, rgba(fb.dark, 0.22));
+    lg.addColorStop(0, 'rgba(255,255,255,0.22)'); lg.addColorStop(0.55, 'rgba(255,255,255,0.02)'); lg.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = lg; ctx.fillRect(x0 - 4, y0 - 4, w + 8, h + 8);
-    outlinePath(LV[i].outline, ox, oy, s); ctx.lineWidth = 6; ctx.strokeStyle = rgba(fb.dark, 0.25); ctx.stroke();
+    outlinePath(LV[i].outline, ox, oy, s); ctx.lineWidth = 3; ctx.strokeStyle = rgba(fb.dark, 0.08); ctx.stroke();
     // bước lên màu đầy ở màn thưởng: đậm hơn một chút, không đổi màu
     if (deep > 0) { ctx.fillStyle = rgba(fb.dark, 0.12 * deep); ctx.fillRect(x0 - 4, y0 - 4, w + 8, h + 8); }
   }
-  // Phong cách tranh tô màu (thử, màn 6): mảng màu phẳng tươi, chuyển sắc nhẹ từ sáng (trên trái) sang tối (dưới),
-  // một vệt bóng trắng cong; không vân vải. Viền đen dày và bỏ chỉ khâu do drawPiece lo.
+  // Phong cách mảng màu tươi sáng: chuyển sắc đa tầng từ sáng (trên trái) sang tối (dưới),
+  // không vân vải thô; bỏ vệt sáng trắng theo yêu cầu để giữ màu tươi sáng, êm mắt tự nhiên.
   function paintFlat(fb, x0, y0, w, h, deep) {
     var rg = ctx.createRadialGradient(x0 + w * 0.32, y0 + h * 0.28, Math.min(w, h) * 0.05, x0 + w * 0.5, y0 + h * 0.55, Math.max(w, h) * 0.75);
     rg.addColorStop(0, fb.light); rg.addColorStop(0.55, fb.base); rg.addColorStop(1, fb.dark);
     ctx.fillStyle = rg; ctx.fillRect(x0 - 4, y0 - 4, w + 8, h + 8);
-    ctx.save(); ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.ellipse(x0 + w * 0.3, y0 + h * 0.36, w * 0.09, h * 0.16, -0.35, Math.PI * 1.05, Math.PI * 1.75);
-    ctx.lineWidth = Math.max(2, w * 0.035); ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.stroke();
-    ctx.beginPath(); ctx.arc(x0 + w * 0.36, y0 + h * 0.2, Math.max(1.5, w * 0.018), 0, 7); ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.fill();
-    ctx.restore();
     if (deep > 0) { ctx.fillStyle = rgba(fb.dark, 0.08 * deep); ctx.fillRect(x0 - 4, y0 - 4, w + 8, h + 8); }
   }
   function paintPattern(i, ox, oy, s, deep) {
@@ -3506,9 +3502,16 @@
       order.forEach(function (pc) { if (pc.placed) drawPc(pc); });
       order.forEach(function (pc) { if (!pc.placed) drawSlotHint(pc.i, a); });
       order.forEach(function (pc) { if (!pc.placed) drawPc(pc); });
-    } else order.forEach(drawPc);
+    } else {
+      // Mảnh sau đè lên viền chỉ của mảnh trước (Layered Piece-over-Seam):
+      order.forEach(function (pc) {
+        drawPc(pc);
+        if (R.phase === 'stitch' || R.phase === 'cinch' || R.phase === 'tapReady') {
+          drawSeam(R.stitch, pc.i);
+        }
+      });
+    }
     if (R.phase === 'stitch' || R.phase === 'cinch' || R.phase === 'tapReady') {
-      drawSeam(R.stitch);
       if (R.phase === 'stitch' && R.stitch > 0 && R.stitch < 1) {
         var sn = seamPoint(R.stitch);
         var curSp = seamPart(R.stitch);
@@ -3537,8 +3540,11 @@
       ctx.beginPath(); ctx.arc(195, 395, 165, 0, 7); ctx.fillStyle = C.baseDeep; ctx.fill();
       ctx.beginPath(); ctx.arc(195, 395, 155, 0, 7); ctx.setLineDash([6, 5]); ctx.lineWidth = 1.8; ctx.strokeStyle = '#FFFFFF'; ctx.stroke(); ctx.setLineDash([]);
       var stA = product().levels.length > 1 ? 0 : 0.6;
-      backToFront().forEach(function (li) { var tf = placeOf(li); drawPiece(li, tf.ox, tf.oy, tf.s, 1, false, stA, 1); });
-      drawSeam(1);
+      backToFront().forEach(function (li) {
+        var tf = placeOf(li);
+        drawPiece(li, tf.ox, tf.oy, tf.s, 1, false, stA, 1);
+        drawSeam(1, li);
+      });
       ctx.restore();
       if (R.phase === 'reveal') {
         // mép màu loang: vòng trắng dày có viền tối mờ để nổi trên nền sáng, kèm chớp trắng ở đầu
@@ -3586,6 +3592,7 @@
       return {
         dark: dark,
         light: light,
+        pencil: darken(dark, 0.25),
         shadow: rgba(dark, 0.35),
         crease: rgba(dark, 0.50),
         sheen: rgba(light, 0.45)
@@ -3594,18 +3601,20 @@
     return {
       dark: C.ink,
       light: '#FFFFFF',
+      pencil: darken(C.ink, 0.25),
       shadow: 'rgba(74,59,53,0.32)',
       crease: 'rgba(74,59,53,0.45)',
       sheen: 'rgba(255,255,255,0.40)'
     };
   }
 
-  function drawSeam(p) {
+  function drawSeam(p, filterLi) {
     if (!R || !R.seams || !R.seams.length) return;
     if (typeof p !== 'number') p = (R.stitch !== undefined ? R.stitch : 1);
     if (p <= 0) return;
 
     var cur = seamPart(p);
+    var pr = product();
     ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
 
     var isStitch = (R.phase === 'stitch');
@@ -3620,11 +3629,13 @@
       var puck = R.pucker;
       ctx.lineWidth = 1.6;
       for (var k0 = 0; k0 < R.seams.length; k0++) {
-        var sm0 = R.seams[k0];
-        if (!sm0 || sm0.length < 2) continue;
-        var step0 = Math.max(1, Math.floor(sm0.length / 10));
-        for (var i0 = 1; i0 < sm0.length - 1; i0 += step0) {
-          var pPrev = sm0[i0 - 1], pNext = sm0[i0 + 1], pMid = sm0[i0];
+        var sm0 = pr && pr.seams && (pr.seams[k0] || pr.seams[k0 % pr.seams.length]);
+        if (filterLi !== undefined && filterLi !== null && sm0 && sm0[0] !== filterLi) continue;
+        var seam0 = R.seams[k0];
+        if (!seam0 || seam0.length < 2) continue;
+        var step0 = Math.max(1, Math.floor(seam0.length / 10));
+        for (var i0 = 1; i0 < seam0.length - 1; i0 += step0) {
+          var pPrev = seam0[i0 - 1], pNext = seam0[i0 + 1], pMid = seam0[i0];
           var dx0 = pNext[0] - pPrev[0], dy0 = pNext[1] - pPrev[1];
           var len0 = Math.hypot(dx0, dy0);
           if (len0 < 1e-4) continue;
@@ -3654,6 +3665,8 @@
       ctx.globalAlpha = stitchAlpha;
       ctx.setLineDash([6, 4]); // Đường may đứt đoạn thanh mảnh chuẩn thêu thủ công
       for (var k = 0; k < R.seams.length; k++) {
+        var sm = pr && pr.seams && (pr.seams[k] || pr.seams[k % pr.seams.length]);
+        if (filterLi !== undefined && filterLi !== null && sm && sm[0] !== filterLi) continue;
         var seam = R.seams[k];
         if (!seam || seam.length < 2) continue;
         var q = p >= 1 || k < cur.k ? 1 : (k === cur.k ? cur.p : 0);
@@ -3664,9 +3677,9 @@
         traceSeamTo(seam, q);
         ctx.lineWidth = 2.4; ctx.strokeStyle = tn.shadow; ctx.stroke();
 
-        // Sợi chỉ may chính tiệp màu vải (không viền trắng đục 5px, không đốm đen thô)
+        // Sợi chỉ may chính tiệp màu vải (sạch sẽ, sắc nét)
         traceSeamTo(seam, q);
-        ctx.lineWidth = 1.6; ctx.strokeStyle = tn.dark; ctx.stroke();
+        ctx.lineWidth = 1.6; ctx.strokeStyle = tn.pencil || tn.dark; ctx.stroke();
 
         // Ánh sáng nhẹ trên thân sợi chỉ
         traceSeamTo(seam, q);
@@ -3675,33 +3688,27 @@
       ctx.restore();
     }
 
-    // 3. Rãnh mí may ép phẳng 3D (Seamless Pressed Seam Crease) khi chỉ đã kìm vào trong
+    // 3. Nét viền bút chì màu sạch sẽ (Clean Colored-Pencil Seam Line) khi chỉ đã kìm vào trong
     if (creaseAlpha > 0.01) {
       ctx.save();
       ctx.globalAlpha = creaseAlpha;
-      ctx.setLineDash([]); // Nếp gấp liền mạch phẳng phiu
+      ctx.setLineDash([]); // Nét liền sạch sẽ, không nham nhở, không nếp nhăn giả
       for (var k2 = 0; k2 < R.seams.length; k2++) {
+        var sm2 = pr && pr.seams && (pr.seams[k2] || pr.seams[k2 % pr.seams.length]);
+        if (filterLi !== undefined && filterLi !== null && sm2 && sm2[0] !== filterLi) continue;
         var seam2 = R.seams[k2];
         if (!seam2 || seam2.length < 2) continue;
         var q2 = p >= 1 || k2 < cur.k ? 1 : (k2 === cur.k ? cur.p : 0);
         if (q2 <= 0) continue;
         var tn2 = seamTone(k2);
 
-        // Rãnh bóng chìm 3D giữa hai mép vải gấp
-        var tr = traceSeamTo(seam2, q2);
-        ctx.lineWidth = 2.4; ctx.strokeStyle = tn2.crease; ctx.stroke();
-
-        // Gờ nẹp phản quang nhẹ của mép vải gấp
+        // Rãnh bóng mờ chìm nhẹ dưới nét bút chì
         traceSeamTo(seam2, q2);
-        ctx.lineWidth = 1.0; ctx.strokeStyle = tn2.sheen; ctx.stroke();
+        ctx.lineWidth = 3.0; ctx.strokeStyle = tn2.shadow; ctx.stroke();
 
-        // Vết kìm mí siêu nhỏ chìm sâu trong khe (micro-tuck tension dimples)
-        var stepD = Math.max(1, Math.floor(seam2.length / 14));
-        for (var d = 0; d <= tr.upto; d += stepD) {
-          var ptD = seam2[d];
-          ctx.beginPath(); ctx.arc(ptD[0], ptD[1], 1.1, 0, 7);
-          ctx.fillStyle = tn2.shadow; ctx.fill();
-        }
+        // Nét viền bút chì màu sạch sẽ, tiệp tông màu hình nhưng đậm hơn, định hình khối rõ nét
+        traceSeamTo(seam2, q2);
+        ctx.lineWidth = 2.2; ctx.strokeStyle = tn2.pencil || tn2.dark; ctx.stroke();
       }
       ctx.restore();
     }
