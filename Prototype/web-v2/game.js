@@ -2265,21 +2265,19 @@
     lg.addColorStop(0, 'rgba(255,255,255,0.22)'); lg.addColorStop(0.55, 'rgba(255,255,255,0.02)'); lg.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = lg; ctx.fillRect(x0 - 4, y0 - 4, w + 8, h + 8);
     outlinePath(LV[i].outline, ox, oy, s); ctx.lineWidth = 3; ctx.strokeStyle = rgba(fb.dark, 0.08); ctx.stroke();
-    // bước lên màu đầy ở màn thưởng: đậm hơn một chút, không đổi màu
-    if (deep > 0) { ctx.fillStyle = rgba(fb.dark, 0.12 * deep); ctx.fillRect(x0 - 4, y0 - 4, w + 8, h + 8); }
+    // màu sắc giữ nguyên bản tươi sáng, không dìm tối ở màn thưởng
   }
   // Phong cách mảng màu tươi sáng: chuyển sắc đa tầng từ sáng (trên trái) sang tối (dưới),
-  // không vân vải thô; bỏ vệt sáng trắng theo yêu cầu để giữ màu tươi sáng, êm mắt tự nhiên.
-  function paintFlat(fb, x0, y0, w, h, deep) {
+  // không vân vải thô; bỏ vệt sáng trắng theo yêu cầu để giữ màu tươi sáng, êm mắt tự nhiên; không đổi màu sẫm.
+  function paintFlat(fb, x0, y0, w, h) {
     var rg = ctx.createRadialGradient(x0 + w * 0.32, y0 + h * 0.28, Math.min(w, h) * 0.05, x0 + w * 0.5, y0 + h * 0.55, Math.max(w, h) * 0.75);
     rg.addColorStop(0, fb.light); rg.addColorStop(0.55, fb.base); rg.addColorStop(1, fb.dark);
     ctx.fillStyle = rg; ctx.fillRect(x0 - 4, y0 - 4, w + 8, h + 8);
-    if (deep > 0) { ctx.fillStyle = rgba(fb.dark, 0.08 * deep); ctx.fillRect(x0 - 4, y0 - 4, w + 8, h + 8); }
   }
-  function paintPattern(i, ox, oy, s, deep) {
-    if (LV[i].def.fabric) { paintFabric(i, ox, oy, s, deep); return; }
+  function paintPattern(i, ox, oy, s) {
+    if (LV[i].def.fabric) { paintFabric(i, ox, oy, s); return; }
     var pt = LV[i].def.pattern, b = LV[i].bbox, x0 = ox + b[0] * s, y0 = oy + b[1] * s, w = (b[2] - b[0]) * s, h = (b[3] - b[1]) * s, u = s / 324;
-    ctx.fillStyle = mix(pt.base, pt.deep, deep); ctx.fillRect(x0 - 4, y0 - 4, w + 8, h + 8);
+    ctx.fillStyle = pt.base; ctx.fillRect(x0 - 4, y0 - 4, w + 8, h + 8);
     var row, xx, yy;
     if (pt.kind === 'dots') {
       ctx.fillStyle = pt.accent; var g = 22 * u, r = 4.6 * u;
@@ -3031,8 +3029,8 @@
       }
     }
     if (R.phase === 'tapReady' && Math.hypot(p[0] - 195, p[1] - 395) < 175) {
-      R.tap = p; R.phase = 'reveal'; R.t = 0; R.sq = 0; chord([0, 2, 4, 7, 9, 12], 0.06, 0.06); vib([20, 30, 20]);
-      burst(p[0], p[1], 16); burst(p[0], p[1], 40);
+      R.tap = p; R.phase = 'reveal'; R.t = 0; R.sq = 0.15; chord([0, 2, 4, 7, 9, 12], 0.06, 0.06); vib([20, 30, 20]);
+      burst(p[0], p[1], 24); sparkle(p[0], p[1], 36);
     }
   }
   function rewardMove(p) { if (!R || !R.drag) return; var pc = R.drag.pc; pc.x = p[0] + R.drag.dx; pc.y = p[1] + R.drag.dy; }
@@ -3125,7 +3123,8 @@
     if (R.phase === 'tapReady') R.sq = reduce ? 0 : 0.012 * Math.sin(clock * 3);
     if (R.phase === 'reveal') {
       R.reveal = easeInOut(R.t / 1.0);
-      if (R.t > 1.0) { R.phase = 'decor'; R.t = 0; R.decorT = 0; sparkle(R.tap[0], R.tap[1], 18); }
+      R.sq = 0.15 * Math.cos(R.t * 14) * Math.exp(-R.t * 3.5);
+      if (R.t > 1.0) { R.phase = 'decor'; R.t = 0; R.decorT = 0; R.sq = 0; sparkle(R.tap[0], R.tap[1], 18); }
     }
     if (R.phase === 'decor') {
       var idx = Math.floor(R.t / 0.24);
@@ -3473,8 +3472,7 @@
   function drawReward() {
     var enter = clamp(R.t / 0.6, 0, 1), a = R.phase === 'enter' ? easeOut(enter) : 1;
     ctx.save(); ctx.globalAlpha = a;
-    // vải nền tròn bằng nỉ
-    var deep = R.phase === 'reveal' || R.phase === 'decor' || R.phase === 'done';
+    // vải nền tròn bằng nỉ (giữ nguyên màu tươi sáng đồng bộ)
     ctx.beginPath(); ctx.arc(195, 395, 165, 0, 7); ctx.fillStyle = C.base; ctx.fill();
     ctx.beginPath(); ctx.arc(195, 395, 155, 0, 7); ctx.setLineDash([6, 5]); ctx.lineWidth = 1.8; ctx.strokeStyle = rgba(C.thread, 0.8); ctx.stroke(); ctx.setLineDash([]);
     // ô mờ của từng mảnh trên khung; mảnh đã ghép thì bỏ ô của nó
@@ -3504,10 +3502,11 @@
       order.forEach(function (pc) { if (!pc.placed) drawPc(pc); });
     } else {
       // Mảnh sau đè lên viền chỉ của mảnh trước (Layered Piece-over-Seam):
+      // Giữ trọn màu tươi sáng nguyên bản, không đổi màu ở mảnh hoàn thiện.
       order.forEach(function (pc) {
         drawPc(pc);
-        if (R.phase === 'stitch' || R.phase === 'cinch' || R.phase === 'tapReady') {
-          drawSeam(R.stitch, pc.i);
+        if (R.phase !== 'enter' && R.phase !== 'place') {
+          drawSeam(R.stitch !== undefined ? R.stitch : 1, pc.i);
         }
       });
     }
@@ -3535,27 +3534,17 @@
       }
     }
     ctx.restore();
-    if (deep) {
-      ctx.save(); ctx.beginPath(); ctx.arc(R.tap[0], R.tap[1], 30 + 330 * R.reveal, 0, 7); ctx.clip();
-      ctx.beginPath(); ctx.arc(195, 395, 165, 0, 7); ctx.fillStyle = C.baseDeep; ctx.fill();
-      ctx.beginPath(); ctx.arc(195, 395, 155, 0, 7); ctx.setLineDash([6, 5]); ctx.lineWidth = 1.8; ctx.strokeStyle = '#FFFFFF'; ctx.stroke(); ctx.setLineDash([]);
-      var stA = product().levels.length > 1 ? 0 : 0.6;
-      backToFront().forEach(function (li) {
-        var tf = placeOf(li);
-        drawPiece(li, tf.ox, tf.oy, tf.s, 1, false, stA, 1);
-        drawSeam(1, li);
-      });
+
+    if (R.phase === 'reveal' && R.tap) {
+      // Sóng xung kích chúc mừng bung tỏa ánh sáng vàng kem & sao sáng khi chạm hoàn thành,
+      // sản phẩm nảy nhịp nhàng (squash & stretch), màu vải giữ nguyên bản tươi sáng không đổi màu.
+      var rr2 = 30 + 330 * R.reveal, fa = 1 - R.reveal;
+      ctx.save();
+      ctx.beginPath(); ctx.arc(R.tap[0], R.tap[1], rr2, 0, 7);
+      ctx.lineWidth = 4 * fa; ctx.strokeStyle = 'rgba(255,255,255,' + 0.85 * fa + ')'; ctx.stroke();
+      ctx.beginPath(); ctx.arc(R.tap[0], R.tap[1], rr2 * 0.85, 0, 7);
+      ctx.lineWidth = 2.4 * fa; ctx.strokeStyle = 'rgba(255,215,0,' + 0.7 * fa + ')'; ctx.stroke();
       ctx.restore();
-      if (R.phase === 'reveal') {
-        // mép màu loang: vòng trắng dày có viền tối mờ để nổi trên nền sáng, kèm chớp trắng ở đầu
-        var rr2 = 30 + 330 * R.reveal, fa = 1 - R.reveal;
-        var g = ctx.createRadialGradient(R.tap[0], R.tap[1], 0, R.tap[0], R.tap[1], rr2);
-        g.addColorStop(0, 'rgba(255,255,255,' + 0.55 * fa * fa + ')'); g.addColorStop(1, 'rgba(255,255,255,0)');
-        ctx.beginPath(); ctx.arc(R.tap[0], R.tap[1], rr2, 0, 7); ctx.fillStyle = g; ctx.fill();
-        ctx.lineWidth = 12; ctx.strokeStyle = 'rgba(74,59,53,' + 0.16 * fa + ')'; ctx.stroke();
-        ctx.lineWidth = 8; ctx.strokeStyle = 'rgba(255,255,255,' + Math.min(1, fa * 1.4) + ')'; ctx.stroke();
-        ctx.beginPath(); ctx.arc(R.tap[0], R.tap[1], rr2 * 0.82, 0, 7); ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,255,255,' + 0.7 * fa + ')'; ctx.stroke();
-      }
     }
     var DEC = DECOR[product().id];
     for (var d = 0; d < R.decor.length; d++) { var k = easeBack(clamp((clock - R.decor[d]) / 0.3, 0, 1)); DEC[d].draw(DEC[d].at(), k); }

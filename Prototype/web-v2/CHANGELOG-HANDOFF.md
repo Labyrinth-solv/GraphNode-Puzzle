@@ -819,3 +819,25 @@ Các thay đổi dưới đây làm và thử ở `Prototype/web-demo` trước,
    - `node alt-solve.js`, `bend-target.js`, `check.js`: **PASS 100%**.
    - Đã đồng bộ mã nguồn sang máy local tại `D:\Work\Unity-project\GraphNode Puzzle\Prototype\web-v2\`.
    - Cam kết giữ vững: **Không thay đổi bất kỳ file nào trong `Prototype/web-demo`**.
+
+### 21. [CHÍNH THỨC ĐÃ DUYỆT / OFFICIALLY APPROVED] Bỏ Cơ Chế Đổi Màu Ở Mảnh Hoàn Thiện & Tăng Cường Animation Nảy Mừng (2026-11-10)
+
+1. **Bối cảnh & Yêu cầu của người chơi**:
+   - Người chơi đề xuất: **Mảnh ghép đã có viền đen phân biệt rồi, mảnh hoàn thiện chỉ cần animation để người chơi hiểu đang làm gì, không cần thiết phải đổi màu, và mảnh trước đã đè lên mảnh sau nên không sợ bị sai đường viền**.
+   - Quyết định: Loại bỏ hoàn toàn cơ chế đổi màu / dìm tối (`deep`) ở màn thưởng; giữ nguyên vẹn 100% màu sắc tươi sáng nguyên bản của vải; tập trung vào Animation nảy tưng bừng (`squash & stretch bounce`) và hiệu ứng sóng ánh sáng chúc mừng (`celebratory sparkles / confetti`) để đem lại cảm giác thỏa mãn (satisfaction) tột độ.
+
+2. **Các cải tiến kỹ thuật cụ thể**:
+   - **Gỡ bỏ hoàn toàn logic đổi màu sẫm (`deep`)**:
+     - Trong `paintFabric`, `paintFlat`, và `paintPattern`: Loại bỏ các lớp phủ làm tối `rgba(fb.dark, 0.12 * deep)`. Màu sắc vải ở màn thưởng luôn giữ trọn vẹn màu gốc tươi tắn, không bị "ám tối" bất ngờ.
+     - Trong `drawReward`: Gỡ bỏ khối lệnh clip che màu `C.baseDeep` và `drawPiece(..., deep = 1)`. Vải nền và toàn bộ các mảnh vải giữ nguyên bảng màu ấm áp, sáng sủa và đồng bộ từ đầu đến cuối.
+   - **Tăng cường Animation Nảy Mừng khi hoàn thành (Squash & Stretch Bounce)**:
+     - Khi người chơi chạm vào sản phẩm ở pha `tapReady`: Kích hoạt dao động đàn hồi `R.sq = 0.15 * Math.cos(R.t * 14) * Math.exp(-R.t * 3.5)`. Sản phẩm nảy tưng lên vui nhộn như một chiếc gối nhồi bông thật sự khi được vỗ nhẹ.
+     - Bung nở chùm hạt ánh sáng vàng kem & sao sáng (`burst`, `sparkle`) kèm hợp âm du dương chúc mừng.
+   - **Cơ chế lớp đè lớp (Layered rendering)**:
+     - Tiếp tục vận hành mượt mà: Mảnh sau đè lên che viền chỉ của mảnh trước, đảm bảo đường may luôn nằm đúng lớp vật lý, không bao giờ bị cắt chéo hay sai lệch viền.
+
+3. **Kiểm thử tự động & Đồng bộ**:
+   - `node smoke.js`: **PASS 100% cả 7 sản phẩm**.
+   - `node alt-solve.js`, `bend-target.js`, `check.js`: **PASS 100%**.
+   - Đã đồng bộ mã nguồn sang máy local tại `D:\Work\Unity-project\GraphNode Puzzle\Prototype\web-v2\`.
+   - Cam kết giữ vững: **Không thay đổi bất kỳ file nào trong `Prototype/web-demo`**.
