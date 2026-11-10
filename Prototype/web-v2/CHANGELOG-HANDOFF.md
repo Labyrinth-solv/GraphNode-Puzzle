@@ -767,3 +767,25 @@ Các thay đổi dưới đây làm và thử ở `Prototype/web-demo` trước,
    - `node smoke.js`: **PASS 100% cả 7 sản phẩm** (`icecream`, `cardigan`, `heart`, `bunny`, `flowerpot`, `strawberry`, `carrot`).
    - `node alt-solve.js`, `bend-target.js`, `check.js`: **PASS 100%**.
    - Đã đồng bộ mã nguồn sang máy local tại `D:\Work\Unity-project\GraphNode Puzzle\Prototype\web-v2\game.js`.
+
+### 19. [CHÍNH THỨC ĐÃ DUYỆT / OFFICIALLY APPROVED] Tích Hợp Quỹ Đạo May Viền Liên Tục Như Web-Demo Kết Hợp Phong Cách Giấu Chỉ Liền Khối 3D (2026-11-10)
+
+1. **Bối cảnh & Yêu cầu của người chơi**:
+   - Xem xét logic may theo viền của bản `Prototype/web-demo` (tuân thủ nguyên tắc: **tuyệt đối không sửa `web-demo`**).
+   - Dựa vào quỹ đạo và vị trí kim may lướt theo viền chuẩn xác của `web-demo`, tích hợp vào `Prototype/web-v2/` nhưng giữ trọn phong cách thẩm mỹ đã duyệt của Phương Án 2 (chỉ may tiệp màu Tone-on-tone, không viền trắng đục 5px/chấm đen, hiệu ứng rút chỉ kìm vào trong và rãnh mí may ép phẳng 3D liền khối).
+
+2. **So sánh cơ chế kỹ thuật & Tinh chỉnh**:
+   - **Vấn đề ở bản `web-v2` cũ**: Hàm `buildStitches` phân đoạn đường may thành từng dây cung thẳng rời rạc bước $13 - 21\text{px}$, tiến độ `stDone` nhảy theo chỉ mục rời rạc làm kim giật qua từng điểm giữa, đường may bị gãy khúc không ôm sát viền cong tự nhiên.
+   - **Ưu điểm của `web-demo`**: Tính toán trực tiếp theo hàm tham số tiến độ liên tục $p \in [0, 1]$ qua `seamPart(p)`, `seamPointOf(seam, q)` và `seamPoint(p)`, kim may lướt liên tục bám sát từng tọa độ cong của `solPath`, góc xoay tiếp tuyến theo hướng cong viền mượt mà.
+   - **Sự hòa quyện hoàn hảo trong `web-v2` mới**:
+     - *Bỏ hoàn toàn chia đoạn thẳng `buildStitches`*: Kim may di chuyển liên tục $C^1$ dọc theo các đường cong `R.seams` lấy từ `solPath` hoặc vòng gấp `outline.loops`.
+     - *Dáng kim may sống động*: Kim nghiêng một góc tự nhiên `rotate(ang - 0.45)` mô phỏng bàn tay thợ may đâm kim vào mép vải; kèm sợi chỉ căng kéo từ chóp đường may vào mắt kim trong pha rút chỉ (`cinch`).
+     - *Đường chỉ thêu đứt đoạn uốn lượn mềm mại (`stitchAlpha > 0.01`)*: Dùng `ctx.setLineDash([6, 4])` vẽ bám sát đường cong thực tế với 3 lớp (bóng chìm `2.4px`, chỉ tiệp màu `1.6px`, sợi tơ phản quang `0.8px`).
+     - *Rút chỉ kìm vào trong (`cinch`)*: Nhăn nhúm vi mô co giãn vải vuông góc đường may (`R.pucker > 0.02`), chỉ ngoài lặn dần vào trong khe nếp gấp (`stitchAlpha \to 0`).
+     - *Màn thưởng liền khối 3D (`tapReady`, `reveal`, `decor`, `done`)*: Chuyển hoàn toàn thành rãnh mí may ép phẳng 3D (`creaseAlpha = 1`), rãnh bóng chìm mềm `2.4px`, gờ nẹp phản quang `1.0px` và vết kìm mí siêu nhỏ `1.1px`, đem lại cảm giác các mảnh vải được may giấu chỉ liền lạc thành một sản phẩm nhồi bông thủ công hoàn hảo.
+
+3. **Kiểm thử tự động & Đồng bộ**:
+   - `node smoke.js`: **PASS 100% cả 7 sản phẩm** (`icecream`, `cardigan`, `heart`, `bunny`, `flowerpot`, `strawberry`, `carrot`).
+   - `node alt-solve.js`, `bend-target.js`, `check.js`: **PASS 100%**.
+   - Đã đồng bộ toàn bộ mã nguồn sang máy local tại `D:\Work\Unity-project\GraphNode Puzzle\Prototype\web-v2\`.
+   - Cam kết giữ vững: **Không thay đổi bất kỳ file nào trong `Prototype/web-demo`**.

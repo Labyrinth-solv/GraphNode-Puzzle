@@ -2930,34 +2930,6 @@
   function ptOf(li, x, y) { var t = placeOf(li); return [t.ox + x * t.s, t.oy + y * t.s]; }
   function backToFront() { return product().order; }
   var HOMES = { 1: [[195, 704]], 2: [[118, 704], [292, 704]], 3: [[78, 704], [195, 704], [312, 704]] };
-  // v3: chia các đường may thành từng mũi khâu rời để mỗi mũi hiện ra phát đúng một nốt nhạc ngũ cung đi lên,
-  // và mũi cuối có pha rút chỉ (đường may co lại, vải hơi nhăn rồi phẳng ra).
-  function buildStitches(seams) {
-    var lens = [], total = 0;
-    seams.forEach(function (sm) {
-      var L = 0; for (var i = 1; i < sm.length; i++) L += Math.hypot(sm[i][0] - sm[i - 1][0], sm[i][1] - sm[i - 1][1]);
-      lens.push(L); total += L;
-    });
-    var step = clamp(total / 15, 13, 21), out = [];
-    seams.forEach(function (sm, si) {
-      var L = lens[si], m = Math.max(3, Math.round(L / step)), cum = [0];
-      for (var i = 1; i < sm.length; i++) cum[i] = cum[i - 1] + Math.hypot(sm[i][0] - sm[i - 1][0], sm[i][1] - sm[i - 1][1]);
-      function ptAt(d) {
-        for (var j = 1; j < cum.length; j++) if (cum[j] >= d || j === cum.length - 1) {
-          var seg = Math.max(1e-6, cum[j] - cum[j - 1]), u = clamp((d - cum[j - 1]) / seg, 0, 1);
-          return [lerp(sm[j - 1][0], sm[j][0], u), lerp(sm[j - 1][1], sm[j][1], u)];
-        }
-        return sm[0].slice();
-      }
-      var span = L / m;
-      for (var k = 0; k < m; k++) {
-        var c = (k + 0.5) * span, h = span * 0.34, a = ptAt(Math.max(0, c - h)), b = ptAt(Math.min(L, c + h));
-        var mx = (a[0] + b[0]) * 0.5, my = (a[1] + b[1]) * 0.5, ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
-        out.push({ a: a, b: b, m: [mx, my], ang: ang, nx: -Math.sin(ang), ny: Math.cos(ang), si: si });
-      }
-    });
-    return out;
-  }
   function startReward() {
     humStop();
     var p = product(), homes = HOMES[p.levels.length], fitted = fitProductPlaces(p);
@@ -2965,20 +2937,35 @@
       t: 0, phase: 'enter', places: fitted, pieces: p.levels.map(function (li, k) {
         return { i: li, tf: placeOf(li), home: homes[k], x: homes[k][0], y: homes[k][1], sc: 0.5, placed: false, back: null };
       }), drag: null, stitch: 0, tap: null, reveal: 0, decor: [], decorT: 0, replay: 0, sq: 0, wig: 0,
-      stitches: [], stDone: 0, cinch: 0, pucker: 0, cinchSound: 0, fast: 1, seamCen: [195, 395]
+      cinch: 0, pucker: 0, cinchSound: 0, fast: 1, seamCen: [195, 395]
     };
     R.seams = [];
     p.seams.forEach(function (sm) {
-      if (LV[sm[0]].def.fold) { var tf0 = placeOf(sm[0]); LV[sm[0]].outline.loops.forEach(function (lp) { var pp = []; for (var z = 0; z <= lp.length; z += 2) { var zz = z % lp.length; pp.push([tf0.ox + lp[zz] * tf0.s, tf0.oy + lp[zz + 1] * tf0.s]); } R.seams.push(pp); }); return; }
+      if (LV[sm[0]].def.fold) {
+        var tf0 = placeOf(sm[0]);
+        LV[sm[0]].outline.loops.forEach(function (lp) {
+          var pp = [];
+          for (var z = 0; z <= lp.length; z += 2) {
+            var zz = z % lp.length;
+            pp.push([tf0.ox + lp[zz] * tf0.s, tf0.oy + lp[zz + 1] * tf0.s]);
+          }
+          if (pp.length >= 2) R.seams.push(pp);
+        });
+        return;
+      }
       var sp = LV[sm[0]].solPath, tf = placeOf(sm[0]), a = sp.nodeD[sm[1]], b = sm[2] === 0 ? sp.total : sp.nodeD[sm[2]], pts = [];
-      for (var i = 0; i < sp.cum.length; i++) if (sp.cum[i] >= a - 1e-6 && sp.cum[i] <= b + 1e-6) pts.push([tf.ox + sp.pts[i * 2] * tf.s, tf.oy + sp.pts[i * 2 + 1] * tf.s]);
-      R.seams.push(pts);
+      for (var i = 0; i < sp.cum.length; i++) {
+        if (sp.cum[i] >= a - 1e-6 && sp.cum[i] <= b + 1e-6) {
+          pts.push([tf.ox + sp.pts[i * 2] * tf.s, tf.oy + sp.pts[i * 2 + 1] * tf.s]);
+        }
+      }
+      if (pts.length >= 2) R.seams.push(pts);
     });
-    R.stitches = buildStitches(R.seams);
-    if (R.stitches.length) {
-      var sx = 0, sy = 0; R.stitches.forEach(function (st) { sx += st.m[0]; sy += st.m[1]; });
-      R.seamCen = [sx / R.stitches.length, sy / R.stitches.length];
-    }
+    var sx = 0, sy = 0, totalPts = 0;
+    R.seams.forEach(function (sm) {
+      sm.forEach(function (pt) { sx += pt[0]; sy += pt[1]; totalPts++; });
+    });
+    if (totalPts > 0) R.seamCen = [sx / totalPts, sy / totalPts];
     var by = 0;
     p.levels.forEach(function (li) { var t = placeOf(li); by = Math.max(by, t.oy + LV[li].bbox[3] * t.s); });
     R.base = [195, by];
@@ -2992,18 +2979,29 @@
       ctx.translate(cx, cy); ctx.scale(1 - R.pucker * 0.055, 1 - R.pucker * 0.04); ctx.translate(-cx, -cy);
     }
   }
-  // Tiến độ khâu p (0–1) chia đều cho các đường may, khâu lần lượt từng đường.
+  // Tiến độ khâu p (0–1) chia đều cho các đường may, khâu lần lượt từng đường theo quỹ đạo viền liên tục (web-demo).
   function seamPart(p) { var n = R.seams.length, f = clamp(p, 0, 1) * n, k = Math.min(n - 1, Math.floor(f)); return { k: k, p: f - k }; }
   function seamPointOf(seam, p) {
+    if (!seam || seam.length < 2) return (seam && seam.length) ? [seam[0][0], seam[0][1], 0] : [0, 0, 0];
     var n = seam.length - 1, f = clamp(p, 0, 1) * n, i = Math.min(n - 1, Math.floor(f)), u = f - i;
     return [lerp(seam[i][0], seam[i + 1][0], u), lerp(seam[i][1], seam[i + 1][1], u), Math.atan2(seam[i + 1][1] - seam[i][1], seam[i + 1][0] - seam[i][0])];
   }
-  function seamPoint(p) { var sp = seamPart(p); return seamPointOf(R.seams[sp.k], p >= 1 ? 1 : sp.p); }
-  function drawNeedle(x, y, ang) {
-    ctx.save(); ctx.translate(x, y); ctx.rotate(ang - 0.6);
-    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-22, 0); ctx.lineWidth = 4.4; ctx.strokeStyle = C.ink; ctx.lineCap = 'round'; ctx.stroke();
-    ctx.lineWidth = 2.4; ctx.strokeStyle = '#DCE2E5'; ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(-18, 0, 2.6, 0.9, 0, 0, 7); ctx.fillStyle = C.ink; ctx.fill();
+  function seamPoint(p) {
+    if (!R || !R.seams || !R.seams.length) return [195, 395, 0];
+    var sp = seamPart(p);
+    return seamPointOf(R.seams[sp.k], p >= 1 ? 1 : sp.p);
+  }
+  function drawNeedle(x, y, ang, threadColor) {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(ang - 0.45);
+    // Thân kim may bạc sáng
+    ctx.beginPath(); ctx.moveTo(-22, -1.2); ctx.lineTo(6, -1.2); ctx.lineTo(14, 0); ctx.lineTo(6, 1.2); ctx.lineTo(-22, 1.2);
+    ctx.fillStyle = '#D6D3D0'; ctx.fill();
+    ctx.lineWidth = 1.2; ctx.strokeStyle = C.ink; ctx.stroke();
+    // Lỗ xỏ kim
+    ctx.beginPath(); ctx.arc(-16, 0, 1.2, 0, 7); ctx.fillStyle = C.ink; ctx.fill();
+    // Sợi chỉ thò ra từ lỗ xỏ kim tiệp màu vải
+    ctx.beginPath(); ctx.moveTo(-16, 0); ctx.quadraticCurveTo(-24, -8, -28, -6);
+    ctx.lineWidth = 1.6; ctx.strokeStyle = threadColor || C.ink; ctx.stroke();
     ctx.restore();
   }
   function pieceCenterTarget(pc) { var lv = LV[pc.i]; return [pc.tf.ox + lv.cen[0] * pc.tf.s, pc.tf.oy + lv.cen[1] * pc.tf.s]; }
@@ -3058,28 +3056,32 @@
     });
     if (R.phase === 'enter' && R.t > 0.6) { R.phase = 'place'; R.t = 0; }
     if (R.phase === 'place' && R.pieces.every(function (pc) { return pc.placed && !pc.snap; })) {
-      R.phase = 'stitch'; R.t = 0; R.tick = 0; R.cheered = false;
+      R.phase = 'stitch'; R.t = 0; R.tick = 0; R.cheered = false; R.stitch = 0;
       burst(195, 395, 40); pop(110, 0.09, 0, 0.25); vib(18);
     }
     if (R.phase === 'stitch') {
       var spd = (R.fast || 1);
       var k = clamp(R.t / 0.35, 0, 1);
       R.sq = reduce ? 0 : 0.06 * Math.sin(k * Math.PI * 2) * (1 - k);
-      var prevSt = Math.floor(R.stDone);
-      var stitchRate = Math.max(13, R.stitches.length / 1.65) * spd;
-      R.stDone += dt * stitchRate;
-      var newSt = Math.floor(R.stDone);
-      if (newSt > prevSt) {
-        for (var si = prevSt; si < Math.min(newSt, R.stitches.length); si++) {
-          pop(risingF(si), 0.05, 0, 0.2);
-          noise(0.025, 0.015, 2000, 'bandpass');
+      var dur = (0.7 + 0.5 * R.seams.length) / spd;
+      var prevStitch = R.stitch || 0;
+      R.stitch = clamp((R.t - 0.25) / dur, 0, 1);
+
+      // Âm thanh và tia sáng ngũ cung leo dần khi kim lướt qua viền
+      var totalNotes = Math.max(12, Math.round(R.seams.length * 7));
+      var prevStep = Math.floor(prevStitch * totalNotes);
+      var curStep = Math.floor(R.stitch * totalNotes);
+      if (curStep > prevStep && R.stitch > 0 && R.stitch < 1) {
+        for (var stepI = prevStep; stepI < curStep; stepI++) {
+          pop(risingF(stepI), 0.05, 0, 0.2);
+          noise(0.02, 0.012, 2200, 'bandpass');
           vib(3);
-          var stObj = R.stitches[si];
-          if (stObj) sparkle(stObj.m[0], stObj.m[1], 2);
+          var snPt = seamPoint((stepI + 0.5) / totalNotes);
+          sparkle(snPt[0], snPt[1], 2);
         }
       }
-      if (R.stDone >= R.stitches.length) {
-        R.stDone = R.stitches.length;
+      if (R.stitch >= 1) {
+        R.stitch = 1;
         R.phase = 'cinch';
         R.t = 0;
         R.cinch = 0;
@@ -3506,18 +3508,27 @@
       order.forEach(function (pc) { if (!pc.placed) drawPc(pc); });
     } else order.forEach(drawPc);
     if (R.phase === 'stitch' || R.phase === 'cinch' || R.phase === 'tapReady') {
-      drawSeam();
-      if (R.phase === 'stitch' && R.stitches && R.stitches.length > 0) {
-        var curIdx = Math.min(R.stitches.length - 1, Math.floor(R.stDone));
-        var st = R.stitches[curIdx];
-        var dip = Math.sin((R.stDone % 1) * Math.PI) * 4;
-        drawNeedle(st.m[0], st.m[1] - dip, st.ang);
-      } else if (R.phase === 'cinch' && R.stitches && R.stitches.length > 0) {
-        var lastSt = R.stitches[R.stitches.length - 1];
+      drawSeam(R.stitch);
+      if (R.phase === 'stitch' && R.stitch > 0 && R.stitch < 1) {
+        var sn = seamPoint(R.stitch);
+        var curSp = seamPart(R.stitch);
+        var tnCur = seamTone(curSp.k);
+        var dip = 2.5 * Math.abs(Math.sin(clock * 22));
+        drawNeedle(sn[0], sn[1] - dip, sn[2], tnCur.dark);
+      } else if (R.phase === 'cinch' && R.seams.length > 0) {
+        var lastSeam = R.seams[R.seams.length - 1];
+        var nPts = lastSeam.length;
+        var pA = lastSeam[Math.max(0, nPts - 2)], pB = lastSeam[nPts - 1];
+        var lastAng = Math.atan2(pB[1] - pA[1], pB[0] - pA[0]);
         var pullProgress = clamp(R.cinch / 0.28, 0, 1);
-        var nx = lastSt.m[0] + Math.cos(lastSt.ang + Math.PI / 2) * (12 + pullProgress * 22);
-        var ny = lastSt.m[1] + Math.sin(lastSt.ang + Math.PI / 2) * (12 + pullProgress * 22);
-        drawNeedle(nx, ny, lastSt.ang + Math.PI / 2);
+        var nx = pB[0] + Math.cos(lastAng + Math.PI / 2) * (10 + pullProgress * 22);
+        var ny = pB[1] + Math.sin(lastAng + Math.PI / 2) * (10 + pullProgress * 22);
+        var tnLast = seamTone(R.seams.length - 1);
+        if (pullProgress < 1) {
+          ctx.beginPath(); ctx.moveTo(pB[0], pB[1]); ctx.lineTo(nx, ny);
+          ctx.lineWidth = 1.4; ctx.strokeStyle = tnLast.dark; ctx.stroke();
+          drawNeedle(nx, ny, lastAng + Math.PI / 2, tnLast.dark);
+        }
       }
     }
     ctx.restore();
@@ -3527,7 +3538,7 @@
       ctx.beginPath(); ctx.arc(195, 395, 155, 0, 7); ctx.setLineDash([6, 5]); ctx.lineWidth = 1.8; ctx.strokeStyle = '#FFFFFF'; ctx.stroke(); ctx.setLineDash([]);
       var stA = product().levels.length > 1 ? 0 : 0.6;
       backToFront().forEach(function (li) { var tf = placeOf(li); drawPiece(li, tf.ox, tf.oy, tf.s, 1, false, stA, 1); });
-      drawSeam();
+      drawSeam(1);
       ctx.restore();
       if (R.phase === 'reveal') {
         // mép màu loang: vòng trắng dày có viền tối mờ để nổi trên nền sáng, kèm chớp trắng ở đầu
@@ -3564,8 +3575,9 @@
     }
   }
   function seamTone(si) {
-    var p = product(), sm = p && p.seams && p.seams[si];
-    var li = sm ? sm[0] : null;
+    var p = product();
+    var sm = p && p.seams && (p.seams[si] || p.seams[si % p.seams.length] || p.seams[0]);
+    var li = sm ? sm[0] : (p && p.levels && p.levels[0]);
     var lv = (li !== null && li !== undefined) ? LV[li] : null;
     var fb = lv && lv.def && lv.def.fabric;
     if (fb) {
@@ -3589,114 +3601,111 @@
   }
 
   function drawSeam(p) {
-    if (!R) return;
-    if (R.stitches && R.stitches.length) {
-      var count = (R.phase === 'stitch') ? Math.min(R.stitches.length, Math.floor(R.stDone)) : R.stitches.length;
-      if (count <= 0) return;
-      ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-
-      // Tiến độ kìm giấu chỉ (Tuck-in): 0 khi đang may stitch, 0 -> 1 trong cinch, 1 khi hoàn thành
-      var isStitch = (R.phase === 'stitch');
-      var isCinch = (R.phase === 'cinch');
-      var tuck = isStitch ? 0 : (isCinch ? clamp(R.cinch / 0.55, 0, 1) : 1);
-      var stitchAlpha = Math.max(0, 1 - tuck);
-      var creaseAlpha = tuck;
-
-      // 1. Hiệu ứng rút chỉ trong pha cinch: vải co nhăn nhẹ dọc hai bên mép may
-      if (R.pucker > 0.02) {
-        var puck = R.pucker;
-        ctx.lineWidth = 1.8;
-        for (var i = 0; i < count; i++) {
-          var st = R.stitches[i], nx = st.nx, ny = st.ny, mx = st.m[0], my = st.m[1];
-          var wLen = (5 + (i % 3) * 2) * puck;
-          ctx.strokeStyle = 'rgba(74,59,53,' + (0.16 * puck) + ')';
-          ctx.beginPath(); ctx.moveTo(mx - nx * wLen, my - ny * wLen); ctx.lineTo(mx + nx * wLen, my + ny * wLen); ctx.stroke();
-          ctx.strokeStyle = 'rgba(255,255,255,' + (0.24 * puck) + ')';
-          ctx.beginPath(); ctx.moveTo(mx - nx * (wLen * 0.7) + ny * 1.2, my - ny * (wLen * 0.7) - nx * 1.2);
-          ctx.lineTo(mx + nx * (wLen * 0.7) + ny * 1.2, my + ny * (wLen * 0.7) - nx * 1.2); ctx.stroke();
-        }
-      }
-
-      // 2. Mũi chỉ may tiệp màu (Tone-on-tone) khi đang may hoặc đang rút chỉ
-      if (stitchAlpha > 0.01) {
-        ctx.save();
-        ctx.globalAlpha = stitchAlpha;
-        var kLen = 1 - tuck * 0.45; // Mũi chỉ co ngắn lại khi bị kéo căng
-        for (var j = 0; j < count; j++) {
-          var s = R.stitches[j];
-          var tn = seamTone(s.si);
-          var ax = s.m[0] + (s.a[0] - s.m[0]) * kLen;
-          var ay = s.m[1] + (s.a[1] - s.m[1]) * kLen;
-          var bx = s.m[0] + (s.b[0] - s.m[0]) * kLen;
-          var by = s.m[1] + (s.b[1] - s.m[1]) * kLen;
-
-          // Rãnh bóng đổ chìm sát vào mép vải
-          ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by);
-          ctx.lineWidth = 2.4; ctx.strokeStyle = tn.shadow; ctx.stroke();
-
-          // Sợi chỉ may chính tiệp màu vải (thanh mảnh, không viền trắng đục, không chấm đen)
-          ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by);
-          ctx.lineWidth = 1.6; ctx.strokeStyle = tn.dark; ctx.stroke();
-
-          // Ánh sáng nhẹ trên thân sợi chỉ
-          ctx.beginPath(); ctx.moveTo(ax - s.nx * 0.5, ay - s.ny * 0.5); ctx.lineTo(bx - s.nx * 0.5, by - s.ny * 0.5);
-          ctx.lineWidth = 0.8; ctx.strokeStyle = tn.sheen; ctx.stroke();
-        }
-        ctx.restore();
-      }
-
-      // 3. Rãnh mí may ép phẳng 3D (Seamless Pressed Seam Crease) khi chỉ đã kìm vào trong
-      if (creaseAlpha > 0.01) {
-        ctx.save();
-        ctx.globalAlpha = creaseAlpha;
-        for (var k = 0; k < R.seams.length; k++) {
-          var seam = R.seams[k];
-          if (!seam || seam.length < 2) continue;
-          var tnK = seamTone(k);
-
-          // Rãnh bóng chìm 3D giữa hai mép vải gấp
-          ctx.beginPath();
-          ctx.moveTo(seam[0][0], seam[0][1]);
-          for (var ii = 1; ii < seam.length; ii++) ctx.lineTo(seam[ii][0], seam[ii][1]);
-          ctx.lineWidth = 2.4; ctx.strokeStyle = tnK.crease; ctx.stroke();
-
-          // Gờ nẹp phản quang nhẹ của mép vải gấp
-          ctx.beginPath();
-          ctx.moveTo(seam[0][0], seam[0][1]);
-          for (var ii2 = 1; ii2 < seam.length; ii2++) ctx.lineTo(seam[ii2][0], seam[ii2][1]);
-          ctx.lineWidth = 1.0; ctx.strokeStyle = tnK.sheen; ctx.stroke();
-        }
-
-        // Vết kìm mí siêu nhỏ chìm sâu trong khe (micro-tuck tension dimples)
-        for (var d = 0; d < count; d++) {
-          var sD = R.stitches[d];
-          var tnD = seamTone(sD.si);
-          ctx.beginPath(); ctx.arc(sD.m[0], sD.m[1], 1.1, 0, 7);
-          ctx.fillStyle = tnD.shadow; ctx.fill();
-          ctx.beginPath(); ctx.arc(sD.m[0] - sD.nx * 0.5, sD.m[1] - sD.ny * 0.5, 0.7, 0, 7);
-          ctx.fillStyle = tnD.sheen; ctx.fill();
-        }
-        ctx.restore();
-      }
-
-      ctx.restore();
-      return;
-    }
-    if (typeof p !== 'number') p = 1;
+    if (!R || !R.seams || !R.seams.length) return;
+    if (typeof p !== 'number') p = (R.stitch !== undefined ? R.stitch : 1);
     if (p <= 0) return;
+
     var cur = seamPart(p);
     ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    for (var k2 = 0; k2 < R.seams.length; k2++) {
-      var seam2 = R.seams[k2], q = p >= 1 || k2 < cur.k ? 1 : (k2 === cur.k ? cur.p : 0);
-      if (q <= 0) continue;
-      var end = seamPointOf(seam2, q), n = seam2.length - 1, upto = Math.floor(q * n);
-      var tn2 = seamTone(k2);
-      ctx.beginPath(); ctx.moveTo(seam2[0][0], seam2[0][1]);
-      for (var ii3 = 1; ii3 <= upto; ii3++) ctx.lineTo(seam2[ii3][0], seam2[ii3][1]);
-      ctx.lineTo(end[0], end[1]);
-      ctx.lineWidth = 2.4; ctx.strokeStyle = tn2.crease; ctx.stroke();
-      ctx.lineWidth = 1.0; ctx.strokeStyle = tn2.sheen; ctx.stroke();
+
+    var isStitch = (R.phase === 'stitch');
+    var isCinch = (R.phase === 'cinch');
+    // Tiến độ kìm giấu chỉ (Tuck-in): 0 khi đang may stitch, 0 -> 1 trong cinch, 1 khi hoàn thành
+    var tuck = isStitch ? 0 : (isCinch ? clamp(R.cinch / 0.45, 0, 1) : 1);
+    var stitchAlpha = Math.max(0, 1 - tuck);
+    var creaseAlpha = tuck;
+
+    // 1. Hiệu ứng rút chỉ trong pha cinch: vải co nhăn nhẹ dọc hai bên mép may
+    if (R.pucker > 0.02) {
+      var puck = R.pucker;
+      ctx.lineWidth = 1.6;
+      for (var k0 = 0; k0 < R.seams.length; k0++) {
+        var sm0 = R.seams[k0];
+        if (!sm0 || sm0.length < 2) continue;
+        var step0 = Math.max(1, Math.floor(sm0.length / 10));
+        for (var i0 = 1; i0 < sm0.length - 1; i0 += step0) {
+          var pPrev = sm0[i0 - 1], pNext = sm0[i0 + 1], pMid = sm0[i0];
+          var dx0 = pNext[0] - pPrev[0], dy0 = pNext[1] - pPrev[1];
+          var len0 = Math.hypot(dx0, dy0);
+          if (len0 < 1e-4) continue;
+          var nx0 = -dy0 / len0, ny0 = dx0 / len0;
+          var wLen = (4.5 + (i0 % 3) * 1.8) * puck;
+          ctx.strokeStyle = 'rgba(74,59,53,' + (0.16 * puck) + ')';
+          ctx.beginPath(); ctx.moveTo(pMid[0] - nx0 * wLen, pMid[1] - ny0 * wLen); ctx.lineTo(pMid[0] + nx0 * wLen, pMid[1] + ny0 * wLen); ctx.stroke();
+          ctx.strokeStyle = 'rgba(255,255,255,' + (0.24 * puck) + ')';
+          ctx.beginPath(); ctx.moveTo(pMid[0] - nx0 * (wLen * 0.7) + ny0 * 1.2, pMid[1] - ny0 * (wLen * 0.7) - nx0 * 1.2);
+          ctx.lineTo(pMid[0] + nx0 * (wLen * 0.7) + ny0 * 1.2, pMid[1] + ny0 * (wLen * 0.7) - nx0 * 1.2); ctx.stroke();
+        }
+      }
     }
+
+    function traceSeamTo(seam, q) {
+      var end = seamPointOf(seam, q), n = seam.length - 1, upto = Math.floor(q * n);
+      ctx.beginPath();
+      ctx.moveTo(seam[0][0], seam[0][1]);
+      for (var i = 1; i <= upto; i++) ctx.lineTo(seam[i][0], seam[i][1]);
+      ctx.lineTo(end[0], end[1]);
+      return { upto: upto, end: end };
+    }
+
+    // 2. Mũi chỉ may tiệp màu (Tone-on-tone) khi đang may hoặc đang rút chỉ
+    if (stitchAlpha > 0.01) {
+      ctx.save();
+      ctx.globalAlpha = stitchAlpha;
+      ctx.setLineDash([6, 4]); // Đường may đứt đoạn thanh mảnh chuẩn thêu thủ công
+      for (var k = 0; k < R.seams.length; k++) {
+        var seam = R.seams[k];
+        if (!seam || seam.length < 2) continue;
+        var q = p >= 1 || k < cur.k ? 1 : (k === cur.k ? cur.p : 0);
+        if (q <= 0) continue;
+        var tn = seamTone(k);
+
+        // Rãnh bóng đổ chìm sát vào mép vải
+        traceSeamTo(seam, q);
+        ctx.lineWidth = 2.4; ctx.strokeStyle = tn.shadow; ctx.stroke();
+
+        // Sợi chỉ may chính tiệp màu vải (không viền trắng đục 5px, không đốm đen thô)
+        traceSeamTo(seam, q);
+        ctx.lineWidth = 1.6; ctx.strokeStyle = tn.dark; ctx.stroke();
+
+        // Ánh sáng nhẹ trên thân sợi chỉ
+        traceSeamTo(seam, q);
+        ctx.lineWidth = 0.8; ctx.strokeStyle = tn.sheen; ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // 3. Rãnh mí may ép phẳng 3D (Seamless Pressed Seam Crease) khi chỉ đã kìm vào trong
+    if (creaseAlpha > 0.01) {
+      ctx.save();
+      ctx.globalAlpha = creaseAlpha;
+      ctx.setLineDash([]); // Nếp gấp liền mạch phẳng phiu
+      for (var k2 = 0; k2 < R.seams.length; k2++) {
+        var seam2 = R.seams[k2];
+        if (!seam2 || seam2.length < 2) continue;
+        var q2 = p >= 1 || k2 < cur.k ? 1 : (k2 === cur.k ? cur.p : 0);
+        if (q2 <= 0) continue;
+        var tn2 = seamTone(k2);
+
+        // Rãnh bóng chìm 3D giữa hai mép vải gấp
+        var tr = traceSeamTo(seam2, q2);
+        ctx.lineWidth = 2.4; ctx.strokeStyle = tn2.crease; ctx.stroke();
+
+        // Gờ nẹp phản quang nhẹ của mép vải gấp
+        traceSeamTo(seam2, q2);
+        ctx.lineWidth = 1.0; ctx.strokeStyle = tn2.sheen; ctx.stroke();
+
+        // Vết kìm mí siêu nhỏ chìm sâu trong khe (micro-tuck tension dimples)
+        var stepD = Math.max(1, Math.floor(seam2.length / 14));
+        for (var d = 0; d <= tr.upto; d += stepD) {
+          var ptD = seam2[d];
+          ctx.beginPath(); ctx.arc(ptD[0], ptD[1], 1.1, 0, 7);
+          ctx.fillStyle = tn2.shadow; ctx.fill();
+        }
+      }
+      ctx.restore();
+    }
+
     ctx.restore();
   }
   function restart() {
