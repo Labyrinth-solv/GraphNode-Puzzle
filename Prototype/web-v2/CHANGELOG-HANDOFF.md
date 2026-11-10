@@ -740,3 +740,30 @@ Các thay đổi dưới đây làm và thử ở `Prototype/web-demo` trước,
 3. **Kiểm thử tự động**:
    - `node smoke.js`: **PASS 100% cả 7 sản phẩm** (Kem, Cardigan, Trái tim, Bé thỏ, Chậu hoa, Dâu tây, Củ cà rốt).
    - `node check.js`: **PASS 15/15 màn** đạt chuẩn công thái học và độ khớp.
+
+
+### 18. [CHÍNH THỨC ĐÃ DUYỆT / OFFICIALLY APPROVED] Cải Tiến Viền May Mảnh Hoàn Thành — May Giấu Chỉ Liền Khối 3D (Seamless Pressed Seam / Ladder Stitch) (2026-11-10)
+
+1. **Bối cảnh & Vấn đề giải quyết**:
+   - Trước đây, đường may ráp nối các mảnh ở màn thưởng hoàn thành sử dụng màu chỉ vàng mù tạt cố định (`C.mustardDeep = #C9932E`) bọc viền trắng đục to (`4.6px`) và hai chấm tròn đen mô phỏng lỗ đâm kim ở mỗi đầu mũi chỉ.
+   - Khi hoàn thành, đường may vẫn nằm nổi trên mặt vải, tạo tương phản gắt với các mảnh vải khác màu (áo cardigan xanh xô thơm, nơ thỏ hồng, quả dâu đỏ, chậu hoa, củ cà rốt), cộng thêm viền mực đen của từng mảnh khiến sản phẩm trông bị rời rạc, thô và lộ vết chắp vá.
+
+2. **Giải pháp kỹ thuật đã triển khai (Phương Án 2: May Giấu Chỉ Liền Khối 3D)**:
+   - **Hàm tính màu chỉ động (`seamTone`)**: Tự động trích xuất màu sắc từ `fabric.dark` và `fabric.light` của chính mảnh vải đang may trong `product().seams`, đảm bảo màu chỉ tiệp hoàn toàn vào nền vải (Tone-on-tone) thay vì ép một màu vàng mù tạt duy nhất.
+   - **Loại bỏ hoàn toàn các chi tiết thô**:
+     - Xóa bỏ dải viền trắng đục dày cộm `4.6px` và hai chấm đen đâm kim làm bẩn vải.
+     - Thay bằng mũi chỉ thanh mảnh `1.6px`, vệt bóng sáng chỉ thêu `0.8px` và rãnh bóng đổ chìm `2.4px`.
+   - **Hiệu ứng kìm chỉ vào trong (Tuck-in transition)**:
+     - *Trong pha `stitch`*: Các mũi chỉ tiệp màu xuất hiện dần theo kim may và nốt nhạc ngũ cung để người chơi thưởng thức trọn vẹn hành động may vá.
+     - *Trong pha `cinch` (rút chỉ)*: Khi kim giật rút căng sợi chỉ, các mũi chỉ ngoài co ngắn lại (`kLen = 1 - tuck * 0.45`) và mờ dần lặn vào trong khe nếp gấp (`stitchAlpha` giảm từ 1 về 0).
+     - *Trong các pha hoàn thành (`tapReady`, `reveal`, `decor`, `done`)*: Sợi chỉ ngoài hoàn toàn lặn vào trong mép vải (giống kỹ thuật may giấu chỉ Ladder Stitch của thú bông thủ công), chuyển thành **Rãnh Mí May Ép Phẳng 3D (Seamless Pressed Seam Crease)**:
+       - Rãnh bóng tối chìm 3D giữa hai mép vải gấp (`lineWidth: 2.4px`, màu bóng tối mềm của chất liệu vải).
+       - Gờ nẹp phản quang nhẹ (`lineWidth: 1.0px`, màu sáng của vải).
+       - Vết kìm mí siêu nhỏ (`micro-tuck dimples`) chìm sâu trong khe tạo cảm giác vải khâu thủ công tinh xảo thực tế.
+   - **Khử viền cắt đoạn ở sản phẩm đa mảnh**:
+     - Với sản phẩm ghép nhiều mảnh (Cardigan, Bé thỏ, Que kem, Chậu hoa), loại bỏ đường viền nét đứt trắng thu nhỏ bên trong từng mảnh (`stitchA = 0` khi ráp hoàn chỉnh) để toàn bộ sản phẩm hòa quyện thành một khối may nhồi bông liền mạch, sạch sẽ và sang trọng.
+
+3. **Kiểm thử tự động & Đồng bộ**:
+   - `node smoke.js`: **PASS 100% cả 7 sản phẩm** (`icecream`, `cardigan`, `heart`, `bunny`, `flowerpot`, `strawberry`, `carrot`).
+   - `node alt-solve.js`, `bend-target.js`, `check.js`: **PASS 100%**.
+   - Đã đồng bộ mã nguồn sang máy local tại `D:\Work\Unity-project\GraphNode Puzzle\Prototype\web-v2\game.js`.
