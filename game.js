@@ -15,7 +15,8 @@
     duck: '#E1EEF8',
     mushroom: '#EFF2E4',
     acorn: '#F2E7D5',
-    sunflower: '#E3EFE4'
+    sunflower: '#E3EFE4',
+    bonsai: '#E4EFE0'
   };
   var FONT = '"Baloo 2", system-ui, -apple-system, "Segoe UI", sans-serif';
   // Tấm vải vuông trong thẻ trắng, rộng gần hết chiều ngang màn hình (362/390 ≈ 93%) để node và viền dễ nhìn, dễ chạm.
@@ -1613,7 +1614,12 @@
       ctx.restore();
     }
   }
-  function slotRect(i) { return [186 + i * 58, 168, 46, 46]; }
+  function slotRect(i) {
+    var n = product().levels.length;
+    if (n <= 3) return [186 + i * 58, 168, 46, 46];
+    var w = 38, step = Math.floor((170 - w) / (n - 1));
+    return [186 + i * step, 170, w, w];
+  }
   function fitTf(lv, cx, cy, size) {
     var b = lv.bbox, s = size / Math.max(b[2] - b[0], b[3] - b[1]);
     return { ox: cx - (b[0] + b[2]) / 2 * s, oy: cy - (b[1] + b[3]) / 2 * s, s: s };
@@ -1653,7 +1659,7 @@
       var r = slotRect(i), li = lvls[i];
       rr(r[0], r[1], r[2], r[3], 10); ctx.fillStyle = C.paper; ctx.fill();
       ctx.setLineDash([4, 3]); ctx.lineWidth = 1.8; ctx.strokeStyle = C.thread; ctx.stroke(); ctx.setLineDash([]);
-      if (S.done[li]) { var t2 = fitTf(LV[li], r[0] + r[2] / 2, r[1] + r[3] / 2, 34); drawPiece(li, t2.ox, t2.oy, t2.s, 1, false, 0.6); }
+      if (S.done[li]) { var t2 = fitTf(LV[li], r[0] + r[2] / 2, r[1] + r[3] / 2, Math.round(r[2] * 34 / 46)); drawPiece(li, t2.ox, t2.oy, t2.s, 1, false, 0.6); }
     }
   }
   function drawBoosters() {
@@ -2936,7 +2942,7 @@
         drawPiece(S.li, -lv.cen[0] * FS * sc, -lv.cen[1] * FS * sc, FS * sc, fill, true, ph === 'fill' ? clamp((t - 0.7) / 0.3, 0, 1) : 0, 0);
         ctx.restore();
       } else if (ph === 'fly') {
-        var u = easeInOut(t / 0.65), sr = slotRect(product().levels.indexOf(S.li)), tf = fitTf(lv, sr[0] + sr[2] / 2, sr[1] + sr[3] / 2, 34);
+        var u = easeInOut(t / 0.65), sr = slotRect(product().levels.indexOf(S.li)), tf = fitTf(lv, sr[0] + sr[2] / 2, sr[1] + sr[3] / 2, Math.round(sr[2] * 34 / 46));
         var s0 = FS * 1.04, ox0 = X(lv.cen[0]) - lv.cen[0] * s0, oy0 = Y(lv.cen[1]) - 12 - lv.cen[1] * s0;
         drawPiece(S.li, lerp(ox0, tf.ox, u), lerp(oy0, tf.oy, u) - 70 * Math.sin(Math.PI * u), lerp(s0, tf.s, u), 1, u < 0.8, 1 - u, 0);
       }
@@ -2996,7 +3002,7 @@
   }
   function ptOf(li, x, y) { var t = placeOf(li); return [t.ox + x * t.s, t.oy + y * t.s]; }
   function backToFront() { return product().order; }
-  var HOMES = { 1: [[195, 704]], 2: [[118, 704], [292, 704]], 3: [[78, 704], [195, 704], [312, 704]] };
+  var HOMES = { 1: [[195, 704]], 2: [[118, 704], [292, 704]], 3: [[78, 704], [195, 704], [312, 704]], 4: [[72, 704], [154, 704], [234, 704], [314, 704]] };
   // v3: chia các đường may thành từng mũi khâu rời để mỗi mũi hiện ra phát đúng một nốt nhạc ngũ cung đi lên,
   // và mũi cuối có pha rút chỉ (đường may co lại, vải hơi nhăn rồi phẳng ra).
   function buildStitches(seams) {
@@ -3198,7 +3204,9 @@
     var p = product(), homes = HOMES[p.levels.length], fitted = fitProductPlaces(p);
     R = {
       t: 0, phase: 'enter', places: fitted, pieces: p.levels.map(function (li, k) {
-        return { i: li, tf: placeOf(li), home: homes[k], x: homes[k][0], y: homes[k][1], sc: 0.5, placed: false, back: null };
+        var b = LV[li].bbox, tf0 = fitted[li] || placeOf(li);
+        var homeSc = p.levels.length > 3 ? clamp(Math.min(72 / Math.max(1, (b[2] - b[0]) * tf0.s), 86 / Math.max(1, (b[3] - b[1]) * tf0.s)), 0.28, 0.72) : 0.5;
+        return { i: li, tf: placeOf(li), home: homes[k], homeSc: homeSc, x: homes[k][0], y: homes[k][1], sc: homeSc, placed: false, back: null };
       }), drag: null, stitch: 0, tap: null, reveal: 0, decor: [], decorT: 0, replay: 0, sq: 0, wig: 0,
       stitches: [], stDone: 0, cinch: 0, pucker: 0, cinchSound: 0, fast: 1, seamCen: [195, 395]
     };
@@ -3289,7 +3297,7 @@
   function updateReward(dt) {
     R.t += dt;
     R.pieces.forEach(function (pc) {
-      var targetSc = (R.drag && R.drag.pc === pc) || pc.placed ? 1 : 0.5;
+      var targetSc = (R.drag && R.drag.pc === pc) || pc.placed ? 1 : (pc.homeSc || 0.5);
       pc.sc += (targetSc - pc.sc) * Math.min(1, dt * 14);
       if (pc.snap) { pc.snap.t += dt; var u = easeOut(pc.snap.t / 0.2), tg = pieceCenterTarget(pc); pc.x = lerp(pc.snap.x, tg[0], u); pc.y = lerp(pc.snap.y, tg[1], u); if (pc.snap.t >= 0.2) pc.snap = null; }
       if (pc.back) { pc.back.t += dt; var v = easeOut(pc.back.t / 0.25); pc.x = lerp(pc.back.x, pc.home[0], v); pc.y = lerp(pc.back.y, pc.home[1], v); if (pc.back.t >= 0.25) pc.back = null; }
@@ -3459,6 +3467,13 @@
       { clipTo: 14, at: function () { return ptOf(14, 0.50, 0.65); }, draw: function (p, k) { sunflowerLeavesDecor(placeOf(14), k); } },
       { clipTo: 15, at: function () { return ptOf(15, 0.50, 0.50); }, draw: function (p, k) { sunflowerPetalsDecor(placeOf(15), k); } },
       { clipTo: 16, at: function () { return ptOf(16, 0.50, 0.50); }, draw: function (p, k) { sunflowerCenterDecor(placeOf(16), k); } }
+    ],
+    bonsai: [
+      { before: 17, at: function () { return ptOf(17, 0.50, 0.58); }, draw: function (p, k) { bonsaiPotLegsDecor(placeOf(17), k); } },
+      { clipTo: 17, at: function () { return ptOf(17, 0.50, 0.49); }, draw: function (p, k) { bonsaiPotDecor(placeOf(17), k); } },
+      { clipTo: 18, at: function () { return ptOf(18, 0.50, 0.52); }, draw: function (p, k) { bonsaiTrunkDecor(placeOf(18), k); } },
+      { clipTo: 19, at: function () { return ptOf(19, 0.52, 0.52); }, draw: function (p, k) { bonsaiMossDecor(placeOf(19), k); } },
+      { clipTo: 20, at: function () { return ptOf(20, 0.50, 0.53); }, draw: function (p, k) { bonsaiCanopyDecor(placeOf(20), k); } }
     ]
   };
   function mushroomStemDecor(tf, k) {
@@ -4056,6 +4071,127 @@
     ctx.strokeStyle = rgba('#66A6FA', 0.58); ctx.lineWidth = Math.max(2.0, tf.s * 0.011);
     [[0.10, 0.44, 0.20, 0.44], [0.30, 0.43, 0.44, 0.43], [0.56, 0.43, 0.70, 0.43], [0.80, 0.44, 0.90, 0.44]].forEach(function (w) {
       ctx.beginPath(); ctx.moveTo(px(w[0]), py(w[1])); ctx.quadraticCurveTo(px((w[0] + w[2]) * 0.5), py(w[1] - 0.032), px(w[2]), py(w[3])); ctx.stroke();
+    });
+    ctx.restore();
+  }
+  function bonsaiPotLegsDecor(tf, al) {
+    var px = function (u) { return tf.ox + u * tf.s; }, py = function (v) { return tf.oy + v * tf.s; };
+    ctx.save(); ctx.globalAlpha = al; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    [[0.295, 0.372], [0.648, 0.725]].forEach(function (xr) {
+      var x0 = xr[0], x1 = xr[1], y0 = 0.578, y1 = 0.654;
+      ctx.beginPath();
+      ctx.moveTo(px(x0), py(y0)); ctx.lineTo(px(x1), py(y0));
+      ctx.lineTo(px(x1 - 0.008), py(y1 - 0.006));
+      ctx.quadraticCurveTo(px((x0 + x1) * 0.5), py(y1 + 0.004), px(x0 + 0.008), py(y1 - 0.006));
+      ctx.closePath();
+      ctx.fillStyle = '#DFAA36'; ctx.fill();
+      ctx.fillStyle = rgba('#9C6810', 0.48);
+      ctx.fillRect(px(x0 + 0.003), py(y0), px(x1 - 0.003) - px(x0 + 0.003), py(y0 + 0.024) - py(y0));
+      ctx.strokeStyle = rgba('#5E3E08', 0.85); ctx.lineWidth = Math.max(2.0, tf.s * 0.009);
+      ctx.stroke();
+    });
+    ctx.restore();
+  }
+  function bonsaiPotDecor(tf, al) {
+    var px = function (u) { return tf.ox + u * tf.s; }, py = function (v) { return tf.oy + v * tf.s; };
+    ctx.save(); ctx.globalAlpha = al; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    // Vành miệng chậu vàng sáng phía trên + đường gờ bóng đổ ngăn cách với thân chậu
+    ctx.fillStyle = rgba('#FFE28A', 0.82);
+    ctx.beginPath();
+    ctx.moveTo(px(0.05), py(0.375)); ctx.lineTo(px(0.95), py(0.375));
+    ctx.lineTo(px(0.95), py(0.448));
+    ctx.quadraticCurveTo(px(0.50), py(0.456), px(0.05), py(0.448));
+    ctx.closePath(); ctx.fill();
+    // Vệt sáng bóng men gốm trên mép trên chậu
+    ctx.strokeStyle = rgba('#FFF8DC', 0.80); ctx.lineWidth = Math.max(2.2, tf.s * 0.011);
+    ctx.beginPath(); ctx.moveTo(px(0.14), py(0.402)); ctx.lineTo(px(0.72), py(0.402)); ctx.stroke();
+    // Gờ khuất dưới vành miệng chậu
+    ctx.strokeStyle = rgba('#B87D14', 0.72); ctx.lineWidth = Math.max(2.0, tf.s * 0.009);
+    ctx.beginPath(); ctx.moveTo(px(0.08), py(0.448)); ctx.quadraticCurveTo(px(0.50), py(0.456), px(0.92), py(0.448)); ctx.stroke();
+    // Mảng bóng cel bên phải và đáy chậu gốm (#C98C1A)
+    ctx.fillStyle = rgba('#C98C1A', 0.44);
+    ctx.beginPath();
+    ctx.moveTo(px(0.66), py(0.448)); ctx.lineTo(px(0.94), py(0.448));
+    ctx.lineTo(px(0.90), py(0.64)); ctx.lineTo(px(0.16), py(0.64));
+    ctx.lineTo(px(0.18), py(0.556));
+    ctx.quadraticCurveTo(px(0.56), py(0.578), px(0.66), py(0.448));
+    ctx.closePath(); ctx.fill();
+    // Vệt ánh men dọc má trái chậu
+    ctx.fillStyle = rgba('#FFF2BA', 0.45);
+    ctx.beginPath(); ctx.ellipse(px(0.245), py(0.515), Math.max(3, tf.s * 0.022), Math.max(5, tf.s * 0.036), -0.35, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+  function bonsaiTrunkDecor(tf, al) {
+    var px = function (u) { return tf.ox + u * tf.s; }, py = function (v) { return tf.oy + v * tf.s; };
+    ctx.save(); ctx.globalAlpha = al; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    // Bóng vỏ cây sẫm bên phải và gầm nhánh Y (#7C3216)
+    ctx.fillStyle = rgba('#7C3216', 0.46);
+    ctx.beginPath();
+    ctx.moveTo(px(0.68), py(0.20)); ctx.lineTo(px(0.92), py(0.20));
+    ctx.lineTo(px(0.74), py(0.88)); ctx.lineTo(px(0.48), py(0.88));
+    ctx.quadraticCurveTo(px(0.57), py(0.62), px(0.54), py(0.40));
+    ctx.quadraticCurveTo(px(0.64), py(0.32), px(0.68), py(0.20));
+    ctx.closePath(); ctx.fill();
+    // Viền sáng nắng phía trái thân bonsai
+    ctx.strokeStyle = rgba('#EEB08F', 0.65); ctx.lineWidth = Math.max(2.0, tf.s * 0.022);
+    ctx.beginPath();
+    ctx.moveTo(px(0.275), py(0.20));
+    ctx.quadraticCurveTo(px(0.44), py(0.39), px(0.38), py(0.54));
+    ctx.quadraticCurveTo(px(0.31), py(0.69), px(0.245), py(0.80));
+    ctx.stroke();
+    // Đường vân vỏ cây & mắt xoắn bonsai đặc trưng
+    ctx.strokeStyle = rgba('#6D2B14', 0.48); ctx.lineWidth = Math.max(1.5, tf.s * 0.015);
+    ctx.beginPath(); ctx.moveTo(px(0.45), py(0.42)); ctx.quadraticCurveTo(px(0.50), py(0.56), px(0.38), py(0.76)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(px(0.57), py(0.52)); ctx.quadraticCurveTo(px(0.58), py(0.68), px(0.55), py(0.80)); ctx.stroke();
+    ctx.beginPath(); ctx.arc(px(0.44), py(0.62), Math.max(2.5, tf.s * 0.036), 0.3, Math.PI * 1.65); ctx.stroke();
+    ctx.restore();
+  }
+  function bonsaiMossDecor(tf, al) {
+    var px = function (u) { return tf.ox + u * tf.s; }, py = function (v) { return tf.oy + v * tf.s; };
+    ctx.save(); ctx.globalAlpha = al; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    // Tầng rêu sẫm phía chân sát miệng chậu
+    ctx.fillStyle = rgba('#225E0E', 0.46);
+    ctx.beginPath();
+    ctx.moveTo(px(0.14), py(0.545));
+    ctx.quadraticCurveTo(px(0.52), py(0.565), px(0.88), py(0.565));
+    ctx.lineTo(px(0.88), py(0.66)); ctx.lineTo(px(0.14), py(0.66));
+    ctx.closePath(); ctx.fill();
+    // 3 vệt sáng xanh non ôm đỉnh 3 ụ rêu
+    ctx.strokeStyle = rgba('#B2F288', 0.72); ctx.lineWidth = Math.max(1.8, tf.s * 0.018);
+    [[0.25, 0.51, 0.33, 0.45, 0.40, 0.49], [0.44, 0.43, 0.52, 0.39, 0.60, 0.44], [0.64, 0.49, 0.71, 0.47, 0.78, 0.54]].forEach(function (a) {
+      ctx.beginPath(); ctx.moveTo(px(a[0]), py(a[1])); ctx.quadraticCurveTo(px(a[2]), py(a[3]), px(a[4]), py(a[5])); ctx.stroke();
+    });
+    // Cọng rêu nhỏ tạo chất liệu mềm
+    ctx.strokeStyle = rgba('#1D520A', 0.36); ctx.lineWidth = Math.max(1.2, tf.s * 0.011);
+    [[0.46, 0.55, 0.44, 0.50], [0.55, 0.54, 0.56, 0.49], [0.66, 0.57, 0.68, 0.53]].forEach(function (g) {
+      ctx.beginPath(); ctx.moveTo(px(g[0]), py(g[1])); ctx.lineTo(px(g[2]), py(g[3])); ctx.stroke();
+    });
+    ctx.restore();
+  }
+  function bonsaiCanopyDecor(tf, al) {
+    var px = function (u) { return tf.ox + u * tf.s; }, py = function (v) { return tf.oy + v * tf.s; };
+    ctx.save(); ctx.globalAlpha = al; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    // Tầng bóng gầm xanh đậm uốn lượn đáy tán lá bonsai (#2D8018)
+    ctx.fillStyle = rgba('#2D8018', 0.46);
+    ctx.beginPath();
+    ctx.moveTo(px(0.08), py(0.55));
+    ctx.quadraticCurveTo(px(0.26), py(0.62), px(0.44), py(0.59));
+    ctx.quadraticCurveTo(px(0.64), py(0.63), px(0.76), py(0.54));
+    ctx.quadraticCurveTo(px(0.84), py(0.47), px(0.92), py(0.48));
+    ctx.lineTo(px(0.94), py(0.75)); ctx.lineTo(px(0.08), py(0.75));
+    ctx.closePath(); ctx.fill();
+    // Đường vòm ngăn múi tán lá bên trong
+    ctx.strokeStyle = rgba('#318A1C', 0.42); ctx.lineWidth = Math.max(1.8, tf.s * 0.0085);
+    ctx.beginPath(); ctx.moveTo(px(0.24), py(0.61)); ctx.quadraticCurveTo(px(0.34), py(0.51), px(0.48), py(0.53)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(px(0.58), py(0.55)); ctx.quadraticCurveTo(px(0.70), py(0.47), px(0.81), py(0.55)); ctx.stroke();
+    // Vệt nắng xanh cốm trên đỉnh và gò tán trái
+    ctx.strokeStyle = rgba('#AEEC8E', 0.72); ctx.lineWidth = Math.max(2.2, tf.s * 0.011);
+    ctx.beginPath(); ctx.moveTo(px(0.32), py(0.395)); ctx.quadraticCurveTo(px(0.49), py(0.352), px(0.66), py(0.398)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(px(0.155), py(0.535)); ctx.quadraticCurveTo(px(0.21), py(0.455), px(0.295), py(0.445)); ctx.stroke();
+    // Cụm điểm lá sáng tạo nhịp khối tùng
+    ctx.fillStyle = rgba('#C2F4A4', 0.65);
+    [[0.39, 0.45, 0.011], [0.43, 0.435, 0.008], [0.66, 0.455, 0.010], [0.70, 0.445, 0.007], [0.22, 0.515, 0.009]].forEach(function (d) {
+      ctx.beginPath(); ctx.arc(px(d[0]), py(d[1]), Math.max(1.8, tf.s * d[2]), 0, Math.PI * 2); ctx.fill();
     });
     ctx.restore();
   }
