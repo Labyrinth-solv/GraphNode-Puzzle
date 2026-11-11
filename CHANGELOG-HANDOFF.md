@@ -971,3 +971,24 @@ Các thay đổi dưới đây làm và thử ở `Prototype/web-demo` trước,
 
 3. **Kiểm chứng**:
    - Xác nhận bằng Node (`check.js`, `bend-target.js`, `alt-solve.js`, `smoke.js`) và Chrome headless (`23` mục menu, đáy chip thấp nhất ở `y = 658` phía trên footer; kéo cạnh đáy `mushroom_grass` đạt `-0.2100` và snap sạch; khay & màn hoàn thành Màn 6 khớp tạo hình).
+
+
+### 29. [CẬP NHẬT / ART & LEVEL OVERHAUL] Nâng Cấp Ảnh Màn 1 & Thay Thế Màn 2 (`cupcake`), Màn 3 (`duck`) Theo Color Page Data (2026-11-11)
+
+1. **Nâng cấp hình ảnh Màn 1 (`icecream` – Kem ốc quế)**:
+   - Giữ nguyên cấu trúc chơi và thông số hình học của `LEVELS[0]` (`scoop`), `LEVELS[1]` (`cone`) và `PRODUCTS[0]`.
+   - Nâng cấp `STAGE_BG.icecream` (`'#D9F0E7'`) và viết lại `DECOR.icecream` cùng 3 hàm `iceCreamConeDecor`, `iceCreamScoopDecor`, `iceCreamCherryDecor` trong `Prototype/web-v2/game.js`: bỏ áo giấy sọc mint che kín thân nón, thay bằng nón bánh quế nướng giòn nổi khối 3D với lưới waffle 2 lớp, dải sáng mật ong, cel-shade caramel và bóng đổ của viên kem dâu; bổ sung cel-shade 2 tông cho viên kem, kem phủ bóng và quả cherry cùng lá 2 tông.
+
+2. **Thay Màn 2 (`cardigan/shirt/collar` $\to$ `cupcake` – Cupcake Trái Tim từ `IconCupcakeHeart.png`)**:
+   - `Prototype/web-v2/levels.js`: Thay `LEVELS[2..4]` và `PRODUCTS[1]` bằng 3 mảnh mức `tier: 'hard'`: `cupcake_base` (**Đế bánh**), `cupcake_frosting` (**Kem bánh**), `cupcake_heart` (**Trái tim**), đạt tổng IoU silhouette **96.61%** (trước khi chỉnh bo mịn đáy cốc và thùy tim trên `levels.js`), `minNN` $\ge 0.143$, `start` $\le 45.4\%$.
+   - `Prototype/web-v2/game.js`: Thêm `STAGE_BG.cupcake = '#FCE6EF'`, `DECOR.cupcake` và `cupcakeHandleDecor`, `cupcakeBaseDecor`, `cupcakeFrostingDecor`, `cupcakeHeartDecor` (quai giỏ tím nhạt phía sau kem, cốc hồng xếp ly nổi khối, kem cam cel-shaded + bóng tim và tai cắm quai bo cong, tim đỏ hai vệt sáng đặc trưng).
+
+3. **Thay Màn 3 (`bunny` $\to$ `duck` – Vịt Vàng Bơi Nước từ `ICON-duck.png`)**:
+   - `Prototype/web-v2/levels.js`: Thay `LEVELS[5..7]` và `PRODUCTS[2]` bằng 3 mảnh mức `tier: 'hard'`: `duck_body` (**Thân vịt**), `duck_head` (**Đầu vịt**), `duck_waves` (**Sóng nước**, 8 node bo gợn sóng tròn đặt gọn trong vòng tròn sân khấu $r = 165$), `minNN` $\ge 0.140$, `start` $\le 34.3\%$.
+   - `Prototype/web-v2/game.js`: Thêm `STAGE_BG.duck = '#E1EEF8'`, `DECOR.duck` và `duckBodyDecor`, `duckHeadDecor`, `duckEyeDecor`, `duckWavesDecor` (thân & cánh vịt vàng cel-shaded + highlight, mỏ cam san hô 2 tông nằm trong clip đầu vịt, mắt đen tròn tối giản không mặt cười, sóng xanh 2 tầng).
+
+4. **Kiểm thử & Dọn code**:
+   - Xóa các helper cũ không còn dùng của Cardigan/Thỏ (`coatButton`, `bunny*`, `pocket`, `drawBlossom`, `drawLeafSprig`) trong `game.js`.
+   - Cập nhật `Prototype/web-v2/bend-target.js` (kiểm thử trên `duck_head`), `Prototype/web-v2/alt-solve.js` (bao gồm `cupcake_base`, `cupcake_frosting`, `duck_head`, `duck_waves`) và `Prototype/web-v2/smoke.js` (log đủ 6 sản phẩm mới).
+   - Toàn bộ 4 script (`check.js`, `bend-target.js`, `alt-solve.js`, `smoke.js`) và ảnh chụp Chrome headless Màn 1–3 đều đạt 100%, 0 cảnh báo.
+
