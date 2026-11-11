@@ -116,7 +116,7 @@ function reward(p) {
 
 step(70);
 const W = sb.window;
-const LI = LV.findIndex(l => l.id === 'shirt'), LVL = LV[LI], PI = P.findIndex(p => p.levels.includes(LI));
+const LI = LV.findIndex(l => l.id === 'duck_head'), LVL = LV[LI], PI = P.findIndex(p => p.levels.includes(LI));
 const S2 = (q) => [FX + q[0] * FS, FY + q[1] * FS];
 function jump() { W.GNJumpTo({ pi: PI, li: LI }); step(80); }
 function dragNode(i, to) {
@@ -140,33 +140,34 @@ function dragEdge(k, off, u) {
 let fail = 0;
 function check(name, ok, info) { console.log((ok ? '✅ ' : '❌ ') + name + (info ? ' (' + info + ')' : '')); if (!ok) fail++; }
 
-// 1. Cắm đúng 5 chốt (màn Áo lót trong), uốn lệch một đoạn thẳng (cạnh 0): đoạn đó phải có gợi ý
+// 1. Cắm đúng tất cả chốt (màn Đầu vịt), uốn lệch một đoạn thẳng (cạnh 6): đoạn đó phải có gợi ý
 jump();
 for (let i = 0; i < LVL.sol.length; i++) if (!LVL.locked.includes(i)) dragNode(i, LVL.sol[i]);
-dragEdge(0, 0.07);
-let he = W.GNHintEdges(), d0 = he.find(e => e.k === 0);
-check('đoạn thẳng uốn lệch có gợi ý', !!d0 && Math.abs(d0.h) < 0.01, 'bend ' + W.GNState().bend[0].toFixed(3) + ', gợi ý ' + JSON.stringify(he.map(e => e.k)));
+dragEdge(6, 0.07);
+let he = W.GNHintEdges(), d0 = he.find(e => e.k === 6);
+check('đoạn thẳng uốn lệch có gợi ý', !!d0 && Math.abs(d0.h) < 0.01, 'bend ' + W.GNState().bend[6].toFixed(3) + ', gợi ý ' + JSON.stringify(he.map(e => e.k)));
 
 // 1b. Nắn đoạn đang lệch về thẳng: phải có hiệu ứng khớp dây như cạnh cong
-let zBack = dragEdge(0, -0.066), bBack = W.GNState().bend[0];
+let zBack = dragEdge(6, -0.066), bBack = W.GNState().bend[6];
 check('nắn đoạn về thẳng có hiệu ứng khớp dây', zBack > 0 && Math.abs(bBack) < 1e-3, 'tia sáng ' + zBack + ', bend ' + bBack.toFixed(4));
 // 1c. Kéo nhẹ đoạn thẳng đang đúng, vẫn trong vùng hút: không có hiệu ứng
-let zTap = dragEdge(2, 0.02);
-check('kéo nhẹ đoạn thẳng đang đúng không có hiệu ứng', zTap === 0, 'tia sáng ' + zTap + ', bend ' + W.GNState().bend[2].toFixed(4));
+let zTap = dragEdge(7, 0.02);
+check('kéo nhẹ đoạn thẳng đang đúng không có hiệu ứng', zTap === 0, 'tia sáng ' + zTap + ', bend ' + W.GNState().bend[7].toFixed(4));
 
 // 2. Hai đầu dây ở hai chốt liền nhau nhưng khác thứ tự lời giải: dây hút về độ uốn của cạnh lời giải giữa hai chốt đó
-// Đưa node 4 lên sol[3] và node 0 lên sol[4] -> cạnh 4 (4→0) nằm trên cạnh lời giải 3 (3→4, solBend = -0.0975)
+// Đưa node 4 lên sol[1] và node 5 lên sol[2] -> cạnh 4 (4→5) nằm trên cạnh lời giải 1 (1→2, solBend[1])
+const targetBend = LVL.solBend[1];
 jump();
-dragNode(4, LVL.sol[3]); dragNode(0, LVL.sol[4]);
-dragEdge(4, -0.088);
+dragNode(4, LVL.sol[1]); dragNode(5, LVL.sol[2]);
+dragEdge(4, targetBend * 0.85);
 let b0 = W.GNState().bend[4];
-check('dây hút đúng đích khi đặt khác thứ tự', Math.abs(b0 - (-0.0975)) < 1e-3, 'bend ' + b0.toFixed(4) + ', đích -0.0975');
+check('dây hút đúng đích khi đặt khác thứ tự', Math.abs(b0 - targetBend) < 1e-3, 'bend ' + b0.toFixed(4) + ', đích ' + targetBend.toFixed(4));
 
 // 3. Hai đầu dây chưa ở chốt: không hút, dây giữ đúng chỗ thả
 jump();
-dragNode(3, [0.80, 0.84]); dragNode(4, [0.20, 0.84]); // tách 2 đầu dây ra xa chốt để không dính chốt hay vùng bắt node
-dragEdge(3, -0.082);
-let b1 = W.GNState().bend[3];
-check('dây chưa có chốt không bị hút', Math.abs(b1 - (-0.0975)) > 0.005 && Math.abs(b1) > 0.07, 'bend ' + b1.toFixed(4) + ', solBend -0.0975');
-check('dây chưa có chốt không có gợi ý', !W.GNHintEdges().some(e => e.k === 3));
+dragNode(4, [0.80, 0.84]); dragNode(5, [0.20, 0.84]); // tách 2 đầu dây ra xa chốt để không dính chốt hay vùng bắt node
+dragEdge(4, -0.082);
+let b1 = W.GNState().bend[4];
+check('dây chưa có chốt không bị hút', Math.abs(b1 - targetBend) > 0.005 && Math.abs(b1) > 0.07, 'bend ' + b1.toFixed(4) + ', solBend ' + targetBend.toFixed(4));
+check('dây chưa có chốt không có gợi ý', !W.GNHintEdges().some(e => e.k === 4));
 if (fail) { console.log(fail + ' kiểm tra không đạt'); process.exit(1); }

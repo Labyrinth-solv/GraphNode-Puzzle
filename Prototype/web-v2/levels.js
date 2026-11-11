@@ -28,83 +28,123 @@
       start: [[0.34, 0.42], [0.72, 0.62], [0.50, 0.90]]
     },
     {
-      // Màn 2 - Mảnh 1 (index 2): Thân áo khoác
-      id: 'cardigan', name: 'Thân áo khoác', winThreshold: 0.95, tier: 'hard', free: [1, 3, 4, 5, 6, 8],
-      pattern: { kind: 'dots', base: '#B5D6A6', deep: '#93BF85', accent: '#F6E7B0' },
-      fabric: { mat: 'knit', base: '#48C774', light: '#7FE8A2', dark: '#2DA856', deep: { base: '#2EB35E', light: '#6FD68D', dark: '#1E8A47', line: '#145C32' } },
-      types: ['s', 's', 's', 's', 'c', 'c', 's', 's', 's', 's'],
-      ring: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], inner: [], locked: [0, 2, 7, 9],
-      sol:   [[0.26, 0.16], [0.04, 0.60], [0.14, 0.67], [0.24, 0.42], [0.24, 0.86], [0.76, 0.86], [0.76, 0.42], [0.86, 0.67], [0.96, 0.60], [0.74, 0.16]],
-      start: [[0.26, 0.16], [0.30, 0.60], [0.14, 0.67], [0.12, 0.30], [0.40, 0.70], [0.60, 0.30], [0.86, 0.40], [0.86, 0.67], [0.70, 0.86], [0.74, 0.16]]
+      // Màn 2 - Mảnh 1 (index 2): Đế bánh cupcake (từ IconCupcakeHeart.png Color Page)
+      id: 'cupcake_base', name: 'Đế bánh', winThreshold: 0.94, tier: 'hard',
+      free: [0, 2, 3, 5], bendFree: [],
+      solBendOverride: { '2': 0, '3': -0.008, '4': -0.008, '5': 0 },
+      pattern: { kind: 'rib', base: '#D858A8', deep: '#B8368B', accent: '#F79AD5' },
+      fabric: {
+        mat: 'felt', base: '#DC329E', light: '#F474C4', dark: '#A61E76', line: '#5E0C3E',
+        deep: { base: '#D62898', light: '#F068BE', dark: '#961264', line: '#5E0C3E' }
+      },
+      types: ['s', 's', 's', 'c', 'c', 's'],
+      ring: [0, 1, 2, 3, 4, 5], inner: [], locked: [1, 4],
+      sol:   [[0.162, 0.333], [0.500, 0.342], [0.838, 0.333], [0.754, 0.630], [0.500, 0.640], [0.246, 0.630]],
+      start: [[0.280, 0.560], [0.500, 0.342], [0.720, 0.560], [0.790, 0.780], [0.500, 0.640], [0.210, 0.780]]
     },
     {
-      // Màn 2 - Mảnh 2 (index 3): Áo lót trong (Đã tối ưu 5 node, gấu cong chữ U 116px)
-      id: 'shirt', name: 'Áo lót trong', winThreshold: 0.95, tier: 'hard', free: [0, 2, 3, 4],
-      pattern: { kind: 'knit', base: '#F4E2B8', deep: '#EBCF90', accent: '#C9A35E' },
-      fabric: { mat: 'knit', base: '#FFF8EB', light: '#FFFFFF', dark: '#EEDDC0', deep: { base: '#FBEBD0', light: '#FFF8EA', dark: '#D9B98A', line: '#8C6A3E' } },
-      types: ['s', 's', 's', 'c', 'c'],
-      ring: [0, 1, 2, 3, 4], inner: [], locked: [1],
-      sol:   [[0.34, 0.06], [0.50, 0.20], [0.66, 0.06], [0.66, 0.84], [0.34, 0.84]],
-      start: [[0.20, 0.30], [0.50, 0.20], [0.80, 0.40], [0.70, 0.86], [0.30, 0.90]]
-    },
-    {
-      // Màn 2 - Mảnh 3 (index 4): Cổ áo
-      id: 'collar', name: 'Cổ áo', winThreshold: 0.95, tier: 'hard', free: [1, 2, 3, 5],
-      pattern: { kind: 'rib', base: '#6F9C98', deep: '#557F7B', accent: '#94BCB7' },
-      fabric: { mat: 'rib', base: '#3CB867', light: '#6DD990', dark: '#24954B', deep: { base: '#22A055', light: '#5CCB82', dark: '#16753D', line: '#0E4D28' } },
-      types: ['s', 's', 's', 's', 's', 's'],
-      ring: [0, 1, 2, 3, 4, 5], inner: [], locked: [0, 4],
-      sol:   [[0.20, 0.10], [0.36, 0.10], [0.50, 0.46], [0.64, 0.10], [0.80, 0.10], [0.50, 0.72]],
-      start: [[0.20, 0.10], [0.60, 0.50], [0.30, 0.60], [0.80, 0.30], [0.80, 0.10], [0.70, 0.80]]
-    },
-    {
-      // Màn 3 - Mảnh 1 (index 5): Đôi tai thỏ
-      id: 'bunny_ears', name: 'Đôi tai thỏ', winThreshold: 0.95, tier: 'hard', free: [1, 2, 3, 7, 8, 9], bendFree: [2, 7],
-      pattern: { kind: 'knit', base: '#FFF5EB', deep: '#FCEADE', accent: '#F3D5C8' },
-      fabric: { mat: 'felt', base: '#FFFDFC', light: '#FFFFFF', dark: '#E8DFD5', deep: { base: '#FFF6EE', light: '#FFFFFF', dark: '#DCC6B4', line: '#8A6E5C' } },
-      types: ['c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c'],
-      ring: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], inner: [], locked: [0, 4, 5, 6, 10],
+      // Màn 2 - Mảnh 2 (index 3): Kem bánh cupcake (từ IconCupcakeHeart.png Color Page)
+      id: 'cupcake_frosting', name: 'Kem bánh', winThreshold: 0.94, tier: 'hard',
+      free: [0, 2, 4, 5, 7], bendFree: [0, 3],
+      solBendOverride: { '0': -0.020, '1': -0.018, '2': 0.011, '3': -0.045, '4': -0.030, '5': 0.003, '6': -0.002, '7': -0.037 },
+      pattern: { kind: 'dots', base: '#F4A262', deep: '#DB7B3E', accent: '#FFD4A4' },
+      fabric: {
+        mat: 'felt', base: '#FA9A56', light: '#FFC58C', dark: '#CF6B2E', line: '#7A3310',
+        deep: { base: '#FA9654', light: '#FFC284', dark: '#C86026', line: '#7A3310' }
+      },
+      types: ['c', 'c', 'c', 'c', 'c', 'c', 'c', 'c'],
+      ring: [0, 1, 2, 3, 4, 5, 6, 7], inner: [], locked: [1, 3, 6],
       sol: [
-        [0.24, 0.78], [0.09, 0.42], [0.13, 0.14], [0.29, 0.12], [0.39, 0.42],
-        [0.50, 0.70],
-        [0.61, 0.42], [0.71, 0.12], [0.87, 0.14], [0.91, 0.42], [0.76, 0.78]
+        [0.105, 0.527], [0.220, 0.390], [0.410, 0.332], [0.640, 0.372],
+        [0.892, 0.534], [0.753, 0.600], [0.493, 0.579], [0.232, 0.592]
       ],
       start: [
-        [0.24, 0.78], [0.09, 0.42], [0.13, 0.14], [0.29, 0.12], [0.39, 0.42],
-        [0.50, 0.70],
-        [0.61, 0.42], [0.71, 0.12], [0.87, 0.14], [0.91, 0.42], [0.76, 0.78]
+        [0.180, 0.690], [0.220, 0.390], [0.440, 0.210], [0.640, 0.372],
+        [0.830, 0.690], [0.710, 0.770], [0.493, 0.579], [0.280, 0.770]
       ]
     },
     {
-      // Màn 3 - Mảnh 2 (index 6): Mặt thỏ
-      id: 'bunny_head', name: 'Mặt thỏ', winThreshold: 0.95, tier: 'hard', free: [0, 2, 4, 5, 7, 8], bendFree: [4, 7],
-      pattern: { kind: 'dots', base: '#FFF8F0', deep: '#FDF0E4', accent: '#F9DFD0' },
-      fabric: { mat: 'felt', base: '#FFFDFC', light: '#FFFFFF', dark: '#E8DFD5', deep: { base: '#FFF6EE', light: '#FFFFFF', dark: '#DCC6B4', line: '#8A6E5C' } },
-      types: ['c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c'],
-      ring: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], inner: [], locked: [1, 3, 6, 9],
-      sol: [
-        [0.27, 0.29], [0.50, 0.20], [0.73, 0.29], [0.82, 0.48], [0.92, 0.65],
-        [0.78, 0.83], [0.50, 0.86], [0.22, 0.83], [0.08, 0.65], [0.18, 0.48]
-      ],
-      start: [
-        [0.27, 0.29], [0.50, 0.20], [0.73, 0.29], [0.82, 0.48], [0.92, 0.65],
-        [0.78, 0.83], [0.50, 0.86], [0.22, 0.83], [0.08, 0.65], [0.18, 0.48]
-      ]
-    },
-    {
-      // Màn 3 - Mảnh 3 (index 7): Chiếc nơ
-      id: 'bunny_bow', name: 'Chiếc nơ', winThreshold: 0.95, tier: 'hard', free: [0, 2, 3, 5], bendFree: [2, 5],
-      pattern: { kind: 'gingham', base: '#E89B96', deep: '#D97B75', accent: '#FFF8F2' },
-      fabric: { mat: 'felt', base: '#FF5A72', light: '#FF8E9F', dark: '#D9324C', deep: { base: '#E8344F', light: '#FF6F84', dark: '#B01D37', line: '#730F22' } },
+      // Màn 2 - Mảnh 3 (index 4): Trái tim đỏ (từ IconCupcakeHeart.png Color Page)
+      id: 'cupcake_heart', name: 'Trái tim', winThreshold: 0.94, tier: 'hard',
+      free: [0, 2, 3, 5], bendFree: [1, 4],
+      solBendOverride: { '0': -0.055, '1': -0.028, '2': -0.028, '3': -0.032, '4': -0.048, '5': -0.062 },
+      pattern: { kind: 'dots', base: '#E43A40', deep: '#BC1C22', accent: '#FF8A8E' },
+      fabric: {
+        mat: 'felt', base: '#EA242B', light: '#FF6A70', dark: '#B40E15', line: '#68060C',
+        deep: { base: '#E61E24', light: '#FF5E66', dark: '#AC0A12', line: '#68060C' }
+      },
       types: ['c', 'c', 'c', 'c', 'c', 'c'],
       ring: [0, 1, 2, 3, 4, 5], inner: [], locked: [1, 4],
       sol: [
-        [0.14, 0.22], [0.50, 0.41], [0.86, 0.22],
-        [0.86, 0.78], [0.50, 0.59], [0.14, 0.78]
+        [0.556, 0.385], [0.744, 0.394], [0.723, 0.637],
+        [0.320, 0.737], [0.224, 0.464], [0.355, 0.220]
       ],
       start: [
-        [0.14, 0.22], [0.50, 0.41], [0.86, 0.22],
-        [0.86, 0.78], [0.50, 0.59], [0.14, 0.78]
+        [0.550, 0.190], [0.744, 0.394], [0.800, 0.720],
+        [0.440, 0.850], [0.224, 0.464], [0.260, 0.160]
+      ]
+    },
+    {
+      // Màn 3 - Mảnh 1 (index 5): Thân vịt vàng (từ ICON-duck.png Color Page)
+      id: 'duck_body', name: 'Thân vịt', winThreshold: 0.94, tier: 'hard',
+      free: [0, 2, 4, 6, 8], bendFree: [0, 5],
+      solBendOverride: { '0': 0.035, '1': 0.017, '2': 0.006, '3': -0.008, '4': -0.008, '5': -0.043, '6': 0.013, '7': 0.017, '8': -0.029 },
+      pattern: { kind: 'dots', base: '#EACC3A', deep: '#CFA61A', accent: '#FFF2A0' },
+      fabric: {
+        mat: 'felt', base: '#F5D61E', light: '#FFED66', dark: '#C89E0E', line: '#705204',
+        deep: { base: '#F2D218', light: '#FFE95C', dark: '#BE9408', line: '#705204' }
+      },
+      types: ['c', 'c', 's', 's', 'c', 'c', 's', 's', 'c'],
+      ring: [0, 1, 2, 3, 4, 5, 6, 7, 8], inner: [], locked: [1, 3, 5, 7],
+      sol: [
+        [0.060, 0.430], [0.250, 0.445], [0.448, 0.398], [0.605, 0.315], [0.745, 0.320],
+        [0.807, 0.470], [0.878, 0.670], [0.505, 0.735], [0.115, 0.695]
+      ],
+      start: [
+        [0.100, 0.240], [0.250, 0.445], [0.460, 0.220], [0.605, 0.315], [0.810, 0.210],
+        [0.807, 0.470], [0.900, 0.780], [0.505, 0.735], [0.140, 0.830]
+      ]
+    },
+    {
+      // Màn 3 - Mảnh 2 (index 6): Đầu & mỏ vịt (từ ICON-duck.png Color Page)
+      id: 'duck_head', name: 'Đầu vịt', winThreshold: 0.94, tier: 'hard',
+      free: [1, 2, 4, 5, 7], bendFree: [2, 5],
+      solBendOverride: { '0': -0.019, '1': -0.036, '2': -0.052, '3': -0.036, '4': -0.025, '5': -0.045 },
+      pattern: { kind: 'dots', base: '#EED246', deep: '#D2AA1C', accent: '#FFF4A8' },
+      fabric: {
+        mat: 'felt', base: '#F5D61E', light: '#FFED66', dark: '#C89E0E', line: '#705204',
+        deep: { base: '#F2D218', light: '#FFE95C', dark: '#BE9408', line: '#705204' }
+      },
+      types: ['c', 'c', 'c', 'c', 'c', 'c', 's', 's'],
+      ring: [0, 1, 2, 3, 4, 5, 6, 7], inner: [], locked: [0, 3, 6],
+      sol: [
+        [0.449, 0.676], [0.258, 0.449], [0.312, 0.170], [0.672, 0.123],
+        [0.800, 0.379], [0.939, 0.490], [0.701, 0.583], [0.589, 0.694]
+      ],
+      start: [
+        [0.449, 0.676], [0.160, 0.500], [0.220, 0.150], [0.672, 0.123],
+        [0.860, 0.250], [0.920, 0.590], [0.701, 0.583], [0.600, 0.840]
+      ]
+    },
+    {
+      // Màn 3 - Mảnh 3 (index 7): Sóng nước xanh (từ ICON-duck.png Color Page, gợn sóng bo tròn nằm gọn vòng tròn sân khấu)
+      id: 'duck_waves', name: 'Sóng nước', winThreshold: 0.92, tier: 'hard',
+      free: [1, 2, 3, 5, 7], bendFree: [1, 2],
+      solBendOverride: { '0': -0.036, '1': -0.044, '2': -0.044, '3': -0.036, '4': -0.026, '5': -0.022, '6': -0.022, '7': -0.026 },
+      pattern: { kind: 'rib', base: '#2C64B8', deep: '#124698', accent: '#6CA2EC' },
+      fabric: {
+        mat: 'felt', base: '#124AA8', light: '#4482DE', dark: '#08327A', line: '#041C48',
+        deep: { base: '#0C46A4', light: '#3A7AD8', dark: '#062C6E', line: '#041C48' }
+      },
+      types: ['c', 'c', 'c', 'c', 'c', 'c', 'c', 'c'],
+      ring: [0, 1, 2, 3, 4, 5, 6, 7], inner: [], locked: [0, 4, 6],
+      sol: [
+        [0.065, 0.460], [0.235, 0.455], [0.500, 0.455], [0.765, 0.455],
+        [0.935, 0.460], [0.815, 0.595], [0.500, 0.605], [0.185, 0.595]
+      ],
+      start: [
+        [0.065, 0.460], [0.270, 0.250], [0.500, 0.250], [0.730, 0.250],
+        [0.935, 0.460], [0.830, 0.770], [0.500, 0.605], [0.170, 0.770]
       ]
     },
     // --- Màn 4 (indices 8..10): Cây nấm đỏ Color Page (từ ICON-mushroom.png, tách 3 mảnh ghép khít viền gốc) ---
@@ -365,10 +405,10 @@
   var PRODUCTS = [
     { id: 'icecream', label: 'Màn 1', levels: [0, 1], order: [1, 0], seams: [[0, 4, 0]],
       place: { 0: [70, 210, 250], 1: [70, 315, 250] } },
-    { id: 'cardigan', label: 'Màn 2', levels: [2, 3, 4], order: [2, 3, 4], seams: [[3, 2, 3], [3, 4, 0], [4, 4, 0]],
-      place: { 2: [65, 258, 260], 3: [95, 288, 200], 4: [110, 275, 170] } },
-    { id: 'bunny', label: 'Màn 3', levels: [5, 6, 7], order: [5, 6, 7], seams: [[6, 0, 2], [7, 0, 2]],
-      place: { 5: [92.5, 244, 205], 6: [70.0, 294, 250], 7: [142.5, 456, 105] } },
+    { id: 'cupcake', label: 'Màn 2', levels: [2, 3, 4], order: [2, 3, 4], seams: [[2, 0, 0], [3, 0, 0], [4, 0, 0]],
+      place: { 2: [53.2, 319.6, 280], 3: [55, 252.4, 280], 4: [172.6, 249.6, 160] } },
+    { id: 'duck', label: 'Màn 3', levels: [5, 6, 7], order: [5, 6, 7], seams: [[5, 0, 0], [6, 0, 0], [7, 0, 0]],
+      place: { 5: [66.2, 300.0, 243], 6: [127.0, 253.8, 196], 7: [60.0, 340.0, 270] } },
     { id: 'mushroom', label: 'Màn 4', levels: [8, 9, 10], order: [8, 9, 10], seams: [[8, 0, 0], [9, 0, 0], [10, 0, 0]],
       place: { 8: [122.3, 363.0, 145.4], 9: [57.2, 180.9, 275.6], 10: [96.2, 395.4, 192.1] } },
     { id: 'acorn', label: 'Màn 5', levels: [11, 12, 13], order: [11, 12, 13], seams: [[11, 0, 0], [12, 0, 0], [13, 0, 0]],

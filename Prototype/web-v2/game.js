@@ -10,9 +10,9 @@
   };
   // Nền bổ trợ dịu dạng radial theo từng sản phẩm khi hoàn thiện (Hướng A).
   var STAGE_BG = {
-    icecream: '#D3ECE2',
-    cardigan: '#F5E1AF',
-    bunny: '#EEDAE8',
+    icecream: '#D9F0E7',
+    cupcake: '#FCE6EF',
+    duck: '#E1EEF8',
     mushroom: '#EFF2E4',
     acorn: '#F2E7D5',
     sunflower: '#E3EFE4'
@@ -3404,179 +3404,46 @@
       if (R.decor.length >= DEC.length && R.t > DEC.length * 0.24 + 0.4) { R.phase = 'done'; R.t = 0; confetti(70); chord([0, 4, 7, 12, 16], 0.07, 0.09); }
     }
   }
-  // Hàm vẽ bông hoa 5 cánh nhỏ dùng chung (cài áo cardigan, nhành hoa trái tim, hoa dâu, hoa tai thỏ).
-  function drawBlossom(x, y, petals, pr, pd, centerR, petalFill, petalInk, centerFill, centerInk) {
-    ctx.save(); ctx.translate(x, y);
-    for (var q = 0; q < petals; q++) {
-      var a = q * (Math.PI * 2 / petals) - 0.25;
-      ctx.beginPath(); ctx.arc(Math.cos(a) * pr, Math.sin(a) * pr, pd, 0, 7);
-      ctx.fillStyle = petalFill; ctx.fill(); ctx.lineWidth = 1.6; ctx.strokeStyle = petalInk; ctx.stroke();
-    }
-    ctx.beginPath(); ctx.arc(0, 0, centerR, 0, 7);
-    ctx.fillStyle = centerFill; ctx.fill(); ctx.lineWidth = 1.6; ctx.strokeStyle = centerInk; ctx.stroke();
-    ctx.restore();
-  }
-  function drawLeafSprig(x, y, rx, ry, rot) {
-    ctx.save(); ctx.translate(x, y); ctx.rotate(rot);
-    ctx.beginPath(); ctx.ellipse(0, 0, rx, ry, 0, 0, 7);
-    ctx.fillStyle = '#6BD486'; ctx.fill(); ctx.lineWidth = 1.7; ctx.strokeStyle = '#1B5E34'; ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(-rx * 0.6, 0); ctx.lineTo(rx * 0.6, 0); ctx.lineWidth = 1.1; ctx.stroke();
-    ctx.restore();
-  }
   // Decor Hướng A phong cách Cartoon nghệ thuật (không mặt cười); hỗ trợ before (sau lưng mảnh), clipTo (trong clip mảnh) và after (đúng tầng chiều sâu).
   var DECOR = {
     icecream: [
-      { clipTo: 1, at: function () { return ptOf(1, 0.50, 0.72); }, draw: function (p, k) {
-        var p1 = placeOf(1), b1 = LV[1].bbox, p0 = placeOf(0);
-        var x0 = p1.ox + b1[0] * p1.s, y0 = p1.oy + b1[1] * p1.s, w = (b1[2] - b1[0]) * p1.s, h = (b1[3] - b1[1]) * p1.s;
-        var al = clamp(k, 0, 1), cutY = p1.oy + 0.48 * p1.s + (1 - Math.min(k, 1.04)) * 18;
-        ctx.save(); ctx.globalAlpha = al;
-        // Bóng mềm của viên kem đổ xuống miệng ốc quế
-        ctx.save(); ctx.translate(0, 6);
-        outlinePath(LV[0].outline, p0.ox, p0.oy, p0.s);
-        ctx.fillStyle = 'rgba(95,38,30,0.22)'; ctx.fill(); ctx.restore();
-        // Áo giấy nếp sọc mint có mép lượn sóng & dải ruy-băng cong
-        ctx.beginPath(); ctx.moveTo(x0 - 8, cutY + 4);
-        var steps = 6;
-        for (var q = 0; q < steps; q++) {
-          var sx0 = (x0 - 4) + ((w + 8) * q / steps), sx1 = (x0 - 4) + ((w + 8) * (q + 1) / steps);
-          var sag = Math.sin(((q + 0.5) / steps) * Math.PI) * 6;
-          ctx.quadraticCurveTo((sx0 + sx1) / 2, cutY + (q % 2 === 0 ? -5 : 7) + sag, sx1, cutY + 3 + sag * 0.6);
-        }
-        ctx.lineTo(x0 + w + 8, y0 + h + 8); ctx.lineTo(x0 - 8, y0 + h + 8); ctx.closePath();
-        ctx.fillStyle = '#FFF7EE'; ctx.fill();
-        ctx.save(); ctx.clip();
-        ctx.fillStyle = '#BBE3D4';
-        for (var sx = x0 - 12; sx < x0 + w + 12; sx += 18) ctx.fillRect(sx, cutY - 12, 8, h + 16);
-        ctx.beginPath(); ctx.moveTo(x0 - 6, cutY + 13); ctx.quadraticCurveTo(x0 + w * 0.5, cutY + 23, x0 + w + 6, cutY + 13);
-        ctx.lineWidth = 7; ctx.strokeStyle = '#FF8FA8'; ctx.stroke();
-        ctx.lineWidth = 1.6; ctx.strokeStyle = '#6E2B3E'; ctx.stroke();
-        ctx.restore();
-        ctx.lineWidth = 2.0; ctx.strokeStyle = '#6E4C3C'; ctx.stroke();
-        ctx.beginPath(); ctx.ellipse(x0 + w * 0.5, cutY + 18, 6.2, 4, 0, 0, 7);
-        ctx.fillStyle = '#FFE3EA'; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = '#6E2B3E'; ctx.stroke();
-        ctx.restore(); } },
+      { clipTo: 1, at: function () { return ptOf(1, 0.50, 0.56); }, draw: function (p, k) { iceCreamConeDecor(placeOf(1), placeOf(0), k); } },
       { after: 1, at: function () { return ptOf(0, 0.74, 0.24); }, draw: function (p, k) {
         var sc = Math.max(0.01, k);
         ctx.save(); ctx.translate(p[0], p[1]); ctx.rotate(0.45); ctx.scale(sc, sc);
         rr(-10, -56, 20, 76, 7);
-        var wg = ctx.createLinearGradient(-10, 0, 10, 0); wg.addColorStop(0, '#F7CE8A'); wg.addColorStop(1, '#DF9F52');
-        ctx.fillStyle = wg; ctx.fill();
+        ctx.fillStyle = '#F7CE8A'; ctx.fill();
         ctx.save(); ctx.clip();
-        ctx.strokeStyle = '#BA6D28'; ctx.lineWidth = 5;
+        // Cel-shade nửa phải bánh quế cuộn
+        ctx.fillStyle = '#DA8F3A'; ctx.fillRect(0, -60, 14, 84);
+        ctx.strokeStyle = '#9C5216'; ctx.lineWidth = 4.6;
         for (var yy = -62; yy < 32; yy += 16) { ctx.beginPath(); ctx.moveTo(-14, yy); ctx.lineTo(14, yy + 12); ctx.stroke(); }
+        ctx.fillStyle = 'rgba(255,244,212,0.55)'; rr(-6.5, -52, 4.2, 66, 2); ctx.fill();
         ctx.restore();
-        ctx.lineWidth = 2.8; ctx.strokeStyle = '#6E3F0E'; ctx.stroke(); ctx.restore(); } },
-      { clipTo: 0, at: function () { return ptOf(0, 0.50, 0.28); }, draw: function (p, k) {
-        var p0 = placeOf(0), b0 = LV[0].bbox, fb0 = fab(0), al = clamp(k, 0, 1);
-        var x0 = p0.ox + b0[0] * p0.s, y0 = p0.oy + b0[1] * p0.s, w = (b0[2] - b0[0]) * p0.s, h = (b0[3] - b0[1]) * p0.s;
-        ctx.save(); ctx.globalAlpha = al; ctx.translate(0, (1 - Math.min(k, 1.05)) * -12);
-        ctx.beginPath();
-        ctx.moveTo(x0 - 4, y0 - 4); ctx.lineTo(x0 + w + 4, y0 - 4); ctx.lineTo(x0 + w + 4, y0 + h * 0.42);
-        ctx.bezierCurveTo(x0 + w * 0.85, y0 + h * 0.54, x0 + w * 0.78, y0 + h * 0.34, x0 + w * 0.67, y0 + h * 0.46);
-        ctx.bezierCurveTo(x0 + w * 0.56, y0 + h * 0.60, x0 + w * 0.46, y0 + h * 0.36, x0 + w * 0.34, y0 + h * 0.50);
-        ctx.bezierCurveTo(x0 + w * 0.22, y0 + h * 0.60, x0 + w * 0.14, y0 + h * 0.36, x0 - 4, y0 + h * 0.44);
-        ctx.closePath();
-        var ig = ctx.createLinearGradient(0, y0, 0, y0 + h * 0.55); ig.addColorStop(0, '#FFFDF9'); ig.addColorStop(1, '#FFE8EF');
-        ctx.fillStyle = ig; ctx.fill(); ctx.lineWidth = 2.4; ctx.strokeStyle = mix(fb0.line, '#D66E88', 0.4); ctx.stroke();
-        ctx.save(); ctx.translate(x0 + w * 0.22, y0 + h * 0.28); ctx.rotate(-0.62);
-        ctx.beginPath(); ctx.ellipse(0, 0, 16, 5.8, 0, 0, 7); ctx.fillStyle = 'rgba(255,255,255,0.65)'; ctx.fill(); ctx.restore();
-        ctx.restore(); } },
+        ctx.lineWidth = 2.8; ctx.strokeStyle = '#63360B'; ctx.stroke(); ctx.restore(); } },
+      { clipTo: 0, at: function () { return ptOf(0, 0.50, 0.34); }, draw: function (p, k) { iceCreamScoopDecor(placeOf(0), k); } },
       { after: 0, at: function () { return ptOf(0, 0.50, 0.36); }, draw: function (p, k) {
         var sc = Math.max(0.01, k);
-        [[0.34, 0.27, -0.4, '#FFD24C'], [0.48, 0.22, 0.5, '#7AD6A8'], [0.62, 0.29, -0.2, '#82C8F5'],
-         [0.25, 0.36, 0.7, '#FF7596'], [0.54, 0.36, 0.3, '#FFD24C'], [0.71, 0.37, -0.6, '#7AD6A8'],
+        [[0.34, 0.27, -0.4, '#FFD24C'], [0.48, 0.23, 0.5, '#68D89A'], [0.62, 0.29, -0.2, '#6CC4F8'],
+         [0.25, 0.36, 0.7, '#FF6892'], [0.54, 0.36, 0.3, '#FFD24C'], [0.71, 0.37, -0.6, '#68D89A'],
          [0.39, 0.58, 0.4, '#FFF8EA'], [0.61, 0.59, -0.5, '#FFE074']].forEach(function (sp) {
           var q = ptOf(0, sp[0], sp[1]);
           ctx.save(); ctx.translate(q[0], q[1]); ctx.rotate(sp[2]); ctx.scale(sc, sc);
-          rr(-6, -2.5, 12, 5, 2.5); ctx.fillStyle = sp[3]; ctx.fill(); ctx.lineWidth = 1.3; ctx.strokeStyle = '#6E263D'; ctx.stroke(); ctx.restore();
+          rr(-6.2, -2.6, 12.4, 5.2, 2.6); ctx.fillStyle = sp[3]; ctx.fill(); ctx.lineWidth = 1.4; ctx.strokeStyle = '#6B1F3A'; ctx.stroke(); ctx.restore();
         }); } },
-      { at: function () { return ptOf(0, 0.48, 0.12); }, draw: function (p, k) {
-        var sc = Math.max(0.01, k) * 1.12;
-        ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(sc, sc);
-        drawLeafSprig(-13, -2, 13, 6.2, -0.55);
-        ctx.beginPath(); ctx.moveTo(0, -10); ctx.quadraticCurveTo(-5, -25, -14, -28);
-        ctx.lineWidth = 2.8; ctx.strokeStyle = '#1E5E34'; ctx.lineCap = 'round'; ctx.stroke();
-        ctx.beginPath(); ctx.arc(0, 0, 12.5, 0, 7);
-        var cg = ctx.createRadialGradient(-4, -4, 1, 0, 0, 12.5);
-        cg.addColorStop(0, '#FF7D88'); cg.addColorStop(0.6, '#E83A52'); cg.addColorStop(1, '#A61C34');
-        ctx.fillStyle = cg; ctx.fill(); ctx.lineWidth = 2.4; ctx.strokeStyle = '#6B1325'; ctx.stroke();
-        ctx.beginPath(); ctx.ellipse(-4.5, -4.5, 3.8, 2.3, -0.6, 0, 7); ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.fill(); ctx.restore(); } }
+      { at: function () { return ptOf(0, 0.48, 0.12); }, draw: function (p, k) { iceCreamCherryDecor(p, k); } }
     ],
-    cardigan: [
-      { clipTo: 2, at: function () { return ptOf(2, 0.50, 0.85); }, draw: function (p, k) {
-        var p2 = placeOf(2), b2 = LV[2].bbox, x0 = p2.ox + b2[0] * p2.s, w = (b2[2] - b2[0]) * p2.s, h = (b2[3] - b2[1]) * p2.s;
-        var hemY = p2.oy + 0.78 * p2.s;
-        ctx.save(); ctx.globalAlpha = clamp(k, 0, 1);
-        ctx.fillStyle = '#20944D'; ctx.fillRect(x0 - 4, hemY, w + 8, h);
-        ctx.strokeStyle = rgba('#124F2A', 0.55); ctx.lineWidth = 1.8;
-        ctx.beginPath(); ctx.moveTo(x0, hemY); ctx.lineTo(x0 + w, hemY); ctx.stroke();
-        ctx.strokeStyle = rgba('#82EEAC', 0.42); ctx.lineWidth = 1.5;
-        for (var rx = x0 + 9; rx < x0 + w; rx += 11) { ctx.beginPath(); ctx.moveTo(rx, hemY + 2); ctx.lineTo(rx, p2.oy + b2[3] * p2.s); ctx.stroke(); }
-        [[0.04, 0.58, 0.15, 0.65], [0.96, 0.58, 0.85, 0.65]].forEach(function (seg, si) {
-          var a = ptOf(2, seg[0], seg[1]), b = ptOf(2, seg[2], seg[3]);
-          ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]);
-          ctx.lineWidth = 2.2; ctx.strokeStyle = '#145C32'; ctx.stroke();
-          ctx.strokeStyle = rgba('#82EEAC', 0.42); ctx.lineWidth = 1.4;
-          for (var q = 0.25; q <= 0.75; q += 0.25) {
-            var cx = lerp(a[0], b[0], q), cy = lerp(a[1], b[1], q);
-            ctx.beginPath(); ctx.moveTo(cx, cy + 2); ctx.lineTo(cx + (si === 0 ? -5 : 5), cy + 13); ctx.stroke();
-          }
-        });
-        ctx.restore(); } },
-      { clipTo: 3, at: function () { return ptOf(3, 0.50, 0.55); }, draw: function (p, k) {
-        var p3 = placeOf(3), p4 = placeOf(4), b3 = LV[3].bbox, y0 = p3.oy + b3[1] * p3.s, h = (b3[3] - b3[1]) * p3.s;
-        var cx3 = p3.ox + 0.5 * p3.s;
-        ctx.save(); ctx.globalAlpha = clamp(k, 0, 1);
-        ctx.fillStyle = 'rgba(225,198,162,0.38)'; ctx.fillRect(cx3 - 11, y0, 22, h);
-        ctx.strokeStyle = 'rgba(155,120,82,0.45)'; ctx.lineWidth = 1.3; ctx.setLineDash([3.5, 3]);
-        ctx.beginPath(); ctx.moveTo(cx3 - 11, y0); ctx.lineTo(cx3 - 11, y0 + h); ctx.moveTo(cx3 + 11, y0); ctx.lineTo(cx3 + 11, y0 + h); ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.save(); ctx.translate(0, 5);
-        outlinePath(LV[4].outline, p4.ox, p4.oy, p4.s); ctx.fillStyle = 'rgba(18,75,42,0.20)'; ctx.fill(); ctx.restore();
-        ctx.restore(); } },
-      { clipTo: 4, at: function () { return ptOf(4, 0.50, 0.50); }, draw: function (p, k) {
-        var p4 = placeOf(4);
-        ctx.save(); ctx.globalAlpha = clamp(k, 0, 1);
-        ctx.strokeStyle = 'rgba(235,255,242,0.48)'; ctx.lineWidth = 1.6; ctx.setLineDash([5, 3.5]);
-        outlinePath(LV[4].outline, p4.ox, p4.oy - 3, p4.s); ctx.stroke(); ctx.setLineDash([]); ctx.restore(); } },
-      { at: function () { return ptOf(3, 0.5, 0.36); }, draw: function (p, k) { coatButton(p, k); } },
-      { at: function () { return ptOf(3, 0.5, 0.50); }, draw: function (p, k) { coatButton(p, k); } },
-      { at: function () { return ptOf(3, 0.5, 0.64); }, draw: function (p, k) { coatButton(p, k); } },
-      { at: function () { return ptOf(3, 0.5, 0.77); }, draw: function (p, k) { coatButton(p, k); } },
-      { at: function () { return ptOf(2, 0.33, 0.71); }, draw: function (p, k) { pocket(p, k, true); } },
-      { at: function () { return ptOf(2, 0.67, 0.71); }, draw: function (p, k) { pocket(p, k, false); } },
-      { at: function () { return ptOf(2, 0.69, 0.45); }, draw: function (p, k) {
-        var sc = Math.max(0.01, k) * 1.15;
-        ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(sc, sc);
-        drawLeafSprig(-5, 11, 8.5, 4.4, -0.9); drawLeafSprig(5, 11, 8.5, 4.4, 0.9);
-        drawBlossom(0, -2, 5, 7, 5.6, 4.5, '#FFFDF5', '#6B4E24', '#FFBE3B', '#75470E');
-        ctx.restore(); } }
+    cupcake: [
+      { before: 3, at: function () { return ptOf(3, 0.44, 0.22); }, draw: function (p, k) { cupcakeHandleDecor(placeOf(3), k); } },
+      { clipTo: 2, at: function () { return ptOf(2, 0.50, 0.50); }, draw: function (p, k) { cupcakeBaseDecor(placeOf(2), k); } },
+      { clipTo: 3, at: function () { return ptOf(3, 0.50, 0.46); }, draw: function (p, k) { cupcakeFrostingDecor(placeOf(3), k); } },
+      { clipTo: 4, at: function () { return ptOf(4, 0.50, 0.48); }, draw: function (p, k) { cupcakeHeartDecor(placeOf(4), k); } }
     ],
-    bunny: [
-      { after: 5, at: function () { return ptOf(5, 0.24, 0.36); }, draw: function (p, k) { bunnyEarInner(p, k, -0.22); } },
-      { after: 5, at: function () { return ptOf(5, 0.76, 0.36); }, draw: function (p, k) { bunnyEarInner(p, k, 0.22); } },
-      { clipTo: 6, at: function () { return ptOf(6, 0.50, 0.86); }, draw: function (p, k) {
-        var p7 = placeOf(7);
-        ctx.save(); ctx.globalAlpha = clamp(k, 0, 1); ctx.translate(0, -3);
-        outlinePath(LV[7].outline, p7.ox, p7.oy, p7.s); ctx.fillStyle = 'rgba(120,70,58,0.14)'; ctx.fill(); ctx.restore(); } },
-      { after: 6, at: function () { return ptOf(6, 0.50, 0.20); }, draw: function (p, k) { bunnyTuft(p, k); } },
-      { after: 6, at: function () { return ptOf(6, 0.77, 0.23); }, draw: function (p, k) {
-        var sc = Math.max(0.01, k) * 1.05;
-        ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(sc, sc);
-        drawLeafSprig(11, 7, 10, 4.8, 0.5);
-        drawBlossom(0, 0, 6, 8.5, 5.2, 4.6, '#FFFDF5', '#7D5C48', '#FFC240', '#7A4F16');
-        ctx.restore(); } },
-      { after: 6, at: function () { return ptOf(6, 0.34, 0.50); }, draw: function (p, k) { bunnyEye(p, k, -1); } },
-      { after: 6, at: function () { return ptOf(6, 0.66, 0.50); }, draw: function (p, k) { bunnyEye(p, k, 1); } },
-      { after: 6, at: function () { return ptOf(6, 0.50, 0.58); }, draw: function (p, k) { bunnyMuzzleAndCheeks(p, k); } },
-      { clipTo: 7, at: function () { return ptOf(7, 0.50, 0.50); }, draw: function (p, k) {
-        ctx.save(); ctx.globalAlpha = clamp(k, 0, 1); ctx.fillStyle = 'rgba(255,244,240,0.68)';
-        [[0.22, 0.34], [0.30, 0.68], [0.78, 0.34], [0.70, 0.68], [0.18, 0.52], [0.82, 0.52]].forEach(function (uv) {
-          var d = ptOf(7, uv[0], uv[1]); ctx.beginPath(); ctx.arc(d[0], d[1], 3.6, 0, 7); ctx.fill();
-        });
-        ctx.restore(); } },
-      { after: 7, at: function () { return ptOf(7, 0.50, 0.50); }, draw: function (p, k) { bunnyBowKnot(p, k); } }
+    duck: [
+      { clipTo: 5, at: function () { return ptOf(5, 0.48, 0.52); }, draw: function (p, k) { duckBodyDecor(placeOf(5), k); } },
+      { clipTo: 6, at: function () { return ptOf(6, 0.56, 0.42); }, draw: function (p, k) { duckHeadDecor(placeOf(6), k); } },
+      { after: 6, at: function () { return ptOf(6, 0.62, 0.34); }, draw: function (p, k) { duckEyeDecor(p, k); } },
+      { clipTo: 7, at: function () { return ptOf(7, 0.50, 0.46); }, draw: function (p, k) { duckWavesDecor(placeOf(7), k); } }
     ],
     mushroom: [
       { clipTo: 8, at: function () { return ptOf(8, 0.50, 0.50); }, draw: function (p, k) { mushroomStemDecor(placeOf(8), k); } },
@@ -3911,90 +3778,285 @@
     });
     ctx.restore();
   }
-  function coatButton(p, k) {
+  // Decor Màn 1 nâng cấp Color Page: Vỏ ốc quế nướng giòn nổi khối 3D, kem dâu cel-shaded bóng bẩy & cherry tươi.
+  function iceCreamConeDecor(tf, p0, k) {
+    var al = clamp(k, 0, 1);
+    var px = function (u) { return tf.ox + u * tf.s; }, py = function (v) { return tf.oy + v * tf.s; };
+    ctx.save(); ctx.globalAlpha = al; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    // Cel-shade nâu caramel cháy nhẹ nửa phải hình nón (#BA6820)
+    ctx.fillStyle = rgba('#B2601A', 0.52);
+    ctx.beginPath();
+    ctx.moveTo(px(0.54), py(0.14));
+    ctx.lineTo(px(0.84), py(0.14));
+    ctx.lineTo(px(0.50), py(0.92));
+    ctx.quadraticCurveTo(px(0.58), py(0.50), px(0.54), py(0.14));
+    ctx.closePath(); ctx.fill();
+    // Dải highlight mật ong ấm dọc thân trái (#FFF1BC)
+    ctx.fillStyle = rgba('#FFF2BE', 0.45);
+    ctx.beginPath();
+    ctx.moveTo(px(0.32), py(0.24));
+    ctx.lineTo(px(0.42), py(0.24));
+    ctx.lineTo(px(0.47), py(0.76));
+    ctx.lineTo(px(0.41), py(0.70));
+    ctx.closePath(); ctx.fill();
+    // Khắc viền nổi lưới bánh waffle 2 lớp (sáng bên trên + nâu nướng bên dưới)
+    ctx.strokeStyle = rgba('#6E3B0E', 0.38); ctx.lineWidth = 1.6;
+    for (var row = 0.24; row <= 0.82; row += 0.14) {
+      ctx.beginPath(); ctx.moveTo(px(0.18), py(row)); ctx.lineTo(px(0.82), py(row + 0.22)); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(px(0.82), py(row)); ctx.lineTo(px(0.18), py(row + 0.22)); ctx.stroke();
+    }
+    // Bóng đổ mềm sâu của viên kem dâu xuống phần trên vỏ ốc quế
+    ctx.save(); ctx.translate(0, 7);
+    outlinePath(LV[0].outline, p0.ox, p0.oy, p0.s);
+    ctx.fillStyle = rgba('#6E2C12', 0.38); ctx.fill();
+    ctx.restore();
+    ctx.restore();
+  }
+  function iceCreamScoopDecor(tf, k) {
+    var b0 = LV[0].bbox, fb0 = fab(0), al = clamp(k, 0, 1);
+    var x0 = tf.ox + b0[0] * tf.s, y0 = tf.oy + b0[1] * tf.s, w = (b0[2] - b0[0]) * tf.s, h = (b0[3] - b0[1]) * tf.s;
+    ctx.save(); ctx.globalAlpha = al; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    // Mảng cel-shade dâu đậm phía đáy phải tạo khối tròn mọng (#C22050)
+    ctx.fillStyle = rgba('#C01E4E', 0.44);
+    ctx.beginPath();
+    ctx.moveTo(x0 + w * 0.16, y0 + h * 0.98);
+    ctx.bezierCurveTo(x0 + w * 0.56, y0 + h * 0.92, x0 + w * 0.80, y0 + h * 0.62, x0 + w * 0.82, y0 + h * 0.26);
+    ctx.lineTo(x0 + w * 1.04, y0 + h * 0.26);
+    ctx.lineTo(x0 + w * 1.04, y0 + h * 1.04);
+    ctx.closePath(); ctx.fill();
+    // Kem phủ vani bóng mượt chảy gợn sóng từ đỉnh + viền bóng hồng bên dưới
+    ctx.save(); ctx.translate(0, (1 - Math.min(k, 1.05)) * -12);
+    ctx.beginPath();
+    ctx.moveTo(x0 - 4, y0 - 4); ctx.lineTo(x0 + w + 4, y0 - 4); ctx.lineTo(x0 + w + 4, y0 + h * 0.42);
+    ctx.bezierCurveTo(x0 + w * 0.85, y0 + h * 0.54, x0 + w * 0.78, y0 + h * 0.34, x0 + w * 0.67, y0 + h * 0.46);
+    ctx.bezierCurveTo(x0 + w * 0.56, y0 + h * 0.60, x0 + w * 0.46, y0 + h * 0.36, x0 + w * 0.34, y0 + h * 0.50);
+    ctx.bezierCurveTo(x0 + w * 0.22, y0 + h * 0.60, x0 + w * 0.14, y0 + h * 0.36, x0 - 4, y0 + h * 0.44);
+    ctx.closePath();
+    ctx.save(); ctx.translate(0, 4.5); ctx.fillStyle = rgba('#8E183F', 0.24); ctx.fill(); ctx.restore();
+    var ig = ctx.createLinearGradient(0, y0, 0, y0 + h * 0.55); ig.addColorStop(0, '#FFFDF9'); ig.addColorStop(1, '#FFE6EF');
+    ctx.fillStyle = ig; ctx.fill(); ctx.lineWidth = 2.4; ctx.strokeStyle = mix(fb0.line, '#B83C60', 0.35); ctx.stroke();
+    ctx.save(); ctx.translate(x0 + w * 0.22, y0 + h * 0.26); ctx.rotate(-0.62);
+    ctx.beginPath(); ctx.ellipse(0, 0, 17, 6.2, 0, 0, 7); ctx.fillStyle = 'rgba(255,255,255,0.72)'; ctx.fill(); ctx.restore();
+    ctx.restore();
+    ctx.restore();
+  }
+  function iceCreamCherryDecor(p, k) {
     var sc = Math.max(0.01, k) * 1.12;
     ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(sc, sc);
-    ctx.beginPath(); ctx.arc(0, 1.6, 7.2, 0, 7); ctx.fillStyle = 'rgba(70,40,20,0.22)'; ctx.fill();
-    ctx.beginPath(); ctx.arc(0, 0, 7, 0, 7);
-    var bg = ctx.createRadialGradient(-2, -2, 1, 0, 0, 7); bg.addColorStop(0, '#E8AE74'); bg.addColorStop(1, '#A4622E');
-    ctx.fillStyle = bg; ctx.fill(); ctx.lineWidth = 1.7; ctx.strokeStyle = '#593012'; ctx.stroke();
-    ctx.beginPath(); ctx.arc(0, 0, 4.6, 0, 7); ctx.strokeStyle = 'rgba(89,48,18,0.4)'; ctx.lineWidth = 1.0; ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(-2.2, -2.2); ctx.lineTo(2.2, 2.2); ctx.moveTo(2.2, -2.2); ctx.lineTo(-2.2, 2.2);
-    ctx.lineWidth = 1.5; ctx.strokeStyle = '#FFF5E0'; ctx.lineCap = 'round'; ctx.stroke();
+    // Lá bạc hà 2 tông Color Page
+    ctx.save(); ctx.translate(-12, -2); ctx.rotate(-0.55);
+    ctx.beginPath(); ctx.ellipse(0, 0, 13.5, 6.4, 0, 0, 7);
+    ctx.fillStyle = '#5EE082'; ctx.fill();
+    ctx.save(); ctx.clip(); ctx.fillStyle = '#2CA850'; ctx.fillRect(-15, 0, 30, 8); ctx.restore();
+    ctx.lineWidth = 1.9; ctx.strokeStyle = '#16582C'; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-8.5, 0); ctx.lineTo(8.5, 0); ctx.lineWidth = 1.2; ctx.stroke();
+    ctx.restore();
+    // Cuống và quả cherry 2 tông cel-shaded bóng bẩy
+    ctx.beginPath(); ctx.moveTo(0, -10); ctx.quadraticCurveTo(-5, -25, -14, -28);
+    ctx.lineWidth = 2.8; ctx.strokeStyle = '#16582C'; ctx.lineCap = 'round'; ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, 12.8, 0, 7);
+    ctx.fillStyle = '#EE2640'; ctx.fill();
+    ctx.save(); ctx.clip();
+    ctx.fillStyle = '#B00E24';
+    ctx.beginPath(); ctx.arc(4.2, 4.2, 12.2, 0, 7); ctx.fill();
+    ctx.fillStyle = '#EE2640';
+    ctx.beginPath(); ctx.arc(-2.5, -2.5, 11.4, 0, 7); ctx.fill();
+    ctx.restore();
+    ctx.lineWidth = 2.4; ctx.strokeStyle = '#620C1E'; ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(-4.6, -4.8, 4.0, 2.4, -0.6, 0, 7); ctx.fillStyle = 'rgba(255,255,255,0.92)'; ctx.fill();
     ctx.restore();
   }
-  function bunnyEarInner(p, k, rot) {
-    var sc = Math.max(0.01, k);
-    ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(sc, sc); ctx.rotate(rot);
-    ctx.beginPath(); ctx.ellipse(0, 0, 14, 34, 0, 0, 7);
-    ctx.fillStyle = '#FABAC0'; ctx.fill(); ctx.lineWidth = 1.7; ctx.strokeStyle = 'rgba(175,98,104,0.6)'; ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(rot < 0 ? 3 : -3, 10, 5, 16, rot * 0.4, 0, 7);
-    ctx.fillStyle = 'rgba(235,140,148,0.42)'; ctx.fill();
-    ctx.restore();
-  }
-  function bunnyTuft(p, k) {
-    var sc = Math.max(0.01, k);
-    ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(sc, sc);
+  // Decor Màn 2 Color Page (IconCupcakeHeart.png): quai giỏ tím nhạt, ly hồng xếp ly, kem cam & trái tim đỏ bóng bẩy.
+  function cupcakeHandleDecor(tf, k) {
+    var al = clamp(k, 0, 1);
+    var px = function (u) { return tf.ox + u * tf.s; }, py = function (v) { return tf.oy + v * tf.s; };
+    ctx.save(); ctx.globalAlpha = al; ctx.lineCap = 'round';
     ctx.beginPath();
-    ctx.moveTo(-12, 3); ctx.quadraticCurveTo(-5, -16, 4, -14); ctx.quadraticCurveTo(0, -6, 3, -3);
-    ctx.quadraticCurveTo(10, -8, 12, -1); ctx.quadraticCurveTo(8, 3, 5, 5);
-    ctx.fillStyle = '#FDF0E4'; ctx.fill();
-    ctx.lineWidth = 2.2; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#6A4E3F'; ctx.stroke();
+    ctx.moveTo(px(0.22), py(0.41));
+    ctx.quadraticCurveTo(px(0.32), py(0.10), px(0.68), py(0.22));
+    ctx.lineWidth = 15; ctx.strokeStyle = rgba('#9A90CC', 0.45); ctx.stroke();
+    ctx.lineWidth = 11.5; ctx.strokeStyle = rgba('#E4DFFF', 0.92); ctx.stroke();
+    ctx.lineWidth = 4.0; ctx.strokeStyle = rgba('#FAF8FF', 0.78); ctx.stroke();
     ctx.restore();
   }
-  function bunnyEye(p, k, dir) {
-    var sc = Math.max(0.01, k);
-    ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(sc, sc);
-    ctx.beginPath(); ctx.moveTo(-7, -15); ctx.quadraticCurveTo(0, -19, 7, -15);
-    ctx.lineWidth = 2.0; ctx.lineCap = 'round'; ctx.strokeStyle = '#63483A'; ctx.stroke();
-    // Mắt oval cartoon tối giản hài hòa, không tròn kawaii lấp lánh quá cỡ
-    ctx.beginPath(); ctx.ellipse(0, 0, 6.4, 9.0, dir * -0.06, 0, 7); ctx.fillStyle = '#4A342B'; ctx.fill();
-    ctx.beginPath(); ctx.arc(-2, -3.2, 2.2, 0, 7); ctx.fillStyle = '#FFFDF8'; ctx.fill();
-    ctx.beginPath(); ctx.moveTo(dir * 4.5, -5.5); ctx.lineTo(dir * 9.5, -8.5); ctx.lineWidth = 1.8; ctx.strokeStyle = '#4A342B'; ctx.stroke();
-    ctx.restore();
-  }
-  function bunnyMuzzleAndCheeks(p, k) {
-    var sc = Math.max(0.01, k);
-    ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(sc, sc);
-    [-64, 64].forEach(function (bx) {
-      var bg = ctx.createRadialGradient(bx, 12, 2, bx, 12, 22);
-      bg.addColorStop(0, 'rgba(244,148,154,0.62)'); bg.addColorStop(1, 'rgba(244,148,154,0)');
-      ctx.fillStyle = bg; ctx.beginPath(); ctx.ellipse(bx, 12, 22, 14, 0, 0, 7); ctx.fill();
+  function cupcakeBaseDecor(tf, k) {
+    var al = clamp(k, 0, 1);
+    var px = function (u) { return tf.ox + u * tf.s; }, py = function (v) { return tf.oy + v * tf.s; };
+    ctx.save(); ctx.globalAlpha = al; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    // Bóng đổ tối hai bên thành cốc hồng đậm (#A4166E)
+    ctx.fillStyle = rgba('#981264', 0.65);
+    ctx.beginPath(); ctx.moveTo(px(0.12), py(0.30)); ctx.lineTo(px(0.27), py(0.30)); ctx.lineTo(px(0.34), py(0.68)); ctx.lineTo(px(0.18), py(0.68)); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(px(0.73), py(0.30)); ctx.lineTo(px(0.88), py(0.30)); ctx.lineTo(px(0.82), py(0.68)); ctx.lineTo(px(0.66), py(0.68)); ctx.closePath(); ctx.fill();
+    // 3 gờ xếp ly sáng nổi khối hướng về đáy (#F676C6 / #FFA0DC)
+    [[0.29, 0.38, 0.34, 0.41], [0.46, 0.54, 0.47, 0.53], [0.62, 0.71, 0.59, 0.66]].forEach(function (pl) {
+      ctx.fillStyle = rgba('#F884CE', 0.72);
+      ctx.beginPath();
+      ctx.moveTo(px(pl[0]), py(0.32)); ctx.lineTo(px(pl[1]), py(0.32));
+      ctx.lineTo(px(pl[3]), py(0.67)); ctx.lineTo(px(pl[2]), py(0.67));
+      ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = rgba('#8C0E5B', 0.38); ctx.lineWidth = Math.max(1.3, tf.s * 0.008);
+      ctx.beginPath(); ctx.moveTo(px(pl[1]), py(0.34)); ctx.lineTo(px(pl[3]), py(0.66)); ctx.stroke();
     });
-    ctx.lineWidth = 1.7; ctx.lineCap = 'round'; ctx.strokeStyle = 'rgba(105,78,64,0.72)';
-    [-1, 1].forEach(function (sg) {
-      ctx.beginPath(); ctx.moveTo(sg * 70, 8); ctx.quadraticCurveTo(sg * 86, 5, sg * 98, 8);
-      ctx.moveTo(sg * 70, 14); ctx.quadraticCurveTo(sg * 86, 14, sg * 98, 18); ctx.stroke();
-    });
-    ctx.beginPath(); ctx.moveTo(0, 4); ctx.quadraticCurveTo(-7, -3, -4.5, -5); ctx.quadraticCurveTo(0, -6.5, 4.5, -5); ctx.quadraticCurveTo(7, -3, 0, 4);
-    ctx.fillStyle = '#F28E94'; ctx.fill(); ctx.lineWidth = 1.8; ctx.strokeStyle = '#63483A'; ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(0, 4); ctx.lineTo(0, 10);
-    ctx.moveTo(-4, 11); ctx.quadraticCurveTo(0, 9.5, 4, 11); // nét mõm tĩnh nhẹ nhàng, không cười ngoác
-    ctx.lineWidth = 2.0; ctx.strokeStyle = '#63483A'; ctx.stroke();
+    // Bóng đổ viền kem cam trùm lên mép trên cốc
+    ctx.fillStyle = rgba('#6E0B46', 0.44);
+    ctx.fillRect(px(0.10), py(0.28), tf.s * 0.80, tf.s * 0.09);
     ctx.restore();
   }
-  function bunnyBowKnot(p, k) {
+  function cupcakeFrostingDecor(tf, k) {
+    var al = clamp(k, 0, 1);
+    var px = function (u) { return tf.ox + u * tf.s; }, py = function (v) { return tf.oy + v * tf.s; };
+    ctx.save(); ctx.globalAlpha = al; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    // Viền bóng caramel đậm dưới chân múi kem (#C45B24)
+    ctx.fillStyle = '#C45B24';
+    ctx.beginPath();
+    ctx.moveTo(px(0.06), py(0.52));
+    ctx.quadraticCurveTo(px(0.24), py(0.555), px(0.49), py(0.545));
+    ctx.quadraticCurveTo(px(0.75), py(0.560), px(0.94), py(0.52));
+    ctx.lineTo(px(0.94), py(0.66)); ctx.lineTo(px(0.06), py(0.66));
+    ctx.closePath(); ctx.fill();
+    // Tai cắm quai giỏ màu cam đất bo cong mềm mại góc trái (#CE6830) giống IconCupcakeHeart.png
+    ctx.fillStyle = '#CE6830';
+    ctx.beginPath();
+    ctx.moveTo(px(0.18), py(0.41));
+    ctx.quadraticCurveTo(px(0.215), py(0.35), px(0.245), py(0.39));
+    ctx.quadraticCurveTo(px(0.238), py(0.455), px(0.205), py(0.452));
+    ctx.quadraticCurveTo(px(0.182), py(0.445), px(0.18), py(0.41));
+    ctx.closePath(); ctx.fill();
+    // Mảng highlight vàng bơ sáng giữa đỉnh xoáy kem (#FFBE6E / #FFD59E)
+    ctx.fillStyle = rgba('#FFC476', 0.85);
+    ctx.beginPath();
+    ctx.ellipse(px(0.48), py(0.42), tf.s * 0.17, tf.s * 0.065, -0.08, 0, Math.PI * 2);
+    ctx.fill();
+    // Bóng đổ mềm của trái tim đỏ xuống sườn phải lớp kem
+    ctx.fillStyle = rgba('#8E2414', 0.34);
+    ctx.beginPath();
+    ctx.ellipse(px(0.71), py(0.40), tf.s * 0.14, tf.s * 0.055, -0.25, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+  function cupcakeHeartDecor(tf, k) {
+    var al = clamp(k, 0, 1);
+    var px = function (u) { return tf.ox + u * tf.s; }, py = function (v) { return tf.oy + v * tf.s; };
+    ctx.save(); ctx.globalAlpha = al; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    // Viền bóng đỏ thẫm cel-shade phía dưới-phải và mép trái trái tim (#AC0A14)
+    ctx.fillStyle = rgba('#9E0A12', 0.72);
+    ctx.beginPath();
+    ctx.moveTo(px(0.70), py(0.30));
+    ctx.lineTo(px(0.90), py(0.42));
+    ctx.lineTo(px(0.65), py(0.84));
+    ctx.lineTo(px(0.14), py(0.82));
+    ctx.quadraticCurveTo(px(0.56), py(0.60), px(0.70), py(0.30));
+    ctx.closePath(); ctx.fill();
+    // Hai vệt highlight hồng đào đặc trưng của IconCupcakeHeart.png trên hai thùy tim
+    ctx.fillStyle = rgba('#FF8E90', 0.88);
+    ctx.beginPath(); ctx.ellipse(px(0.37), py(0.36), tf.s * 0.095, tf.s * 0.068, -0.45, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(px(0.64), py(0.46), tf.s * 0.065, tf.s * 0.044, 0.25, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = rgba('#FFDADA', 0.78);
+    ctx.beginPath(); ctx.ellipse(px(0.35), py(0.34), tf.s * 0.045, tf.s * 0.028, -0.45, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+  // Decor Màn 3 Color Page (ICON-duck.png): thân vịt vàng nổi khối cánh & highlight, đầu & mỏ cam san hô bóng, sóng xanh đậm 2 tầng.
+  function duckBodyDecor(tf, k) {
+    var al = clamp(k, 0, 1);
+    var px = function (u) { return tf.ox + u * tf.s; }, py = function (v) { return tf.oy + v * tf.s; };
+    ctx.save(); ctx.globalAlpha = al; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    // Mảng vàng sẫm cel-shading bên đuôi trái & dưới lườn bụng (#D4AC0A)
+    ctx.fillStyle = rgba('#CF9F06', 0.65);
+    ctx.beginPath();
+    ctx.moveTo(px(0.02), py(0.40));
+    ctx.lineTo(px(0.28), py(0.43));
+    ctx.quadraticCurveTo(px(0.24), py(0.58), px(0.36), py(0.64));
+    ctx.quadraticCurveTo(px(0.54), py(0.68), px(0.72), py(0.58));
+    ctx.lineTo(px(0.72), py(0.78));
+    ctx.lineTo(px(0.02), py(0.78));
+    ctx.closePath(); ctx.fill();
+    // Cánh vịt cong màu vàng tươi nổi bật lên trên đuôi
+    ctx.fillStyle = '#FAE02C';
+    ctx.beginPath();
+    ctx.moveTo(px(0.18), py(0.44));
+    ctx.quadraticCurveTo(px(0.34), py(0.48), px(0.47), py(0.42));
+    ctx.quadraticCurveTo(px(0.66), py(0.42), px(0.65), py(0.55));
+    ctx.quadraticCurveTo(px(0.52), py(0.66), px(0.30), py(0.61));
+    ctx.quadraticCurveTo(px(0.18), py(0.56), px(0.18), py(0.44));
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = rgba('#B88E06', 0.45); ctx.lineWidth = Math.max(1.4, tf.s * 0.008);
+    ctx.beginPath();
+    ctx.moveTo(px(0.25), py(0.59));
+    ctx.quadraticCurveTo(px(0.49), py(0.66), px(0.64), py(0.54));
+    ctx.stroke();
+    // Highlight kem vàng dọc vai cánh & ngực vịt
+    ctx.fillStyle = rgba('#FFF8B8', 0.66);
+    ctx.beginPath(); ctx.ellipse(px(0.56), py(0.50), tf.s * 0.032, tf.s * 0.068, -0.18, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(px(0.74), py(0.56), tf.s * 0.032, tf.s * 0.072, -0.22, 0, Math.PI * 2); ctx.fill();
+    // Bóng đổ nhẹ cổ vịt
+    ctx.fillStyle = rgba('#A88004', 0.30);
+    ctx.beginPath(); ctx.ellipse(px(0.67), py(0.33), tf.s * 0.085, tf.s * 0.038, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+  function duckHeadDecor(tf, k) {
+    var al = clamp(k, 0, 1);
+    var px = function (u) { return tf.ox + u * tf.s; }, py = function (v) { return tf.oy + v * tf.s; };
+    ctx.save(); ctx.globalAlpha = al; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    // Cel-shade gáy & cằm trái (#D4AC0A)
+    ctx.fillStyle = rgba('#CF9F06', 0.60);
+    ctx.beginPath();
+    ctx.moveTo(px(0.18), py(0.10)); ctx.lineTo(px(0.50), py(0.10));
+    ctx.quadraticCurveTo(px(0.34), py(0.28), px(0.39), py(0.50));
+    ctx.quadraticCurveTo(px(0.44), py(0.64), px(0.58), py(0.72));
+    ctx.lineTo(px(0.18), py(0.72));
+    ctx.closePath(); ctx.fill();
+    // Vệt sáng trán vịt (#FFF8B8)
+    ctx.fillStyle = rgba('#FFF8B8', 0.72);
+    ctx.beginPath(); ctx.ellipse(px(0.59), py(0.22), tf.s * 0.085, tf.s * 0.035, 0.58, 0, Math.PI * 2); ctx.fill();
+    // Mỏ cam san hô bóng bẩy 2 tông nằm khớp phần mũi phải của đầu vịt (clipTo 6 cắt gọn sát viền)
+    ctx.fillStyle = '#EB7A42';
+    ctx.beginPath();
+    ctx.moveTo(px(0.76), py(0.32));
+    ctx.quadraticCurveTo(px(0.70), py(0.47), px(0.68), py(0.62));
+    ctx.lineTo(px(1.02), py(0.62));
+    ctx.lineTo(px(1.02), py(0.32));
+    ctx.closePath(); ctx.fill();
+    // Nửa dưới mỏ màu cam đất đậm (#BE4C1E)
+    ctx.fillStyle = '#BE4C1E';
+    ctx.beginPath();
+    ctx.moveTo(px(0.70), py(0.51));
+    ctx.quadraticCurveTo(px(0.84), py(0.52), px(0.98), py(0.49));
+    ctx.lineTo(px(1.02), py(0.62));
+    ctx.lineTo(px(0.68), py(0.62));
+    ctx.closePath(); ctx.fill();
+    // Highlight mỏ trên & viền phân cách
+    ctx.fillStyle = rgba('#FFC6A2', 0.65);
+    ctx.beginPath(); ctx.ellipse(px(0.84), py(0.42), tf.s * 0.048, tf.s * 0.020, 0.32, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = rgba('#7E2A0A', 0.55); ctx.lineWidth = Math.max(1.3, tf.s * 0.008);
+    ctx.beginPath(); ctx.moveTo(px(0.76), py(0.34)); ctx.quadraticCurveTo(px(0.71), py(0.47), px(0.69), py(0.60)); ctx.stroke();
+    ctx.restore();
+  }
+  function duckEyeDecor(p, k) {
     var sc = Math.max(0.01, k);
     ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(sc, sc);
-    ctx.strokeStyle = '#6B1324'; ctx.lineWidth = 1.8; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(-9, -3); ctx.quadraticCurveTo(-16, -6, -21, -4); ctx.moveTo(-9, 3); ctx.quadraticCurveTo(-16, 6, -21, 4);
-    ctx.moveTo(9, -3); ctx.quadraticCurveTo(16, -6, 21, -4); ctx.moveTo(9, 3); ctx.quadraticCurveTo(16, 6, 21, 4); ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(0, 0, 8.5, 9.5, 0, 0, 7); ctx.fillStyle = '#D94E60'; ctx.fill(); ctx.lineWidth = 2.1; ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(-2.2, -2.5, 2.2, 3.0, 0.3, 0, 7); ctx.fillStyle = 'rgba(255,255,255,0.45)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(0, 0, 7.6, 0, 7);
+    ctx.fillStyle = '#181A20'; ctx.fill();
+    ctx.beginPath(); ctx.arc(-2.3, -2.5, 2.3, 0, 7);
+    ctx.fillStyle = '#FFFFFF'; ctx.fill();
     ctx.restore();
   }
-  function pocket(p, k, hasHankie) {
-    var sc = Math.max(0.01, k);
-    ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(sc, sc); ctx.rotate(hasHankie ? -0.04 : 0.04);
-    if (hasHankie) {
-      ctx.beginPath(); ctx.moveTo(-14, -10); ctx.lineTo(-9, -30); ctx.lineTo(-1, -21); ctx.lineTo(6, -28); ctx.lineTo(14, -10); ctx.closePath();
-      ctx.fillStyle = '#FFE3A8'; ctx.fill(); ctx.lineWidth = 2.0; ctx.strokeStyle = '#6B4818'; ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(-7, -15); ctx.lineTo(8, -16); ctx.lineWidth = 1.4; ctx.strokeStyle = '#E88B6E'; ctx.stroke();
-    }
-    rr(-18, -14, 36, 30, 5.5); ctx.fillStyle = '#259155'; ctx.fill(); ctx.lineWidth = 2.1; ctx.strokeStyle = '#145C32'; ctx.stroke();
-    ctx.fillStyle = '#47C47C'; ctx.fillRect(-16, -12, 32, 7);
-    ctx.beginPath(); ctx.moveTo(-17, -5); ctx.lineTo(17, -5); ctx.lineWidth = 1.4; ctx.strokeStyle = '#145C32'; ctx.stroke();
-    rr(-14, -1, 28, 14, 3); ctx.setLineDash([3.5, 2.8]); ctx.lineWidth = 1.3; ctx.strokeStyle = '#FFF8E6'; ctx.stroke(); ctx.setLineDash([]);
+  function duckWavesDecor(tf, k) {
+    var al = clamp(k, 0, 1);
+    var px = function (u) { return tf.ox + u * tf.s; }, py = function (v) { return tf.oy + v * tf.s; };
+    ctx.save(); ctx.globalAlpha = al; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    // Tầng bóng nước sâu xanh dương đậm phía đáy gợn sóng (#062E78)
+    ctx.fillStyle = rgba('#062B72', 0.70);
+    ctx.beginPath();
+    ctx.moveTo(px(0.04), py(0.50));
+    ctx.quadraticCurveTo(px(0.24), py(0.54), px(0.50), py(0.52));
+    ctx.quadraticCurveTo(px(0.76), py(0.54), px(0.96), py(0.50));
+    ctx.lineTo(px(0.96), py(0.66)); ctx.lineTo(px(0.04), py(0.66));
+    ctx.closePath(); ctx.fill();
+    // Vệt ánh nước xanh da trời bo cong theo 4 đỉnh sóng tròn
+    ctx.strokeStyle = rgba('#66A6FA', 0.58); ctx.lineWidth = Math.max(2.0, tf.s * 0.011);
+    [[0.10, 0.44, 0.20, 0.44], [0.30, 0.43, 0.44, 0.43], [0.56, 0.43, 0.70, 0.43], [0.80, 0.44, 0.90, 0.44]].forEach(function (w) {
+      ctx.beginPath(); ctx.moveTo(px(w[0]), py(w[1])); ctx.quadraticCurveTo(px((w[0] + w[2]) * 0.5), py(w[1] - 0.032), px(w[2]), py(w[3])); ctx.stroke();
+    });
     ctx.restore();
   }
   // Viền gợi ý chỗ đặt mảnh: nét trắng lót dưới nét đứt đậm để nổi trên cả nền lẫn mảnh đã ghép.

@@ -145,6 +145,6 @@ function playAlt(id, refl, r) {
   console.log((ok ? '✅ ' : '❌ ') + id + ' ' + (refl ? 'đảo' : 'xoay') + r + ': đánh số lại ' + (relabeled ? 'có' : 'không') + ', pha ' + st.phase + ', khớp ' + (st.iouV * 100).toFixed(1) + '%');
   return ok;
 }
-const cases = [['cone', 1, 1], ['cone', 0, 0], ['shirt', 1, 2], ['shirt', 0, 0], ['bunny_bow', 1, 2], ['bunny_bow', 0, 0], ['mushroom_grass', 0, 0]];
+const cases = [['cone', 1, 1], ['cone', 0, 0], ['cupcake_base', 1, 2], ['cupcake_base', 0, 0], ['cupcake_frosting', 0, 0], ['duck_head', 0, 0], ['duck_waves', 0, 0], ['mushroom_grass', 0, 0]];
 let fail = 0; for (const c of cases) if (!playAlt(...c)) fail++;
 if (fail) { console.log(fail + ' trường hợp không thắng'); process.exit(1); }

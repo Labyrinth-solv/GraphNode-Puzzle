@@ -137,4 +137,4 @@ for (const p of P) {
     L.pointerdown(ev(195, 761)); L.pointerup(ev(195, 761)); step(70);
   }
 }
-console.log('🎉 Toàn bộ ' + P.length + ' sản phẩm (Kem, Cardigan, Bé thỏ, Nấm đỏ, Hạt dẻ, Hướng dương) chạy mượt mà với cơ chế Kéo Dây Uốn Cong!');
+console.log('🎉 Toàn bộ ' + P.length + ' sản phẩm (Kem, Cupcake, Vịt vàng, Nấm đỏ, Hạt dẻ, Hướng dương) chạy mượt mà với cơ chế Kéo Dây Uốn Cong!');
