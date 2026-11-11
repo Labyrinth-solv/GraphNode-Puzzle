@@ -6,7 +6,7 @@ Bản gốc của tài liệu là file này trong repo; đặc tả cũng vậy 
 
 Bản thử web chỉ là demo luật lõi: dùng để đối chiếu luật và số liệu trong test, **không** phải gốc cho hình ảnh, giao diện, cấu trúc code hay meta của bản chính thức. Bản đối chiếu hiện tại là `Prototype/web-demo` (bản web chính từ 2026-11-11, dựng artifact "Cắt Vải Theo Mẫu 2"). `Prototype/web-v2` chỉ đồng bộ khi người dùng yêu cầu; `Prototype/web-v3` không còn cập nhật.
 
-Trạng thái: kế hoạch. Mã mới có công cụ Editor tạo font (`Assets/Scripts/Editor`); phần chơi chưa có mã.
+Trạng thái (2026-11-11): xong khung M0 (chưa có CI). Đã có đủ asmdef theo mục 3.1, `Float2` trong Core, hợp đồng `LevelRequest`/`LevelResult`, message bus, interface dịch vụ và `IGameFlow`, dịch vụ rỗng, phạm vi App (`AppScope`) với `Boot`/`Home`/`Gameplay`, chốt chặn build gói MCP. Test: EditMode 9/9, PlayMode 1/1 (luồng Boot → Home → Gameplay → Home). Phần chơi chưa có mã (M1 trở đi).
 
 **Ý chính:** game chia thành một lõi C# thuần (hình học và luật chơi) và các module Unity theo tính năng. Các module nói chuyện với nhau qua hợp đồng chung (dữ liệu vào ra của một màn, thông điệp, interface dịch vụ). Meta loop sau này là một module mới cắm vào các hợp đồng đó, không phải sửa phần chơi màn.
 
@@ -351,6 +351,8 @@ Yêu cầu: API không cấp phát khi đang chơi (bộ đệm dựng một l�
   - Vào màn: Home đưa cho dịch vụ vị trí màn hình và hình của bong bóng; lớp phủ vẽ hình đó bằng `ShapePreview`, nạp Gameplay, rồi phóng hình tới đúng vị trí bóng mờ trên vải mà Gameplay báo lại; xong thì tắt lớp phủ.
   - Ra màn: Gameplay đưa hình và vải của mảnh vừa cắt; lớp phủ giữ mảnh trong lúc nạp Home, rồi cho bay tới thẻ đơn mà Home báo lại.
 - **Luật:** Home và Gameplay không biết nhau; chỉ biết dịch vụ chuyển cảnh và dữ liệu hình. Mọi bước có `CancellationToken`, bấm nhanh hay thoát giữa chừng không để lớp phủ treo.
+- **Token của lần đổi scene (M0, có test PlayMode):** lần đổi scene chạy theo token của phạm vi App (`AppScope.LifetimeToken`), không theo token hủy của scene đang gọi, vì chính lần đổi scene hủy scene đó; dùng token của scene sẽ tự hủy tác vụ giữa chừng dù scene mới đã nạp xong. `SceneTransition` từ chối lần đổi thứ hai khi lần trước chưa xong.
+- **Phạm vi App:** `AppScope.EnsureCreated()` là nơi duy nhất khởi tạo dịch vụ và đặt `targetFrameRate = 60`. Boot gọi đầu tiên; Home và Gameplay cũng gọi để bấm Play thẳng từ scene đó trong Editor vẫn chạy. Chỉ lớp nối trong App đọc `AppScope.Current`; module tính năng nhận dịch vụ qua tham số.
 
 ### 5.12 Hiển thị dùng chung (`GraphNode.Visuals`)
 
@@ -481,7 +483,7 @@ Tiền công, nâng cấp tiệm, lookbook, vải, câu chuyện khách, sự ki
 
 | Mốc | Nội dung | Cổng qua |
 | --- | --- | --- |
-| M0 Khung project | Thư mục, asmdef, ba scene, Boot và luồng scene, dịch vụ rỗng, CI dựng được bản trống | Project mở không lỗi, CI xanh |
+| M0 Khung project | Thư mục, asmdef, ba scene, Boot và luồng scene, dịch vụ rỗng, CI dựng được bản trống | Project mở không lỗi, CI xanh. **2026-11-11: xong trừ CI** (chờ chốt GitHub Actions + GameCI và license) |
 | M1 Lõi | Chuyển lõi bản thử sang `GraphNode.Core` theo bản web chính `Prototype/web-demo` (uốn cạnh, phạt độ uốn, chốt và đánh số lại theo chốt, hút về chốt và hút độ uốn, gấp vải, sinh vị trí ban đầu); test EditMode với số liệu đối chiếu (100% cho đáp án, bảng độ nhạy, cắm đủ chốt mà chưa uốn thì dưới ngưỡng, các cách đặt xoay và soi gương thắng được, lỗ của màn gấp, sinh lại cùng seed, bộ lọc chạm) | Test xanh; đo thời gian tính trên Editor và một máy Android phổ biến |
 | M2 Màn chơi tối thiểu | Một level đọc từ JSON, kéo tương đối có nâng node, bộ lọc chạm node/dây, kéo dây, sợi chỉ và vùng tô (thử hai cách vẽ, chọn một), chốt, thanh khớp, thắng | Chơi hết màn 1 trên thiết bị thật, giữ 60 fps khi kéo node |
 | M3 Luật đầy đủ | Điểm sáng (trang trí, nốt nhạc), chốt và gợi ý uốn, chuỗi trình diễn (gồm chớp sáng thắng), bảng kết quả | Các mảnh của bản web chính (web-demo) chơi được, khớp luật lõi của bản thử (không đối chiếu hình ảnh hay giao diện) |

@@ -648,7 +648,7 @@ Mục này là yêu cầu kỹ thuật để đưa game từ bản thử web san
 
 ### Nền tảng kỹ thuật
 
-- **Project hiện có:** Unity 2022.3.62f3 (LTS), URP 14.0.12 với Renderer 2D, Input System 1.14.2, TextMeshPro 3.0.7, Test Framework 1.1.33. Thư mục Plugins đã có UniTask và DOTween. Thư mục Scripts còn trống.
+- **Project hiện có:** Unity 2022.3.62f3 (LTS), URP 14.0.12 với Renderer 2D, Input System 1.14.2, TextMeshPro 3.0.7, Test Framework 1.1.33. Thư mục Plugins đã có UniTask và DOTween. Khung M0 đã dựng (2026-11-11): asmdef, ba scene Boot/Home/Gameplay trong Build Settings, khóa 60 fps ở Boot, dịch vụ rỗng; xem tài liệu kiến trúc.
 - **Cần chốt trước khi làm tiếp:** đặt bundle id iOS (màn hình dọc đã khóa 2026-11-11) (tên công ty `XGames` và bundle id Android `com.XGames.GraphNodePuzzle` đã đặt), nâng Android min SDK theo máy mục tiêu (hiện 22). Android đã đúng: IL2CPP, ARMv7 + ARM64 (xem mục Build và phát hành).
 - **Gói chỉ dùng khi phát triển:** gói MCP for Unity chỉ dùng trong Editor, phải gỡ khỏi bản build phát hành.
 - **Addressables:** chưa dùng. Level là dữ liệu nhỏ nên bản đầu tham chiếu trực tiếp: `LevelCatalog` (ScriptableObject) giữ tham chiếu tới file JSON của từng level dưới dạng `TextAsset`, lớp khởi động giữ tham chiếu tới catalog. Không dùng `Resources`. Chỉ thêm Addressables nếu cần cập nhật level từ xa.
