@@ -51,7 +51,7 @@ Game mobile Unity dạng giải đố: kéo node của một đồ thị cho vi�
 
 ## Kiểm thử
 
-- Mỗi thay đổi trong `GraphNode.Core` có test EditMode. Dùng số liệu đối chiếu trong đặc tả (đáp án cho 100%, bảng độ nhạy, thứ tự ghim kể cả bản đối xứng gương và đảo chiều).
+- Mỗi thay đổi trong `GraphNode.Core` có test EditMode. Dùng số liệu đối chiếu trong đặc tả (đáp án cho 100%, bảng độ nhạy, cắm đủ chốt mà chưa uốn thì dưới ngưỡng, đặt node vào chốt theo cách xoay hay soi gương vẫn thắng).
 - Level mới phải qua trình kiểm tra hàng loạt: lời giải vượt ngưỡng, vị trí đầu chưa vượt, ghim nằm trên viền trong dung sai, không chồng vùng cấm, không lớp chiều sâu che node hay ghim.
 - Chạy test và đọc kết quả trước khi báo xong. Không báo "xong" khi chưa chạy.
 

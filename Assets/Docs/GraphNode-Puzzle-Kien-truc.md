@@ -4,7 +4,7 @@ Kế hoạch hệ thống, cấu trúc thư mục và công nghệ cho bản Uni
 
 Bản gốc của tài liệu là file này trong repo; đặc tả cũng vậy (bản trên Claude Docs chỉ để đọc và bình luận).
 
-Bản thử web chỉ là demo luật lõi: dùng để đối chiếu luật và số liệu trong test, **không** phải gốc cho hình ảnh, giao diện, cấu trúc code hay meta của bản chính thức. Bản đối chiếu hiện tại là bản web 2: `Prototype/web-v2` (bản đích) và `Prototype/web-demo` (cùng code, dựng artifact). `Prototype/web-v3` không còn cập nhật.
+Bản thử web chỉ là demo luật lõi: dùng để đối chiếu luật và số liệu trong test, **không** phải gốc cho hình ảnh, giao diện, cấu trúc code hay meta của bản chính thức. Bản đối chiếu hiện tại là `Prototype/web-demo` (bản web chính từ 2026-11-11, dựng artifact "Cắt Vải Theo Mẫu 2"). `Prototype/web-v2` chỉ đồng bộ khi người dùng yêu cầu; `Prototype/web-v3` không còn cập nhật.
 
 Trạng thái: kế hoạch. Mã mới có công cụ Editor tạo font (`Assets/Scripts/Editor`); phần chơi chưa có mã.
 
@@ -160,7 +160,7 @@ Assets/
 │   │   └── Common/               Nút, thanh, hộp thoại chung
 │   ├── Visuals/                  GraphNode.Visuals
 │   │   ├── Shapes/               ShapePreview: hình mẫu nét đứt (bong bóng, thẻ hình mẫu, lookbook)
-│   │   ├── Fabric/               FabricMaterial: đổ hoa văn và màu vải theo mặt nạ
+│   │   ├── Fabric/               FabricMaterial: đổ chuyển sắc màu vải và chi tiết theo mặt nạ
 │   │   └── Characters/           CharacterView: thân, biểu cảm, trang phục nhiều lớp
 │   ├── Gameplay/                 GraphNode.Gameplay
 │   │   ├── Session/              LevelSession, máy pha của màn
@@ -267,15 +267,15 @@ stateDiagram-v2
 | `MatchScorer` | Giao chia hợp giữa mặt nạ người chơi và mặt nạ dựng từ đồ thị ở vị trí lời giải, trừ phạt độ uốn (`BendPenalty`, đã chốt tính vào thanh khớp); sau này thêm độ lệch viền | Hàm `iou`, `bendPenalty` |
 | `PinBoard` | Chốt tại vị trí lời giải: ghép node với chốt (cặp gần nhất trước, mỗi chốt một node, bán kính "đã cắm" chung), số chốt đã lấp, chốt đã có node | Hàm `checkPins` |
 | `PinRelabeler` | Khi mọi chốt đã lấp theo một vòng xoay hay soi gương của vòng lời giải: trả về hoán vị node và bảng cạnh mới (cạnh cũ, dấu). Gameplay áp hoán vị lên mọi mảng theo node và theo cạnh. Hàm thuần, test được độc lập | Hàm `canonicalizePins` |
-| `SolutionOutline` | Viền lời giải dựng một lần lúc vào màn (24 đoạn mỗi cạnh): sinh `targetShape`, vị trí ghim, số thứ tự ghim số, đường cho cảnh cắt | Hàm `ringPolyline`, `buildGeo` |
+| `SolutionOutline` | Viền lời giải dựng một lần lúc vào màn (24 đoạn mỗi cạnh): sinh `targetShape` (đã gồm độ uốn lời giải và `solBendOverride`), vị trí chốt, đường cho cảnh cắt | Hàm `ringPolyline`, `buildGeo` |
 | `RunnerSimulator` | Điểm sáng gắn với cạnh và vị trí tỉ lệ trên cạnh; tốc độ đều khi qua node; cảnh cắt khi thắng chạy theo hệ số tốc độ tính từ chu vi; hai chiều | `runnerStep` |
-| `PinChecker` | Chỉ khi level có ghim: lúc thả tay kiểm tra tức thì từng ghim bằng `IPinRule` (khoảng cách tới viền ngoài, thứ tự dọc viền). Thay cho vòng kiểm tra bằng điểm sáng đã bỏ | Ghim tròn, ghim số |
-| `IPinRule` | Luật của một loại ghim: "đi qua là sáng", "theo thứ tự"; thêm loại mới (theo nhịp…) bằng một lớp mới | Ghim tròn, ghim số |
+| `PinChecker` | (Để dành, bản đầu không làm: cơ chế chính là chốt, xem `PinBoard`.) Chỉ khi level có ghim giữa cạnh: lúc thả tay kiểm tra tức thì từng ghim bằng `IPinRule` (khoảng cách tới viền ngoài, thứ tự dọc viền). Thay cho vòng kiểm tra bằng điểm sáng đã bỏ | Ghim tròn, ghim số |
+| `IPinRule` | (Để dành cùng `PinChecker`.) Luật của một loại ghim giữa cạnh: "đi qua là sáng", "theo thứ tự"; thêm loại mới (theo nhịp…) bằng một lớp mới | Ghim tròn, ghim số |
 | `IRunnerRule` | Quyết định tốc độ và chiều của điểm sáng; thêm hai điểm sáng hay nhảy cổng bằng lớp mới | Tốc độ, đảo chiều |
 | `IHintProvider` | Chọn node cần gợi ý (mặc định node xa lời giải nhất, hoặc theo `hintOrder`). Không giữ số booster: số đó đi vào qua `LevelRequest` | Nút Gợi ý |
 | `WinConditions` | Chuỗi điều kiện xét lúc thả tay: ngưỡng khớp (đã trừ phạt độ uốn), đủ chốt (`AllPinsFilled`), vùng cấm (sau) | Luật thắng |
 | `PinMagnet` | `INodeConstraint` hút node đang kéo về chốt trống gần nhất trong bán kính hút; node mép gấp chỉ hút về chốt mép gấp, node thường không hút về chốt sau kim. Thả trong vùng hút thì đặt hẳn vào chốt. Thay `OutlineMagnet` (giữ lớp cũ làm lựa chọn trong cấu hình) | `applyNodeDrag` |
-| `BendMagnet` | Ràng buộc độ uốn khi kéo dây: hút về độ uốn lời giải trong bán kính, bật về 0 khi gần thẳng, kẹp ±0,18; hệ số đổi từ quãng kéo sang độ uốn theo vị trí điểm bắt trên dây | `applyEdgeDrag` |
+| `BendMagnet` | Ràng buộc độ uốn khi kéo dây: hút về đích độ uốn trong bán kính. Đích lấy từ `PinBoard` theo chốt hai đầu dây đang nằm (độ uốn của cạnh lời giải giữa hai chốt, đổi dấu nếu ngược chiều); chưa có đích thì không hút. Gợi ý uốn dùng cùng đích; bật về 0 khi gần thẳng, kẹp ±0,18; hệ số đổi từ quãng kéo sang độ uốn theo vị trí điểm bắt trên dây | `applyEdgeDrag` |
 | `OutlineMagnet` | (Lịch sử, bản web 1) `INodeConstraint` hút nhẹ node đang kéo về điểm gần nhất trên viền mẫu (node mép gấp chỉ hút dọc kim); thả tay trong vùng hút thì đặt hẳn lên viền | `nearestOnLoop`, `foldCross` |
 | `FoldGeometry` | Màn gấp: mặt nạ = nửa vòng hợp bản soi gương qua trục; vòng viền mở ra (viền ngoài và lỗ), đoạn cắt bỏ qua nếp gấp; khoảng kim đi được | `buildFold`, `unionRegion`, `needleRange` |
 | `StartPositionGenerator` | Sinh vị trí ban đầu và độ uốn ban đầu theo mức độ khó từ seed, tất định, đọc tham số từ `DifficultyTierConfig` cộng phần ghi đè của level. Chọn cạnh uốn khi level bỏ trống; so khoảng độ khớp sau khi trừ phạt độ uốn; giữ node kéo được ngoài vùng hút của chốt | `startgen.js` |
@@ -299,7 +299,7 @@ Yêu cầu: API không cấp phát khi đang chơi (bộ đệm dựng một l�
 - **Cạnh, node, ghim, điểm sáng:** mesh và sprite, cập nhật trên cùng đối tượng.
 - **Sợi chỉ (bản web 2):** một mesh dải (triangle strip) động cho cả vòng, đầu tròn, màu ombre bằng vertex color hoặc UV vào texture gradient 5 màu; vùng tô xem trước và đầu kéo đọc cùng một mảng điểm với sợi chỉ. Rung theo đầu kéo và nằm yên khi khớp viền tính trong View từ đường của Core cộng trạng thái đầu kéo, không đổi dữ liệu Core.
 - **Quầng sáng, tia khớp dây, gợi ý uốn:** dải mesh mềm dùng texture cạnh mờ (alpha blend hoặc additive), không dùng bloom hậu kỳ để giữ 60 fps trên máy yếu. `CurveHintView` gồm vùng khuyết (đa giác giữa dây và viền mẫu), nút cúc (sprite), sóng vòng cung (mesh nét đứt).
-- **Ống kính thở 1,04 lần:** scale `FabricRoot` quanh tâm khung, không đổi camera hay HUD; `FabricSpace` tính cả scale này khi quy đổi điểm chạm.
+- **Không phóng khung vải khi kéo:** ống kính thở 1,04 lần của bản web 2 đã bỏ (2026-11-09, người chơi thử thấy chóng mặt). Khung vải và camera đứng yên.
 - **Chốt:** sprite, có trạng thái trống, đã lấp, sóng gợi ý.
 - **Cảnh cắt và miếng vải:** dùng đường viền lời giải (đã biết từ dữ liệu), tam giác hóa một lần lúc vào màn.
 - **Chiều sâu:** `DepthLayersView` đọc `DepthProfile`, chỉ là lớp hiển thị, không ảnh hưởng Core.
@@ -337,7 +337,7 @@ Yêu cầu: API không cấp phát khi đang chơi (bộ đệm dựng một l�
 ### 5.10 Cấu hình cân bằng
 
 - Mọi số trong đặc tả (ngưỡng 92%, tốc độ điểm sáng 68% bề rộng vải mỗi giây, cảnh cắt khi thắng nhắm 1,5 s, hệ số tốc độ theo chu vi kẹp 1,6–2,5 lần; snap khi thắng 0,4 bề rộng vải mỗi giây, 0,2–0,5 s; hút nhẹ về viền bán kính 3,5%, lực 0,5, trượt vào viền 0,12 s; kim gấp: hút trục 2,5%, lực 0,6, lật bung 0,9 s, dừng 0,3 s; dung sai ghim 4,3% nếu dùng ghim; vùng chọn 7,1% tới 19%; màu và độ đậm vùng tô; thời lượng trình diễn) nằm trong asset cấu hình, theo đơn vị bề rộng vải.
-- Số của bản web 2 (số tạm, cùng asset cấu hình): ngưỡng theo mức 94, 95, 96%; chốt: bán kính hút 4,8%, lực 0,5, bán kính "đã cắm" 4,6%, chờ gợi ý chốt 2,8 s; uốn cạnh: hệ số phạt 0,18, hút độ uốn 3,5%, bật về thẳng 1,8%, kẹp ±0,18, đoạn bắt dây 25–75%; chạm: vùng chọn 8,8–22%, ưu tiên node 25 pt, vùng không bắt dây 31 pt, nâng node 22 pt theo 14 pt trượt; ống kính 1,04 lần; snap tối thiểu 0,48 s, chớp sáng 80 + 400 ms, nhấc 0,45 s, đổ màu 1,15 s, ghép 0,65 s, tua tối đa 1,5 lần; khâu khoảng 15 mũi, mỗi mũi 13–21 pt, rút chỉ 0,76 s. Các số đo bằng pt nằm trong cấu hình input, các số theo bề rộng vải nằm trong cấu hình cân bằng.
+- Số của bản web 2 (số tạm, cùng asset cấu hình): ngưỡng theo mức 94, 95, 96%; chốt: bán kính hút 4,8%, lực 0,5, bán kính "đã cắm" 4,6%, chờ gợi ý chốt 2,8 s; uốn cạnh: hệ số phạt 0,18, hút độ uốn 3,5%, bật về thẳng 1,8%, kẹp ±0,18, đoạn bắt dây 25–75%; chạm: vùng chọn 8,8–22%, ưu tiên node 25 pt, vùng không bắt dây 31 pt, nâng node 22 pt theo 14 pt trượt; snap tối thiểu 0,48 s, chớp sáng 80 + 400 ms, nhấc 0,45 s, đổ màu 1,15 s, ghép 0,65 s, tua tối đa 1,5 lần; khâu khoảng 15 mũi, mỗi mũi 13–21 pt, rút chỉ 0,76 s. Các số đo bằng pt nằm trong cấu hình input, các số theo bề rộng vải nằm trong cấu hình cân bằng.
 - Tham số sinh vị trí ban đầu theo mức độ khó nằm trong `DifficultyTierConfig` (Data/Configs), chỉ Level Editor và trình kiểm tra dùng; game lúc chạy không cần. Bản web 2 thêm: số cạnh uốn tối đa theo mức, ngưỡng mặc định theo mức, khoảng cách tối thiểu 12% và cách chốt 6% lúc đầu màn.
 - Sau này có thể ghi đè từ remote config qua interface, không đổi nơi đọc.
 
@@ -355,7 +355,7 @@ Yêu cầu: API không cấp phát khi đang chơi (bộ đệm dựng một l�
 ### 5.12 Hiển thị dùng chung (`GraphNode.Visuals`)
 
 - **`ShapePreview`:** vẽ `targetShape` thành nét đứt có tô nhạt, kích thước tùy chỗ dùng. Có kích thước tối thiểu và độ dày nét theo số node, để hình nhiều node vẫn đọc được trong bong bóng.
-- **`FabricMaterial`:** một shader đổ hoa văn và màu vải theo mặt nạ, dùng cho cảnh đổ màu trong màn, mảnh và vải nền khi hoàn thiện sản phẩm, sản phẩm trên người khách, lookbook.
+- **`FabricMaterial`:** (đổi 2026-11-11 theo phong cách tranh tô màu đã chốt) một shader đổ chuyển sắc tròn ba tông của `FabricDefinition` (sáng ở trên trái, màu nền, tối ở dưới phải) theo mặt nạ, không texture vân nỉ hay len đan. Chi tiết vật thật (ô bánh quế, gân len cổ áo) là một lớp texture xám lặp tùy chọn, nhân với tông màu; UV của chi tiết tính theo toạ độ khung vải (bề rộng vải) chứ không theo cỡ mảnh. Viền mực đen dày đều và sáng viền theo hình vẽ cùng mesh viền mảnh (texture khoảng cách tới mép hoặc dải mesh). Thêm vải hay đổi màu không cần vẽ texture mới. Dùng cho cảnh đổ màu trong màn, mảnh và vải nền khi hoàn thiện sản phẩm, sản phẩm trên người khách, lookbook.
 - **`CharacterView`:** nhân vật gồm các lớp (thân, tóc, biểu cảm, trang phục). Trang phục lấy từ phần mặc lên người của `ProductDefinition`, đổ vải bằng `FabricMaterial`. Dùng cho khách ở quầy, cảnh khách nhận đồ; sau này cho mặc thử và lookbook.
 - **Quy trình art cho mỗi sản phẩm:** bản phác thảo cho thẻ đơn; khi làm mở rộng mặc thử thì thêm một sprite trang phục, một mặt nạ vùng đổ vải, vị trí đặt hình đắp; cùng kích thước khung với chân dung khách để chồng lớp đúng.
 
@@ -482,9 +482,9 @@ Tiền công, nâng cấp tiệm, lookbook, vải, câu chuyện khách, sự ki
 | Mốc | Nội dung | Cổng qua |
 | --- | --- | --- |
 | M0 Khung project | Thư mục, asmdef, ba scene, Boot và luồng scene, dịch vụ rỗng, CI dựng được bản trống | Project mở không lỗi, CI xanh |
-| M1 Lõi | Chuyển lõi bản thử sang `GraphNode.Core` theo bản web 2 (uốn cạnh, phạt độ uốn, chốt và đánh số lại theo chốt, hút về chốt và hút độ uốn, gấp vải, sinh vị trí ban đầu); test EditMode với số liệu đối chiếu (100% cho đáp án, bảng độ nhạy, cắm đủ chốt mà chưa uốn thì dưới ngưỡng, các cách đặt xoay và soi gương thắng được, lỗ của màn gấp, sinh lại cùng seed, bộ lọc chạm) | Test xanh; đo thời gian tính trên Editor và một máy Android phổ biến |
+| M1 Lõi | Chuyển lõi bản thử sang `GraphNode.Core` theo bản web chính `Prototype/web-demo` (uốn cạnh, phạt độ uốn, chốt và đánh số lại theo chốt, hút về chốt và hút độ uốn, gấp vải, sinh vị trí ban đầu); test EditMode với số liệu đối chiếu (100% cho đáp án, bảng độ nhạy, cắm đủ chốt mà chưa uốn thì dưới ngưỡng, các cách đặt xoay và soi gương thắng được, lỗ của màn gấp, sinh lại cùng seed, bộ lọc chạm) | Test xanh; đo thời gian tính trên Editor và một máy Android phổ biến |
 | M2 Màn chơi tối thiểu | Một level đọc từ JSON, kéo tương đối có nâng node, bộ lọc chạm node/dây, kéo dây, sợi chỉ và vùng tô (thử hai cách vẽ, chọn một), chốt, thanh khớp, thắng | Chơi hết màn 1 trên thiết bị thật, giữ 60 fps khi kéo node |
-| M3 Luật đầy đủ | Điểm sáng (trang trí, nốt nhạc), chốt và gợi ý uốn, chuỗi trình diễn (gồm chớp sáng thắng), bảng kết quả | Các mảnh của bản web 2 chơi được, khớp luật lõi của bản thử (không đối chiếu hình ảnh hay giao diện) |
+| M3 Luật đầy đủ | Điểm sáng (trang trí, nốt nhạc), chốt và gợi ý uốn, chuỗi trình diễn (gồm chớp sáng thắng), bảng kết quả | Các mảnh của bản web chính (web-demo) chơi được, khớp luật lõi của bản thử (không đối chiếu hình ảnh hay giao diện) |
 | M4 Nội dung và tiệm may | Level Editor, kiểm tra hàng loạt trong CI, khoảng 20 màn, tiến trình và save; màn Home khách ở quầy, bong bóng, thẻ đơn, chuyển cảnh cơ bản, khách nhận đồ | Kiểm tra hàng loạt xanh; lưu và tải lại đúng; chơi trọn một đơn từ Home |
 | M5 Hoàn thiện | Âm thanh, nốt nhạc, rung, telemetry, giảm chuyển động, hiệu năng, QA trên máy thật | Đạt định nghĩa hoàn thành trong đặc tả |
 | Sau đó | Đặt mảnh và hoàn thiện sản phẩm (vải nền, decor bất ngờ); meta mở rộng: khách có câu chuyện, lookbook, vải, nâng cấp tiệm | Theo mục tương ứng trong đặc tả |
@@ -502,4 +502,4 @@ Tiền công, nâng cấp tiệm, lookbook, vải, câu chuyện khách, sự ki
 - [ ] Ghim gói MCP for Unity vào một tag hoặc commit thay cho `#main`.
 - [x] Đã chốt (2026-11-09): làm Android trước. Rung nhiều nhịp trên iOS (plugin native gọi `UIImpactFeedbackGenerator` hoặc gói có sẵn) để tới khi build iOS.
 - [ ] Âm thanh bản web 2 tổng hợp bằng WebAudio; bản Unity cần bộ clip thu sẵn theo từng bậc ngũ cung và từng âm sắc (chốt gỗ, kalimba, gảy dây, rút chỉ, sột soạt vải): ai làm, định dạng nào. Đề xuất (chờ chốt): Claude kết xuất bộ clip tạm từ chính các hàm tổng hợp của bản web 2 (OfflineAudioContext) ra WAV 48 kHz 16-bit mono, đặt tên theo âm sắc và bậc (`sfx_pin_s03.wav`); nhập vào Unity với clip ngắn ADPCM, Decompress On Load, clip lặp (sột soạt vải) Vorbis, Compressed In Memory. Sau này người làm âm thanh thay file cùng tên, không sửa code.
-- [ ] ProjectSettings: khóa màn hình dọc (đã chốt 2026-11-09, chưa làm: đổi Default Orientation sang Portrait trong Player Settings qua Editor; đang cho tự xoay 4 hướng); bundle id iOS (chưa đặt). Đã xong: tên công ty `XGames`, bundle id Android `com.XGames.GraphNodePuzzle`. Android đã đúng: IL2CPP, ARMv7 + ARM64 (đã chốt giữ cả hai, ưu tiên ARM64; xem mục Build và phát hành trong đặc tả).
+- [ ] ProjectSettings: khóa màn hình dọc đã làm (2026-11-11, người dùng đổi Default Orientation sang Portrait, chưa commit); bundle id iOS (chưa đặt). Đã xong: tên công ty `XGames`, bundle id Android `com.XGames.GraphNodePuzzle`. Android đã đúng: IL2CPP, ARMv7 + ARM64 (đã chốt giữ cả hai, ưu tiên ARM64; xem mục Build và phát hành trong đặc tả).

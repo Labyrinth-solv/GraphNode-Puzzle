@@ -95,18 +95,19 @@ Mỗi cạnh vòng có một **độ uốn** `h`: độ phồng của dây so v�
 - **Hình dạng cạnh khi chơi:** Hermite bậc ba qua hai đầu, tiếp tuyến hai đầu pha giữa hướng dây thẳng và tiếp tuyến Catmull-Rom theo độ uốn hiện tại, rồi cộng thêm phần lệch theo pháp tuyến để chỗ phồng giữa dây bằng đúng `h`. Công thức chính xác lấy theo `edgePoly` của bản web 2 làm số liệu đối chiếu cho test.
 - **Cạnh uốn (`bendFree`):** những cạnh người chơi phải tự uốn. Chúng bắt đầu thẳng (độ uốn 0); mọi cạnh khác bắt đầu ở đúng độ uốn lời giải. Level ghi rõ danh sách này; nếu bỏ trống thì công cụ sinh chọn theo mức độ khó (tối đa 1 cạnh ở mức dễ, 2 ở mức vừa và khó; ưu tiên cạnh cong rõ và dài, có ít nhất một đầu kéo được).
 - **Mọi cạnh uốn được (đã chốt):** người chơi kéo được thân dây của bất kỳ cạnh nào, kể cả cạnh thẳng ở lời giải và cạnh giữa hai ghim khóa; uốn sai thì độ khớp giảm.
-- **Kéo dây:** chỉ bắt được thân dây ở đoạn giữa (25–75% chiều dài, mục Thao tác trên màn hình nhỏ); trong lúc kéo, ngón tay trượt tự do trong 14–86%. Độ uốn kẹp trong ±0,18. Gần độ uốn lời giải (trong 3,5%) thì dây bị hút về đó, lực tối đa 0,5; gần 0 (trong 1,8%) thì dây bật về thẳng. Thả tay trong vùng hút thì dây trượt hẳn về độ uốn lời giải.
+- **Đích độ uốn theo chốt (đã duyệt 2026-11-09, có trong web-demo và web-v2):** đích của một cạnh không lấy theo số thứ tự cạnh mà theo chốt hai đầu dây đang nằm (bán kính "đã cắm" chung). Nếu hai chốt đó là hai đầu của một cạnh lời giải thì đích là độ uốn lời giải của cạnh đó, đổi dấu nếu dây đi ngược chiều; nếu một đầu chưa ở chốt, hoặc hai chốt không liền nhau trên viền mẫu, thì cạnh **không có đích**. Nam châm dây, hiệu ứng khớp dây, gợi ý uốn và sóng nhắc khi đứng yên đều dùng đích này. Lý do: trước đây dây vẫn bị hút về độ uốn lời giải khi hai đầu chưa ở chốt (dây "snap" mà không khít viền), và hút về sai độ uốn khi node cắm chốt theo thứ tự khác lời giải.
+- **Kéo dây:** chỉ bắt được thân dây ở đoạn giữa (25–75% chiều dài, mục Thao tác trên màn hình nhỏ); trong lúc kéo, ngón tay trượt tự do trong 14–86%. Độ uốn kẹp trong ±0,18. Khi cạnh có đích: gần đích (trong 3,5%) thì dây bị hút về đó, lực tối đa 0,5; thả tay trong vùng hút thì dây trượt hẳn về đích. Cạnh chưa có đích thì không hút, dây uốn tự do. Gần 0 (trong 1,8%) thì dây luôn bật về thẳng.
 - **Phạt độ uốn trong thanh khớp (đã chốt):** điểm khớp hiện trên thanh = giao chia hợp − phạt độ uốn. Phạt = 0,18 × trung bình trên các cạnh uốn của `min(1,2; |h − h lời giải| / max(0,04; |h lời giải|))`. Nhờ vậy cắm đủ chốt mà chưa uốn thì luôn dưới ngưỡng (bản web 2: 63–88%, ngưỡng 94–96%), cách tính thắng khắt khe hơn.
 - **Độ khắt khe do vùng hút quyết định (đã chốt, cố ý):** để còn thắng, độ uốn mỗi cạnh chỉ được lệch ±1,1–2,0% bề rộng vải (bản web 2), nhỏ hơn bán kính hút của dây (3,5%). Thực tế: thả dây trong vùng hút là thắng, ngoài vùng hút là không.
-- **Gợi ý uốn ba tầng:** chỉ hiện khi đã buông tay và node đã vào chốt (sau nhịp dừng 0,25 s, hiện dần 0,4 s), không hiện khi các chốt đang cắm sai thứ tự:
+- **Gợi ý uốn ba tầng:** hiện cho **mọi cạnh có đích mà độ uốn còn lệch đích từ 1,2%**, không chỉ cạnh uốn (2026-11-09: trước đây chỉ cạnh `bendFree`, nên đường chéo của đôi lá bị uốn lệch không có gợi ý). Cạnh uốn hiện đậm, cạnh khác nhạt hơn (75%). Chỉ hiện khi đã buông tay (sau nhịp dừng 0,25 s, hiện dần 0,4 s); viền đích vẽ giữa chính hai đầu dây ở độ uốn đích:
   - quầng sáng vàng mật ong quanh dây cần uốn;
   - nút cúc len ở giữa dây làm chỗ để chạm;
   - sóng vòng cung nét đứt trôi từ dây sang phía viền mẫu, chỉ hướng kéo;
   - nền là vùng khuyết giữa dây và viền mẫu tô kem bơ nhạt, thở nhẹ.
-- **Hiện theo từng cạnh (đã duyệt):** nút cúc và vùng khuyết của một cạnh hiện ngay khi hai đầu cạnh đó đã vào chốt và độ uốn còn lệch ít nhất 1,2%, không chờ cắm đủ cả màn.
-- **Khớp dây khi thả:** thả dây đúng vào vùng hút và hai đầu đã cắm chốt thì phát tia sáng chạy dọc dây (0,32 s), dây nảy đàn hồi tắt dần, bụi tơ bay ra, tiếng rút chỉ (quét 1,3 → 3,2 kHz) và một nốt kalimba, rung kép. Hai đầu chưa cắm thì dây vẫn trượt về nhưng không có hiệu ứng. Đang kéo thì im, chỉ rung rất nhẹ khi vào vùng hút.
-- **Khớp dây theo chốt (đã duyệt):** khi một node vừa cắm vào chốt làm cạnh nối với nó (kể cả với ghim khóa) thành đúng độ uốn lời giải, cạnh đó phát hiệu ứng khớp dây trễ 50 ms sau tiếng cắm chốt.
-- **Gợi ý (booster):** chọn giữa node xa chốt nhất và cạnh lệch độ uốn nhất, cạnh thắng khi độ lệch nhân 2,2 lớn hơn khoảng cách của node.
+- **Hiện theo từng cạnh (đã duyệt):** nút cúc và vùng khuyết của một cạnh hiện ngay khi cạnh đó có đích theo chốt và độ uốn còn lệch ít nhất 1,2%, không chờ cắm đủ cả màn.
+- **Khớp dây khi thả:** thả dây đúng vào vùng hút của đích thì phát tia sáng (kể cả khi đích là đoạn thẳng, ví dụ nắn đường chéo của đôi lá về thẳng; trước 2026-11-09 chỉ cạnh cong mới có), với điều kiện dây thật sự được sửa: lúc bắt đầu kéo đã lệch đích từ 1,2%, hoặc trong lúc kéo bị kéo ra khỏi vùng hút; kéo nhẹ một dây đang đúng mà vẫn trong vùng hút thì không có hiệu ứng. Hiệu ứng gồm tia sáng chạy dọc dây (0,32 s), dây nảy đàn hồi tắt dần, bụi tơ bay ra, tiếng rút chỉ (quét 1,3 → 3,2 kHz) và một nốt kalimba, rung kép. Cạnh chưa có đích thì không có vùng hút nên không có hiệu ứng. Đang kéo thì im, chỉ rung rất nhẹ khi vào vùng hút.
+- **Khớp dây theo chốt (đã duyệt):** khi một node vừa cắm vào chốt làm cạnh nối với nó (kể cả với ghim khóa) có đích và đang đúng độ uốn đích, cạnh đó phát hiệu ứng khớp dây trễ 50 ms sau tiếng cắm chốt.
+- **Gợi ý (booster):** chọn giữa node xa chốt nhất và cạnh lệch đích nhiều nhất (chỉ xét cạnh có đích), cạnh thắng khi độ lệch nhân 2,2 lớn hơn khoảng cách của node.
 - **Số tạm (ScriptableObject cấu hình):** hệ số phạt 0,18, mẫu số tối thiểu 0,04, trần 1,2; bán kính hút dây 3,5%, lực 0,5; bật về thẳng 1,8%; kẹp ±0,18; đoạn bắt dây 25–75%.
 
 ### Viền ngoài (đường cắt)
@@ -285,6 +286,37 @@ Level là dữ liệu, không phải scene: một scene gameplay dùng chung t�
 | forbiddenZones | danh sách đa giác, tùy chọn | Vùng cấm (mục Ý tưởng mở rộng: vùng cấm), chưa làm |
 | tags | danh sách | Cơ chế dùng trong màn, để mở rộng sau |
 
+Ví dụ một file level (đôi lá số 8 của bản web 2; toạ độ chuẩn hóa 0–1, trục dọc hướng xuống; `startBend` theo thứ tự cạnh vòng, cạnh `k` nối `ring[k]` với `ring[k+1]`):
+
+```json
+{
+  "schemaVersion": 2,
+  "id": "flower_leaves",
+  "chapterId": "ch1",
+  "productId": "flowerpot",
+  "slotIndex": 1,
+  "difficulty": "hard",
+  "winThreshold": 0.96,
+  "startSeed": 0,
+  "keepStart": true,
+  "nodes": [
+    { "id": 0, "type": "c", "locked": false, "solutionPos": [0.29, 0.34], "startPos": [0.39, 0.06] },
+    { "id": 1, "type": "c", "locked": false, "solutionPos": [0.69, 0.66], "startPos": [0.75, 0.43] },
+    { "id": 2, "type": "c", "locked": false, "solutionPos": [0.69, 0.34], "startPos": [0.62, 0.63] },
+    { "id": 3, "type": "c", "locked": false, "solutionPos": [0.29, 0.66], "startPos": [0.13, 0.79] }
+  ],
+  "ring": [0, 1, 2, 3],
+  "innerEdges": [],
+  "bendFree": [1, 3],
+  "startBend": [0, 0, 0, 0],
+  "solBendOverride": { "1": 0.16, "3": -0.16 },
+  "fabricId": "leaf_stripes",
+  "tags": ["pins", "bend"]
+}
+```
+
+Ví dụ lược trường `targetShape` (danh sách điểm do Level Editor sinh từ lời giải, đã gồm độ uốn) cho gọn. `chapterId`, `startSeed`, `fabricId` trong ví dụ là giá trị giữ chỗ.
+
 ### Gợi ý (booster), lượt kéo và Đặt lại
 
 - **Lượt kéo không giới hạn (đã chốt):** người chơi kéo bao nhiêu lần cũng được. Số lần kéo chỉ để đo (telemetry, bảng kết quả), không liên quan tới thắng thua; màn không có luật thua.
@@ -399,7 +431,9 @@ Sản phẩm là thứ khách đặt: quần áo, tranh vải, gối, túi… M�
   - Sản phẩm nào cũng có khung, hiện ô viền mờ cho từng mảnh. Người chơi kéo mảnh vào, đặt gần đúng thì mảnh tự hút vào ô (cách A, đã chốt).
   - **Viền gợi ý đè lên mảnh đã ghép (đã chốt 2026-11-04, đã thử trên bản web):** khi chưa ghép hết, viền ô của mỗi mảnh còn lại vẽ đè lên trên các mảnh đã ghép, để người chơi vẫn thấy chỗ đặt dù ô bị mảnh khác che (rõ nhất ở sản phẩm nhiều mảnh chồng nhau như cardigan). Mảnh nào ghép xong thì xóa viền gợi ý và ô mờ của mảnh đó ngay. Thứ tự vẽ: mảnh đã ghép, rồi viền gợi ý, trên cùng là mảnh trong khay và mảnh đang cầm (viền không đè lên mảnh trên tay). Bản thử vẽ viền bằng nét đứt màu mực trên một nét trắng lót để nổi trên cả nền lẫn mảnh, nhấp nháy nhẹ và nét đứt chạy chậm dọc viền; cách thể hiện trong bản chính do người dùng chốt khi làm giao diện.
   - Sản phẩm nhiều mảnh: các mảnh ghép với nhau trên khung, cách ghép phụ thuộc từng sản phẩm và từng mảnh. Đủ mảnh thì chạy hoạt ảnh đường chỉ khâu dọc các mép giáp nhau. Sản phẩm một mảnh: chỉ khâu chạy quanh mép mảnh.
-  - **Khâu từng mũi và rút chỉ (bản web 2, 2026-11-07):** đường khâu chia thành khoảng 15 mũi rời, mỗi mũi dài 13–21 pt (theo tổng chiều dài đường may), khâu ít nhất 13 mũi mỗi giây. Kim nhảy từng mũi; mỗi mũi phát một nốt ngũ cung cao dần, tiếng kim xuyên vải và rung nhẹ. Sau mũi cuối là nhịp rút chỉ 0,76 s: 0,28 s đầu kim kéo chỉ căng, cả sản phẩm co nhẹ về tâm đường may (5,5% ngang, 4% dọc), dọc mũi khâu hiện nếp nhăn, có tiếng rít chỉ và tiếng gảy dây; 0,48 s sau vải duỗi phẳng, hợp âm ngũ cung và chùm hạt sáng ở hai đầu đường may. Chạm để tua tối đa 1,5 lần.
+  - **Ép hoàn thiện (đã duyệt 2026-11-11, có trong web-demo; thay cho khâu đắp và khâu từng mũi bên dưới):** người dùng thấy mọi kiểu viền may (mũi khâu nổi, sợi chỉ mảnh cùng màu, rãnh chìm và mép phồng) đều không đẹp, nên bỏ hết đường may ở bước hoàn thiện. Mảnh ở màn thưởng không có nét viền nào, chỉ có bóng đổ mỏng và mép trong hơi tối. Luồng mới: đặt đủ mảnh thì sản phẩm nhấp nhô nhẹ chờ chạm (không còn bước khâu tự chạy); **chính lần chạm là cú ép**, kể như bàn ép keo nhiệt ép mảnh đắp dính xuống vải nền. Bốn nhịp, **kiểu con dấu tròn nhìn từ trên xuống** (sửa 2026-11-11, lần ba: bản đầu nén 8% gần như không thấy; bản hai bàn ép nhìn ngang không hợp góc nhìn; bản ba khuôn đúng hình sản phẩm chưa đúng ý; người dùng muốn như máy ép có khuôn tròn bằng vải nền phía sau, ấn thẳng xuống như đóng con dấu chữ ký): (1) hạ xuống 0,2 s: **con dấu tròn đúng cỡ vải nền** (vành gỗ, mặt nỉ kem có đường chỉ nét đứt, núm cầm ở giữa có điểm sáng), bắt đầu to 1,35 lần và mờ, nhỏ dần về đúng cỡ, nhanh dần như rơi; bóng tròn trên nền co lại và đậm dần; tiếng "vút" ngắn; (2) ấn 0,1 s: con dấu khớp mép nền và che kín sản phẩm, nén nhẹ 3% rồi về, màn hình rung 3 pt tắt dần trong 0,2 s, chớp sáng trắng, tiếng "thịch" trầm êm như nỉ, rung mạnh; sản phẩm không co nảy; (3) nhấc lên 0,3 s: con dấu to dần tới 1,4 lần và mờ đi về phía người chơi, hơi nước bốc đều quanh mép tròn (hướng ra ngoài và lên trên) kèm tiếng xì, vòng sóng ở mép, để lại **vết ép tròn nổi** sát mép nền, cùng màu nền (một nét tối mờ lệch dưới phải, một nét sáng lệch trên trái), giữ tới hết màn thưởng; (4) màu đậm loang **từ tâm ra đúng mép nền** trong 0,6 s, đồng thời nhãn vải "Hoàn thành!" bật ra phía trên sản phẩm (phóng vượt rồi về 1, hơi nghiêng, viền chỉ nét đứt như nhãn may), vệt lóa chéo quét qua sản phẩm trong 0,5 s, rồi trang trí hiện lần lượt như cũ. Hoa văn khắc trên mặt con dấu để sau. Tổng cú ép 0,6 s. Màn thưởng ngắn đi khoảng 3 s. Tùy chọn để sau: ép thêm một nhãn vải nhỏ ở góc sản phẩm (logo tiệm hoặc ngôi sao). Unity: tween nén và bật (DOTween hoặc tự viết, có `SetLink`), hệ hạt có pool cho bụi vải, âm và rung qua `IAudioService`, `IHaptics`; không cần shader rãnh hay texture khoảng cách tới mép cho phần này. Số thời lượng và độ nén là số tạm trong ScriptableObject.
+  - **Khâu đắp mảnh lên vải nền (đã bỏ 2026-11-11, lịch sử; đã duyệt 2026-11-09, thử trên web-demo 2026-11-10):** bản web-demo: mũi cách mép vào trong 3% khung của mảnh, mỗi mũi khoảng 8 pt, cả lượt 2,2 s, khoảng 12 nốt leo dần cho cả lượt (mũi rất dày nên không phát nốt mỗi mũi), chiều dời vào trong xét riêng từng điểm (đúng cả lá số 8 tự bắt chéo và lỗ tim), góc lõm dời tối đa 1,6 lần; mảnh vải bỏ viền mực, còn nét mép mảnh cùng màu tối của mảnh; mũi khâu vẽ ngay sau mảnh của nó để mảnh trên che đúng mũi của mảnh dưới; nút "Mũi khâu" trên thanh công cụ thử đổi giữa viền chăn, mũi chạy, quấn mép. **Sửa 2026-11-11:** mũi khâu nổi (chỉ kem, có nét bóng) người dùng thấy xấu; nay sợi chỉ cực mảnh (0,9 pt) cùng màu tối của chính mảnh, gần như ẩn, mặc định mũi chạy; nút thử có thêm "Không khâu" (bỏ hẳn mũi và kim, sang thẳng nhịp chốt) để so. Chưa chốt giữa hai cách. **Sửa 2026-11-11 (lần 2), mặc định mới: rãnh chần chìm và mép phồng**, không còn sợi chỉ nào nhìn thấy: mọi nét lấy từ màu của chính mảnh nên chìm vào vải, chỉ còn sáng tối tạo khối (ánh sáng từ trên trái). Mép phồng: trong mảnh, dải sáng bám mép trên trái, dải tối bám mép dưới phải, rộng khoảng bằng khoảng dời 3%. Rãnh: nét tối làm đáy rãnh chạy dọc đường dời vào trong, cạnh đó một nét sáng mảnh lệch xuống dưới phải là thành rãnh bắt sáng. Hoạt ảnh: kim đi tới đâu rãnh hiện tới đó, mép phồng dần theo phần đã khâu của mảnh, kết thúc bằng nhịp rút chỉ. Nút thử: Rãnh chìm (mặc định), Mũi chạy, Không khâu. Trong Unity làm bằng shader của `FabricMaterial` với texture khoảng cách tới mép (SDF) tính sẵn mỗi mảnh. Mô tả đã duyệt: bỏ viền mực của mảnh ở màn thưởng và mọi nơi mảnh vải hiện ra, thay bằng bóng đổ mỏng (2–3 pt) và mép trong hơi tối. Khi đặt đủ mảnh, kim chạy dọc mép từng mảnh (mảnh dưới trước), khâu mũi viền chăn (blanket stitch) đắp mảnh lên vải nền; có công tắc thử mũi chạy và mũi quấn mép. Mũi cách mép vào trong đều khoảng 2,5% bề rộng vải, tính bằng phép dời đường viền vào trong (Clipper2 hoặc Level Editor tính sẵn), không thu nhỏ quanh tâm. Màu chỉ tương phản nhẹ theo từng mảnh. Cả lượt khâu 2–2,5 s, tua tối đa 1,5 lần, mỗi mũi một nốt ngũ cung cao dần, cuối lượt giữ nhịp rút chỉ. Viền gợi ý nét đứt của ô trống giữ trong lúc đặt mảnh. Màn tranh tô màu (nếu chọn phong cách đó) giữ viền đen dày nhưng cố định độ dày. Lý do: đường chỉ nét đứt hiện tại thu nhỏ đường viền 88% quanh tâm nên lệch ra ngoài hoặc cắt ngang ở hình có phần mảnh, lõm; viền mực đậm co giãn theo cỡ mảnh làm mất chất vải; ba lớp nét chồng ở cùng mép.
+  - **Khâu từng mũi và rút chỉ (bản web 2, 2026-11-07; đã bỏ 2026-11-11, thay bằng ép hoàn thiện):** đường khâu chia thành khoảng 15 mũi rời, mỗi mũi dài 13–21 pt (theo tổng chiều dài đường may), khâu ít nhất 13 mũi mỗi giây. Kim nhảy từng mũi; mỗi mũi phát một nốt ngũ cung cao dần, tiếng kim xuyên vải và rung nhẹ. Sau mũi cuối là nhịp rút chỉ 0,76 s: 0,28 s đầu kim kéo chỉ căng, cả sản phẩm co nhẹ về tâm đường may (5,5% ngang, 4% dọc), dọc mũi khâu hiện nếp nhăn, có tiếng rít chỉ và tiếng gảy dây; 0,48 s sau vải duỗi phẳng, hợp âm ngũ cung và chùm hạt sáng ở hai đầu đường may. Chạm để tua tối đa 1,5 lần.
   - **Khớp tỉ lệ mảnh:** tỉ lệ giữa các mảnh đặt sẵn trong dữ liệu sản phẩm; nếu cả sản phẩm vượt vòng chỉ của vải nền thì chỉ co đồng đều cả sản phẩm, không phóng riêng một mảnh (bản web 2 từng phóng riêng mảnh áo lót và làm nó dài gấp 2,55 lần).
   - Hình mảnh là `targetShape` của level đã cắt (auto-snap đã đưa đường cắt về đúng viền mẫu), co giãn đúng tỉ lệ ô. Một ngón; vùng chạm của mảnh không nhỏ hơn 44 pt dù mảnh nhỏ.
   - Với sản phẩm một mảnh, bước này chạy sau mỗi màn, nên phải rất ngắn: vùng hút rộng, kéo một lần là vào chỗ.
@@ -478,9 +512,46 @@ Bảng màu cũ của bản minh họa (#FFF1E8, #3A2340, #C7385F, #E2557A, #F9D
 
 Font: Baloo 2, hỗ trợ đầy đủ tiếng Việt.
 
+### Mảnh vải: màu thật và vân len (đã chốt 2026-11-09)
+
+Người dùng chọn hướng D trên [Bảng Vải Cozy](https://claude.ai/artifact/7nasb5KU1QQtN8Cp3ugUYz): mảnh vải in ra không cầu kỳ, màu sát vật thật, có vân thể hiện chất len. Nền khung vải giữ như hiện tại (hồng đất, sọc chéo, viền chỉ nét đứt). Viền mực và đường chỉ khâu nét đứt của mảnh giữ như hiện tại.
+
+- **Màu theo vật thật:** mỗi mảnh một màu chính lấy từ chính vật đó, cộng một tông sáng và một tông tối của cùng màu để làm vân và bóng. Không có màu nhấn trang trí. Lấy màu theo ảnh mẫu của từng sản phẩm.
+- **Không hoa văn trang trí:** bỏ chấm bi, cốm rắc, caro, sọc, chữ V to. Chỉ giữ chi tiết là một phần của vật (ô bánh quế của ốc quế, gân len cổ áo và bo tay), vẽ cùng tông, độ tương phản thấp.
+- **Vân theo chất liệu**, cùng tông với nền nên nhìn xa vẫn phẳng, lại gần mới thấy sợi:
+  - **Len đan:** hàng mũi chữ V nhỏ, mỗi mũi khoảng 1,7% bề rộng khung vải, hàng cao 1,4%.
+  - **Nỉ:** sợi lông ngắn (0,4–1,2% bề rộng vải) rải ngẫu nhiên, tông sáng và tông tối xen nhau.
+  - **Len gân:** gân dọc rộng 2,2%, sáng ở giữa gân, tối ở rãnh.
+- **Kích thước vân cố định theo bề rộng khung vải**, không co giãn theo cỡ mảnh: mảnh nhỏ (ở màn thưởng, ô bộ vải ghép) vẫn có mũi đan cùng cỡ với mảnh to, như vải thật. Bản web hiện co giãn hoa văn theo cỡ mảnh.
+- **Ánh sáng chung:** sáng nhẹ phía trên, tối dần về mép dưới, mép trong viền hơi tối, để mảnh có khối mà vẫn phẳng. **Sáng viền theo hình (2026-11-11):** bỏ cung sáng trắng đặt cố định theo khung bao (lệch ở hình không tròn); thay bằng dải sáng mảnh chạy dọc bên trong mép, chỉ ở các đoạn mép quay về phía nguồn sáng (trên trái), mép càng quay về phía sáng thì dải càng rõ. Quầng sáng tròn rộng giữa mảnh giảm bớt. **Màu trong hơn (2026-11-11):** các lớp tối chồng nhau làm màu sạm, nên giảm khoảng một nửa: nét vân len, nỉ và gân dùng tông tối ở độ đậm 16–24% (trước 32–45%), lớp tối dưới phải tối đa 24% (trước 50%), mép trong 16% (trước 30%), lớp đậm thêm lúc lên màu đầy 6% (trước 12%). **Màu trong, sáng như tranh tô màu (2026-11-11, thay mức giảm ở trên):** người dùng vẫn thấy màu sạm nên bỏ hẳn lớp tối tròn dưới phải và lớp đậm thêm lúc lên màu đầy; mép trong chỉ còn nét 3 pt ở 8%; giữ quầng sáng trên trái và sáng viền theo hình (người dùng duyệt giữ nguyên). Bảng màu đổi sang nền bão hòa hơn, tông sáng gần trắng (bảng dưới). Unity: shader `FabricMaterial` dùng texture khoảng cách tới mép tính sẵn mỗi mảnh.
+- **Màu và chất liệu từng mảnh (giá trị thử, chỉnh khi làm art; 2026-11-11 thay bằng bảng màu tươi đã duyệt ở web-v2 mục 20):**
+
+| Mảnh | Chất liệu | Nền | Tông sáng | Tông tối |
+| --- | --- | --- | --- | --- |
+| Viên kem (hồng dâu, tạm: chưa có ảnh mẫu) | nỉ | #FF7B9B | #FFAEC0 | #E05878 |
+| Ốc quế (giữ ô quế) | nỉ | #E2A855 | #F5C880 | #C48A35 |
+| Thân áo khoác | len đan | #48C774 | #7FE8A2 | #2DA856 |
+| Áo lót trong | len đan | #FFF8EB | #FFFFFF | #EEDDC0 |
+| Cổ áo | len gân | #3CB867 | #6DD990 | #24954B |
+| Trái tim gấp đôi | nỉ | #FF5E7E | #FFA3B8 | #D9385C |
+| Trái tim khoét lỗ | nỉ | #FFB8C6 | #FFDCE4 | #E898A8 |
+| Đôi tai thỏ, mặt thỏ | nỉ | #FFFDFC | #FFFFFF | #E8DFD5 |
+| Chiếc nơ | nỉ | #FF5A72 | #FF8E9F | #D9324C |
+| Bông hoa gấp đôi | nỉ | #FF6E82 | #FFA0B0 | #D84B60 |
+| Đôi lá đối xứng | nỉ | #58C774 | #88E59E | #38A854 |
+| Chậu hoa | nỉ | #E87D48 | #FFA272 | #C25D28 |
+
+- **Dữ liệu:** `FabricDefinition` giữ chất liệu (`knit`, `felt`, `rib`), ba tông màu và chi tiết vật thật nếu có (ví dụ `waffle`); level trỏ tới vải bằng `fabricId`. Thay cho trường `pattern` (kiểu hoa văn và ba màu) của bản web.
+- **Đang thử phong cách khác (2026-11-09, có trong web-demo và web-v2, chưa chốt):** màn 6 "Dâu tây" (một mảnh, mức dễ) vẽ theo phong cách tranh tô màu: viền đen dày đều, mảng màu phẳng tươi chuyển sắc nhẹ, vệt bóng trắng, không vân vải, không chỉ khâu; trang trí màn thưởng (đài lá, hạt dâu, mặt cười) cũng viền đen dày. Hình tự thiết kế, không lấy art của game khác. Dùng để so với hướng vải len, nỉ ở các màn khác rồi chọn một phong cách.
+- **Đang so màu đậm và viền (2026-11-11, có trong web-demo, chưa chốt):** người dùng muốn tông đậm hơn và có viền như tranh tô màu. Nút thử "Màu" ở đáy màn hình chuyển ba chế độ: (0) bảng màu tươi hiện tại, viền mảnh 1,2 pt; (1) bảng đậm + viền dày đều 3,6 pt bằng màu thẫm của chính mảnh; (2) bảng đậm + viền mực nâu đen chung #2A2326. Bảng đậm (trường `fabric.deep` trong levels.js, số tự đặt): nền tông trung bình bão hòa, tông sáng không gần trắng, tông tối đậm hẳn và lệch sắc, chuyển sắc tối dần về mép dưới phải tới 60%; vân vải và sáng viền giữ nguyên. Người dùng chọn xong thì thay bảng màu ở trên và bỏ hai chế độ còn lại.
+- **Bỏ viền, màu sạch (2026-11-11, thay cho ba chế độ trên):** người dùng thấy viền làm màu bẩn nên mảnh vải không còn nét viền nào (cả nét mép 1,2 pt và nét tối mép trong), chỉ giữ bóng đổ mỏng tách mảnh khỏi nền. Vân vải bỏ mọi nét tông tối: mũi đan chỉ bằng tông sáng, gân len chỉ sáng ở sống gân, nỉ chỉ còn sợi sáng 25–50%; ô bánh quế giảm nét tối còn 35%. Nút thử "Màu" còn hai chế độ để so tông: tươi và đậm (lớp tối dưới phải của bảng đậm giảm còn 45%). Quầng sáng trên trái và sáng viền theo hình giữ nguyên. Tranh tô màu (màn dâu tây) giữ viền đen dày.
+- **Chốt phong cách tranh tô màu cho mọi mảnh (2026-11-11, thay hai mục trên và phần vân theo chất liệu):** người dùng thấy vân sần của nỉ (ví dụ viên kem hồng) xấu, muốn màu sạch, trong và đậm theo phong cách tranh tô màu, và giữ viền đen. Mọi mảnh dùng bảng đậm (`fabric.deep`): nền là chuyển sắc tròn từ tông sáng (trên trái) qua màu nền sang tông tối (dưới phải), không vân nỉ, không mũi len đan. Chỉ giữ chi tiết là một phần của vật: ô bánh quế của ốc quế, gân len của cổ áo (độ rõ 55%). Viền mực đen dày đều #2A2326, 4,2 pt ở cỡ mảnh 200 pt trở lên, như màn dâu tây. Giữ bóng đổ mỏng và sáng viền theo hình. Bỏ nút thử "Màu". Unity: `FabricMaterial` thành shader chuyển sắc ba tông cộng chi tiết tùy chọn, không cần texture vân.
+- **Cần chốt:** độ dày viền mực trên máy thật; màu viên kem theo ảnh mẫu; độ rõ của mũi đan khi xem trên máy thật (kích thước mũi và độ tương phản vân là số tạm trong ScriptableObject).
+
 ### Thành phần trên màn chơi
 
-- **Tấm vải:** texture họa tiết lặp lại, viền chỉ khâu nét đứt.
+- **Tấm vải:** texture họa tiết lặp lại, viền chỉ khâu nét đứt (giữ như bản web hiện tại).
+- **Mảnh vải:** màu thật và vân len theo chất liệu (mục Mảnh vải: màu thật và vân len).
 - **Hình mẫu:** bóng mờ nét đứt trên vải, kèm thẻ nhỏ phía trên.
 - **Đường cắt (viền ngoài):** nét đứt đậm như phấn may, nét chạy chậm để trông sống. Bản web 2 thay bằng một sợi chỉ nét liền màu ombre (mục Nét cắt đổi màu dọc viền).
 - **Chốt:** đệm nỉ tròn kem bơ #FFF2CF viền vàng mật #DFB15B, dấu × thêu nâu hổ phách #C88E3E và hạt nút ở tâm; chốt đã lấp đổi viền xanh xô thơm #82A57C, dấu × thu nhỏ dưới node (bản web 2, số tạm).
@@ -541,7 +612,7 @@ Font: Baloo 2, hỗ trợ đầy đủ tiếng Việt.
   1. Chỉ bắt thân dây ở đoạn giữa 25–75% chiều dài; tìm dây trong 8,8%, bắt khi cách dây dưới 8,5%.
   2. Chạm cách tâm một node kéo được dưới 25 pt (6,8%) thì luôn chọn node. Xa hơn thì chỉ chọn dây khi điểm chạm gần dây hơn gần node.
   3. Chạm vào khoảng trống mà cách một đầu dây (node kéo được) dưới 31 pt (8,5%) thì không bắt dây, để bấm lệch rìa node không thành uốn dây. Ghim khóa không có vùng này: chạm ghim khóa mà trúng đoạn giữa dây thì uốn dây.
-- **Ống kính thở 1,04 lần:** khi bắt đầu kéo node hoặc dây, riêng khung vải phóng nhẹ 1,04 lần quanh tâm khung (nở khoảng 7 pt mỗi cạnh), chuyển mượt (hệ số 3,5 mỗi giây); thả tay thì về 1 lần. Không dời camera theo ngón tay (đã thử phóng 1,25 lần có dời camera, người dùng thấy chóng mặt). HUD đứng yên.
+- **Ống kính thở 1,04 lần (đã bỏ 2026-11-09):** người chơi thử thấy chóng mặt nên bỏ hẳn; khung vải giữ nguyên cỡ khi kéo. Mô tả cũ: khi bắt đầu kéo node hoặc dây, riêng khung vải phóng nhẹ 1,04 lần quanh tâm khung (nở khoảng 7 pt mỗi cạnh), chuyển mượt (hệ số 3,5 mỗi giây); thả tay thì về 1 lần. Không dời camera theo ngón tay (đã thử phóng 1,25 lần có dời camera, người dùng thấy chóng mặt). HUD đứng yên.
 - **Thứ tự ưu tiên khi chạm:** thanh gạt kim, rồi node hoặc dây theo bộ lọc trên, rồi nếp gấp.
 
 ## Kiến trúc hệ thống
@@ -557,7 +628,7 @@ Mỗi khi node di chuyển, phần điều khiển đưa vị trí mới vào l�
 - `INodeConstraint`: giới hạn cách node di chuyển (khóa, trượt trên ray, liên kết đối xứng).
 - `IEdgeShape`: cách một cạnh sinh ra đường gấp khúc (thẳng, cong, răng cưa, cạnh cứng).
 - `IWinCondition`: điều kiện thắng (khớp một hình, nhiều mảnh, khoét lỗ).
-- `IPinRule`: luật của từng loại ghim (đi qua lúc nào cũng được, theo thứ tự, sau này theo nhịp).
+- `IPinRule`: luật của từng loại ghim (đi qua lúc nào cũng được, theo thứ tự, sau này theo nhịp). Bản đầu không dùng ghim giữa cạnh; chốt trên viền mẫu là luật lõi (`PinBoard`, `AllPinsFilled`), không đi qua interface này.
 - `IRunnerRule`: cách điểm sáng chạy (tốc độ, chiều, tăng tốc, sau này nhảy cổng hay hai điểm sáng).
 - `IHintProvider`: cách chọn và hiển thị gợi ý. Số booster gợi ý do Meta cấp qua `LevelRequest`, nên đổi cách nhận booster không sửa code chơi.
 
@@ -578,7 +649,7 @@ Mục này là yêu cầu kỹ thuật để đưa game từ bản thử web san
 ### Nền tảng kỹ thuật
 
 - **Project hiện có:** Unity 2022.3.62f3 (LTS), URP 14.0.12 với Renderer 2D, Input System 1.14.2, TextMeshPro 3.0.7, Test Framework 1.1.33. Thư mục Plugins đã có UniTask và DOTween. Thư mục Scripts còn trống.
-- **Cần chốt trước khi làm tiếp:** khóa màn hình dọc (hiện đang để tự xoay), đặt bundle id iOS (tên công ty `XGames` và bundle id Android `com.XGames.GraphNodePuzzle` đã đặt), nâng Android min SDK theo máy mục tiêu (hiện 22). Android đã đúng: IL2CPP, ARMv7 + ARM64 (xem mục Build và phát hành).
+- **Cần chốt trước khi làm tiếp:** đặt bundle id iOS (màn hình dọc đã khóa 2026-11-11) (tên công ty `XGames` và bundle id Android `com.XGames.GraphNodePuzzle` đã đặt), nâng Android min SDK theo máy mục tiêu (hiện 22). Android đã đúng: IL2CPP, ARMv7 + ARM64 (xem mục Build và phát hành).
 - **Gói chỉ dùng khi phát triển:** gói MCP for Unity chỉ dùng trong Editor, phải gỡ khỏi bản build phát hành.
 - **Addressables:** chưa dùng. Level là dữ liệu nhỏ nên bản đầu tham chiếu trực tiếp: `LevelCatalog` (ScriptableObject) giữ tham chiếu tới file JSON của từng level dưới dạng `TextAsset`, lớp khởi động giữ tham chiếu tới catalog. Không dùng `Resources`. Chỉ thêm Addressables nếu cần cập nhật level từ xa.
 
@@ -651,7 +722,7 @@ Mọi khoảng cách và tốc độ trong bản chính thức tính theo bề r
 
 ### Kiểm thử
 
-- **Dữ liệu đối chiếu:** 4 level của bản thử (mục Dữ liệu 4 level của bản thử) chuyển thành file JSON mẫu cho test EditMode, đặt cùng thư mục test, không đặt trong `Content/Levels`.
+- **Dữ liệu đối chiếu:** 13 mảnh của bản web 2 (`Prototype/web-v2/levels.js`, sau khi chạy `startgen.js`) xuất thành file JSON theo đúng định dạng level (mục Dữ liệu một level), kèm số đo của `check.js` (độ khớp ban đầu, khi cắm đủ chốt, cửa sổ độ uốn) làm giá trị kỳ vọng; đặt cùng thư mục test, không đặt trong `Content/Levels`. 4 level của bản thử đời đầu (mục Dữ liệu 4 level của bản thử) giữ cho test cạnh trong và viền bắt chéo.
 - **EditMode (lõi hình học):** dùng số liệu từ bản thử làm đối chiếu. Đáp án mỗi level cho điểm khớp 100%; lệch 0,02 cho kết quả trong khoảng ghi ở bảng độ nhạy; viền ngoài khi có cạnh chéo nhau; thứ tự ghim, gồm bản đối xứng gương thất bại và thành công khi đảo chiều.
 - **EditMode (bản web 2):** độ uốn lời giải và hình cạnh khớp `edgePoly`; phạt độ uốn; cắm đủ chốt mà chưa uốn thì dưới ngưỡng; đánh số lại theo chốt: mọi cách đặt xoay và soi gương hợp lệ thắng được (đối chiếu `alt-solve.js` của bản web: lá số 8, áo lót, chiếc nơ, ốc quế), cách đặt bắt chéo thì không đánh số lại; bộ lọc chạm 3 lớp với ba tình huống: chạm lệch tâm node 18 pt về phía dây thì chọn node, chạm giữa dây thì chọn dây, chạm dây ở 12% chiều dài thì không chọn dây.
 - **Kiểm tra hàng loạt level** (Editor và CI): lời giải vượt ngưỡng, vị trí đầu chưa vượt, ghim nằm trên viền trong dung sai, không chồng vùng cấm.
@@ -801,15 +872,15 @@ Các điểm dưới đây cần chốt trước khi viết code, vì chúng ả
 - [x] Đã chốt (2026-11-09): giữ điểm chạy dọc viền và nốt nhạc (gắn với sợi chỉ rung theo đầu kéo). Vẫn theo dõi khi thử với người chơi xem có gây mệt ở màn nhiều node không.
 - [x] Đã chốt: dùng kéo tương đối, chưa thêm node tay nắm bên ngoài. Xem lại nếu người thử vẫn nói bị che hoặc chọn nhầm node ở màn nhiều node.
 - [ ] Thêm điều kiện độ lệch viền tối đa vào cách tính thắng để không thắng khi cụt mũi nhọn.
-- [ ] Nút đảo chiều điểm sáng: miễn phí, giới hạn 1 lần mỗi màn, hay tính như một lần Gợi ý? Luật thứ tự ghim chỉ còn gài buộc khi có từ 4 ghim số.
+- [ ] (Chỉ khi dùng lại ghim giữa cạnh) Nút đảo chiều điểm sáng: miễn phí, giới hạn 1 lần mỗi màn, hay tính như một lần Gợi ý? Luật thứ tự ghim chỉ còn gài buộc khi có từ 4 ghim số.
 - [ ] Vùng cấm: chỉ nằm ngoài hình mẫu, hay làm cơ chế khoét lỗ để có vùng cấm nằm bên trong?
 - [ ] Level chiều sâu: bao nhiêu level dùng, chọn parallax 2D hay camera nghiêng cho từng level, và kích thước tối thiểu của điểm sáng khi đi vào xa?
 - [x] Đã chốt: bước đặt mảnh không cho chọn màu (màu do người thiết kế level đặt); người chơi không xoay mảnh, góc xoay của từng ô do người thiết kế level đặt và mảnh xuất hiện đã xoay sẵn. Khách chỉ nhận sản phẩm, vui vẻ rồi ra về; mặc thử lên người khách là mở rộng tùy chọn.
 - [x] Đã chốt (2026-11-09, bản web 2): chốt trên viền mẫu luôn hiện, node nào vào chốt nào cũng được, thắng khi đạt ngưỡng và đủ chốt; mọi cạnh uốn được, chỉ còn node tròn; phạt độ uốn tính vào thanh khớp; độ khắt khe của phần uốn do vùng hút quyết định; ngưỡng theo mức độ khó 94, 95, 96%. Thay cho hút về viền, snap về điểm gần nhất trên viền và ngưỡng mặc định 92% ở các mục cũ.
-- [ ] Màn gấp mức dễ: kim lệch 5–8% và độ khớp ban đầu 55–85% không cùng đạt được khi có phạt dây thẳng (mục Mức độ khó). Chọn một: nới khoảng độ khớp cho màn gấp, giảm độ lệch kim, hay ghi đè `startGenOverride` riêng từng màn.
+- [x] Đã chốt (2026-11-09): chưa sửa hình hai màn trái tim gấp; generator giữ kim theo mức và chỉ cảnh báo khi độ khớp ban đầu lệch khoảng. Ghi chú cũ: kim lệch 5–8% và độ khớp ban đầu 55–85% không cùng đạt được khi có phạt dây thẳng (mục Mức độ khó). Chọn một: nới khoảng độ khớp cho màn gấp, giảm độ lệch kim, hay ghi đè `startGenOverride` riêng từng màn.
 - [x] Đã chốt (2026-11-09): số của bản web 2 là giá trị khởi đầu trong ScriptableObject cấu hình, chỉnh lại sau khi thử trên máy thật: khoảng cách tối thiểu lúc đầu 12%, cách chốt 6%; hệ số phạt độ uốn 0,18; bán kính hút chốt 4,8%, "đã cắm" 4,6%; bộ lọc chạm 25 pt và 31 pt; nâng node 22 pt; độ uốn mút lá ±0,16.
 - [x] Đã chốt (2026-11-09): bản Unity đánh số lại theo chốt ngay lúc đang kéo (khi node đang cầm đã nằm trong vùng hút của chốt cuối), để quầng "thả tay là thắng" hiện như mọi cách đặt khác. Bản web 2 chỉ đánh số lại lúc thả.
-- [ ] Quy chuẩn khoảng cách (node 20%, cạnh uốn 28%): giữ là khuyến nghị hay bắt buộc cho màn mới; có sửa các màn bản web 2 đang vi phạm không.
+- [x] Đã chốt (2026-11-09): quy chuẩn khoảng cách (node 20%, cạnh uốn 28%) là khuyến nghị; trình kiểm tra chỉ cảnh báo, không sửa các màn bản web 2 đang vi phạm.
 - [x] Vùng tô xem trước: bản web 2 tô theo đa giác của sợi chỉ (luật tô nonzero của canvas), không theo mặt nạ chấm điểm như mục Phần tô vùng cắt. Khi viền bắt chéo, phần tô có thể khác phần được chấm (vùng có số vòng quấn bằng 0 nằm trong viền ngoài không được tô nhưng vẫn tính điểm). Đã chốt (2026-11-09): bản Unity tô theo mặt nạ, để người chơi thấy đúng phần được tính điểm; sợi chỉ vẫn vẽ riêng phía trên.
 - [ ] Đặt mảnh và hoàn thiện sản phẩm: có cho bỏ qua không? Khoảng cách tự hút, bán kính bo góc vải nền và thời lượng chuỗi hoàn thiện đặt trong ScriptableObject, số cụ thể cần chốt.
 
