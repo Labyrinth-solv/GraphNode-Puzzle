@@ -665,6 +665,7 @@ Mục này là yêu cầu kỹ thuật để đưa game từ bản thử web san
 
 - **Khung hình:** khóa cứng 60 fps theo chuẩn game casual. Khi khởi động đặt Application.targetFrameRate = 60 (mặc định của Unity trên mobile là 30). Màn chơi và Home phải giữ 60 fps ổn định trên các máy phổ biến, tức mỗi khung hình có 16,6 ms cho toàn bộ công việc. Chưa đặt mục tiêu riêng cho máy yếu.
 - **Ngân sách lõi:** hướng tới khoảng 1 ms mỗi khung hình cho việc tính viền ngoài và điểm khớp (bản thử web đo khoảng 0,7 ms). Con số 1 ms là hướng dẫn cho riêng lõi; cổng bắt buộc là cả khung hình giữ 60 fps. Tối ưu khi đo thấy rơi khỏi 60 fps trên máy phổ biến.
+- **Đo lõi Unity lần đầu (2026-11-11, Editor, Mono, chưa đo trên máy):** dựng mặt nạ và chấm điểm một khung hình mất 1,7 ms với bông hoa gấp đôi (nhiều node nhất, màn gấp nên dựng hai mặt nạ), trung bình 200 khung (test `MaskAndScore_FitsTheFrameBudgetInEditor`). Cao hơn mức hướng tới 1 ms; bản IL2CPP phát hành thường nhanh hơn Editor nhiều. Chưa tối ưu, chờ đo trên máy Android phổ biến; nếu cần thì việc rẻ nhất là chỉ dựng lại mặt nạ khi node hay dây thật sự đổi, và giới hạn tô loang trong khung bao của hình.
 - **Không cấp phát GC trong vòng Update khi đang kéo:** tái dùng mảng đệm cho mặt nạ, đường gấp khúc và danh sách giao điểm.
 - **Mesh:** mesh viền và vùng vải cập nhật lại trên cùng một đối tượng, không tạo mới mỗi khung. Dùng SRP Batcher với Renderer 2D.
 - **Kích thước build:** đề xuất dưới 100 MB cho bản đầu, cần chốt.
