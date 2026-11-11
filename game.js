@@ -3218,8 +3218,6 @@
     R.top = topY; R.labelT = 0; R.sheenT = -9; R.flashT = -9; R.shakeT = -9;
     chord([0, 4, 7], 0.05, 0.08);
   }
-  // Cùng mốc thời gian cho lực ép, hình khuôn và bóng tiếp xúc.
-  var PRESS = { hit: 0.18, lift: 0.40, end: 0.68, settle: 0.65 };
   function productTf() {
     var bx = R.base[0], by = R.base[1];
     ctx.translate(bx, by); ctx.rotate(R.wig); ctx.scale(1 + R.sq * 0.6, 1 - R.sq); ctx.translate(-bx, -by);
@@ -3228,29 +3226,6 @@
     if (R.pucker && Math.abs(R.pucker) > 1e-4) {
       var cx = R.seamCen[0], cy = R.seamCen[1];
       ctx.translate(cx, cy); ctx.scale(1 - R.pucker * 0.055, 1 - R.pucker * 0.04); ctx.translate(-cx, -cy);
-    }
-  }
-  // Mỗi mảnh hồi trễ một nhịp nhỏ, nén dọc và bè ngang quanh chân mảnh thay vì phóng cứng cả hình.
-  function rewardPieceTf(li) {
-    if (reduce || !R.pressHit) return;
-    var rank = Math.max(0, backToFront().indexOf(li));
-    var age = clock - R.liftAt - 0.12 - rank * 0.055;
-    if (age <= 0 || age >= 0.65) return;
-    var u = age / 0.65, wave = Math.sin(u * Math.PI * 2) * Math.pow(1 - u, 2);
-    var tf = placeOf(li), lv = LV[li];
-    var x = tf.ox + lv.cen[0] * tf.s, y = tf.oy + lv.bbox[3] * tf.s;
-    ctx.translate(x, y); ctx.transform(1 + 0.035 * wave, 0, 0.012 * wave, 1 - 0.045 * wave, 0, -2 * wave);
-    ctx.translate(-x, -y);
-  }
-  function pressSteam() {
-    var count = reduce ? 8 : 22;
-    for (var i = 0; i < count; i++) {
-      var a = i / count * Math.PI * 2 + Math.random() * 0.18;
-      S.parts.push({ x: 195 + Math.cos(a) * 165, y: 395 + Math.sin(a) * 165,
-        vx: Math.cos(a) * (reduce ? 6 : 18 + Math.random() * 16),
-        vy: Math.sin(a) * 14 - (reduce ? 10 : 34 + Math.random() * 26),
-        life: reduce ? 0.6 : 0.9 + Math.random() * 0.3, age: 0, kind: 'steam',
-        r: 9 + Math.random() * 8, rot: 0, vr: 0, g: -12 });
     }
   }
   // Tiến độ khâu p (0–1) chia đều cho các đường may, khâu lần lượt từng đường.
@@ -3298,7 +3273,7 @@
       }
     }
     if (R.phase === 'tapReady' && Math.hypot(p[0] - 195, p[1] - 395) < 175) {
-      // Chạm để ép hoàn thiện dưới khuôn; nhấc lên để lộ thành phẩm.
+      // chạm là cú ép: nén xuống, va chạm, bật lại, rồi mới loang màu (pha 'press' trong updateReward)
       R.tap = p; R.phase = 'press'; R.t = 0; R.sq = 0; R.pressHit = false; R.pressRelease = false; R.ringT = 0;
       // tiếng "vút" ngắn lúc con dấu hạ xuống
       noise(0.18, 0.03, 1400, 'bandpass'); noise(0.12, 0.02, 2600, 'bandpass', 0.06);
@@ -3391,45 +3366,32 @@
     }
     if (R.phase === 'tapReady') R.sq = reduce ? 0 : 0.012 * Math.sin(clock * 3);
     if (R.phase === 'press') {
-      // Hoàn thiện khi chịu lực, còn khuôn che; nhấc lên chỉ để lộ kết quả.
-      var pt = R.t;
+      // Ép hoàn thiện kiểu con dấu tròn (2026-11-11, số tạm), nhìn từ trên xuống: con dấu tròn đúng cỡ vải nền hạ thẳng
+      // xuống trong 0,2 s (to 1,35 lần và mờ, nhỏ dần; bóng tròn co lại và đậm dần); chạm thì khớp mép nền, nén nhẹ
+      // 0,1 s (rung, chớp sáng, tiếng thịch); nhấc lên 0,3 s (to ra, mờ đi), hơi nước bốc đều quanh mép tròn và để lại
+      // vết ép tròn nổi cùng màu nền; rồi màu loang từ tâm ra mép nền, nhãn "Hoàn thành!".
+      var T_HIT = 0.2, T_LIFT = 0.3, T_END = 0.6, pt = R.t;
       R.sq = 0; R.pz = 1;
-      if (pt >= PRESS.hit && !R.pressHit) {
-        R.pressHit = true; R.ringT = clock; R.reveal = 1;
-        R.liftAt = clock + PRESS.lift - pt; R.accentCount = 0;
-        R.decor = (DECOR[product().id] || []).map(function () { return clock - 0.3; });
-        pressSteam();
-        pop(92, 0.14, 0, 0.32); noise(0.12, 0.035, 450, 'lowpass'); vib(22);
-        noise(0.28, 0.022, 3200, 'highpass');
+      if (pt >= T_HIT && !R.pressHit) {
+        R.pressHit = true; R.flashT = clock; R.shakeT = clock;
+        // tiếng "thịch" trầm êm như nỉ, rung mạnh một nhịp
+        pop(92, 0.16, 0, 0.4); noise(0.18, 0.07, 450, 'lowpass'); vib(40);
       }
-      if (!reduce && pt >= PRESS.hit) {
-        var load = easeOut(clamp((pt - PRESS.hit) / 0.12, 0, 1));
-        var unload = clamp((pt - PRESS.lift) / (PRESS.end - PRESS.lift), 0, 1);
-        R.pz = 1 - 0.018 * load * (1 - easeOut(unload)) + 0.004 * Math.sin(Math.PI * unload);
-        R.sq = 0.016 * load * (1 - easeOut(unload));
+      if (pt >= T_LIFT && !R.pressRelease) {
+        R.pressRelease = true; R.ringT = clock;
+        noise(0.3, 0.03, 4200, 'highpass'); // hơi nước xì khi nhấc con dấu
+        // hơi nước bốc đều quanh mép tròn: hướng ra ngoài và lên trên
+        for (var sm = 0; sm < 22; sm++) {
+          var sa = sm / 22 * Math.PI * 2 + Math.random() * 0.2, sx = 195 + Math.cos(sa) * 165, sy = 395 + Math.sin(sa) * 165;
+          S.parts.push({ x: sx, y: sy, vx: Math.cos(sa) * (18 + Math.random() * 16), vy: Math.sin(sa) * 14 - 34 - Math.random() * 26, life: 0.9 + Math.random() * 0.3, age: 0, kind: 'steam', r: 9 + Math.random() * 8, rot: 0, vr: 0, g: -12 });
+        }
+        burst(195, 395, 150);
       }
-      if (pt >= PRESS.lift && !R.pressRelease) {
-        R.pressRelease = true;
-        noise(0.12, 0.012, 1500, 'lowpass');
-      }
-      if (pt >= PRESS.end) { R.pz = 1; R.sq = 0; R.phase = 'reveal'; R.t = 0; R.sheenT = clock; }
+      if (pt >= T_END) { R.sq = 0; R.phase = 'reveal'; R.t = 0; R.labelT = clock; R.sheenT = clock; chord([0, 2, 4, 7, 9, 12], 0.06, 0.06); vib([12, 20, 12]); }
     }
     if (R.phase === 'reveal') {
-      // Một nhịp ổn định, không tô lại màu hay bật chi tiết sau khi nhấc.
-      if (R.t >= PRESS.settle) {
-        R.phase = 'done'; R.t = 0; R.labelT = clock;
-        if (!reduce) sparkle(195, 395, 8);
-        chord([0, 4, 7, 12], 0.05, 0.08); vib(10);
-      }
-    }
-    // Ba điểm nhấn leo nốt khi lộ hình: chi tiết đã có sẵn, chỉ khẽ nảy và lóe theo nhịp.
-    if (R.pressHit && (R.phase === 'press' || R.phase === 'reveal')) {
-      var details = DECOR[product().id] || [], accents = Math.min(3, details.length);
-      while (R.accentCount < accents && clock >= R.liftAt + 0.28 + R.accentCount * 0.13) {
-        var accent = R.accentCount++, point = details[accent].at();
-        pop(noteF(2 + accent * 2), 0.045, 0, 0.22); vib(6);
-        if (!reduce) sparkle(point[0], point[1], 4);
-      }
+      R.reveal = easeInOut(clamp(R.t / 0.6, 0, 1));
+      if (R.t > 0.6) { R.phase = 'decor'; R.t = 0; R.decorT = 0; sparkle(195, 395, 18); }
     }
     if (R.phase === 'decor') {
       var idx = Math.floor(R.t / 0.24);
@@ -4124,25 +4086,20 @@
     drawDoneLabel();
   }
   // Con dấu tròn đúng cỡ vải nền (r 165 tại 195,395), nhìn từ trên xuống: vành gỗ, mặt nỉ, núm cầm ở giữa có điểm sáng.
-  // Hạ nhanh dần, giữ lực rồi nhấc chậm trước nhanh sau; sản phẩm bên dưới tự nén và hồi nhẹ.
+  // Hạ xuống: to 1,35 lần và mờ, nhỏ dần về đúng cỡ (nhanh dần như rơi), bóng tròn co lại và đậm dần.
+  // Chạm: khớp mép nền, nén 3% rồi về. Nhấc: to ra 1,4 lần và mờ đi về phía người chơi.
   function drawPressPlate() {
     if (R.phase !== 'press') return;
-    var t = R.t, cx = 195, cy = 395, RS = 165, sc = 1, al = 1, height = 0;
-    if (t < PRESS.hit) {
-      var u0 = clamp(t / PRESS.hit, 0, 1);
-      height = 1 - u0 * u0; al = lerp(0.75, 1, u0);
-    } else if (t >= PRESS.lift) {
-      var u1 = clamp((t - PRESS.lift) / (PRESS.end - PRESS.lift), 0, 1);
-      height = u1 * u1; al = 1 - easeInOut(u1);
-    }
-    sc = reduce ? 1 : 1 + 0.28 * height;
+    var t = R.t, cx = 195, cy = 395, RS = 165, sc, al, sh;
+    if (t < 0.2) { var u0 = t / 0.2; sc = lerp(1.35, 1, u0 * u0); al = 0.3 + 0.7 * u0; sh = u0; }
+    else if (t < 0.3) { sc = 1 - 0.03 * Math.sin(Math.PI * (t - 0.2) / 0.1); al = 1; sh = 1; }
+    else { var u1 = clamp((t - 0.3) / 0.3, 0, 1); sc = lerp(1, 1.4, easeOut(u1)); al = 1 - u1; sh = 1 - u1; }
+    if (reduce) sc = 1;
     if (al <= 0.01) return;
     ctx.save();
-    // Bóng khuôn rộng, mềm khi ở cao; sát khi tiếp xúc, tách khỏi bóng thành phẩm.
-    ctx.save(); ctx.shadowColor = 'rgba(74,59,53,0.18)';
-    ctx.shadowBlur = lerp(2, 18, height); ctx.shadowOffsetY = 2 + 10 * height;
-    ctx.beginPath(); ctx.arc(cx + 4 * height, cy + 10 * height, RS * lerp(1.005, 1.10, height), 0, 7);
-    ctx.fillStyle = 'rgba(74,59,53,' + (lerp(0.20, 0.045, height) * al) + ')'; ctx.fill(); ctx.restore();
+    // bóng tròn trên nền: càng gần càng nhỏ, sát và đậm
+    var off = 14 * (1 - sh);
+    ctx.beginPath(); ctx.arc(cx + off * 0.5, cy + off, RS * lerp(1.12, 1.01, sh), 0, 7); ctx.fillStyle = 'rgba(74,59,53,' + (0.24 * sh) + ')'; ctx.fill();
     ctx.globalAlpha = al;
     ctx.translate(cx, cy); ctx.scale(sc, sc);
     // vành gỗ
@@ -4175,12 +4132,6 @@
     ctx.save(); ctx.lineWidth = 2.4;
     ctx.beginPath(); ctx.arc(196, 396.5, 160, 0, 7); ctx.strokeStyle = 'rgba(74,59,53,' + 0.14 * k + ')'; ctx.stroke();
     ctx.beginPath(); ctx.arc(194, 393.5, 160, 0, 7); ctx.strokeStyle = 'rgba(255,255,255,' + 0.6 * k + ')'; ctx.stroke();
-    var age = clock - R.ringT;
-    if (!reduce && age >= 0 && age < 0.32) {
-      var u = age / 0.32;
-      ctx.beginPath(); ctx.arc(195, 395, lerp(164, 176, easeOut(u)), 0, 7);
-      ctx.lineWidth = 1.4; ctx.strokeStyle = rgba(C.thread, 0.2 * (1 - u)); ctx.stroke();
-    }
     ctx.restore();
   }
   // Vệt lóa chéo quét qua sản phẩm một lần ngay sau cú ép (0,5 s), cắt theo từng mảnh.
@@ -4193,7 +4144,7 @@
       ctx.save(); outlinePath(LV[li].outline, tf.ox, tf.oy, tf.s); ctx.clip();
       ctx.translate(x, 395); ctx.rotate(0.45);
       var g = ctx.createLinearGradient(-34, 0, 34, 0);
-      g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.5, 'rgba(255,255,255,' + (0.18 * Math.sin(Math.PI * u)) + ')'); g.addColorStop(1, 'rgba(255,255,255,0)');
+      g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.5, 'rgba(255,255,255,' + (0.6 * Math.sin(Math.PI * u)) + ')'); g.addColorStop(1, 'rgba(255,255,255,0)');
       ctx.fillStyle = g; ctx.fillRect(-34, -320, 68, 640);
       ctx.restore();
     });
@@ -4217,7 +4168,7 @@
     var enter = clamp(R.t / 0.6, 0, 1), a = R.phase === 'enter' ? easeOut(enter) : 1;
     ctx.save(); ctx.globalAlpha = a;
     // vải nền tròn bằng nỉ
-    var deep = (R.phase === 'press' && R.pressHit) || R.phase === 'reveal' || R.phase === 'decor' || R.phase === 'done';
+    var deep = R.phase === 'reveal' || R.phase === 'decor' || R.phase === 'done';
     ctx.beginPath(); ctx.arc(195, 395, 165, 0, 7); ctx.fillStyle = C.base; ctx.fill();
     ctx.beginPath(); ctx.arc(195, 395, 155, 0, 7); ctx.setLineDash([6, 5]); ctx.lineWidth = 1.8; ctx.strokeStyle = rgba(C.thread, 0.8); ctx.stroke(); ctx.setLineDash([]);
     drawPressRing();
@@ -4267,42 +4218,42 @@
       for (var d = 0; d < R.decor.length; d++) {
         var item = DEC[d];
         if (!item || !filterFn(item)) continue;
-        var k = easeBack(clamp((clock - R.decor[d]) / 0.3, 0, 1)), at = item.at();
-        var age = clock - R.liftAt - 0.28 - (d % 3) * 0.13;
-        var pulse = !reduce && R.pressHit && age >= 0 && age < 0.32 ? Math.sin(Math.PI * age / 0.32) : 0;
-        ctx.save(); ctx.translate(at[0], at[1]); ctx.rotate(0.018 * pulse * (d % 2 ? -1 : 1));
-        ctx.scale(1 + 0.025 * pulse, 1 + 0.025 * pulse); ctx.translate(-at[0], -at[1]);
-        item.draw(at, k); ctx.restore();
+        var k = easeBack(clamp((clock - R.decor[d]) / 0.3, 0, 1));
+        item.draw(item.at(), k);
       }
     }
     if (deep) {
-      // Màu, chi tiết và bóng có sẵn dưới khuôn ngay khi ép, không lan màu sau khi nhấc.
-      var sBg = STAGE_BG[product().id] || C.baseDeep;
-      ctx.save(); ctx.beginPath(); ctx.arc(195, 395, 166, 0, 7); ctx.clip();
+      // màu loang từ tâm con dấu ra đúng mép nền (r 165) với nền bổ trợ dịu theo từng sản phẩm (Hướng A)
+      var RV = 166 * R.reveal, sBg = STAGE_BG[product().id] || C.baseDeep;
+      ctx.save(); ctx.beginPath(); ctx.arc(195, 395, RV, 0, 7); ctx.clip();
       var sGrad = ctx.createRadialGradient(195, 395 - 165 * 0.18, 165 * 0.08, 195, 395, 165);
       sGrad.addColorStop(0, mix(sBg, '#FFFFFF', 0.42)); sGrad.addColorStop(1, sBg);
       ctx.beginPath(); ctx.arc(195, 395, 165, 0, 7); ctx.fillStyle = sGrad; ctx.fill();
       ctx.beginPath(); ctx.arc(195, 395, 155, 0, 7); ctx.setLineDash([6, 5]); ctx.lineWidth = 1.8; ctx.strokeStyle = 'rgba(255,255,255,0.88)'; ctx.stroke(); ctx.setLineDash([]);
       drawPressRing();
       ctx.save(); ctx.beginPath(); ctx.ellipse(195, Math.min(530, R.base[1] - 2), 58, 10, 0, 0, 7); ctx.fillStyle = 'rgba(60,40,35,0.10)'; ctx.fill(); ctx.restore();
-      ctx.save(); productTf();
       backToFront().forEach(function (li) {
         var tf = placeOf(li);
-        ctx.save(); rewardPieceTf(li);
         drawDecors(function (it) { return it.before === li; });
         drawPiece(li, tf.ox, tf.oy, tf.s, 1, false, 1, 1, function () {
           drawDecors(function (it) { return it.clipTo === li; });
         });
         drawPieceStitches(li);
         drawDecors(function (it) { return it.after === li; });
-        ctx.restore();
       });
       ctx.restore();
-      ctx.restore();
+      if (R.phase === 'reveal') {
+        // mép màu loang: vòng trắng dày có viền tối mờ để nổi trên nền sáng, kèm chớp trắng ở đầu
+        var rr2 = Math.max(1, RV), fa = 1 - R.reveal;
+        var g = ctx.createRadialGradient(195, 395, 0, 195, 395, rr2);
+        g.addColorStop(0, 'rgba(255,255,255,' + 0.55 * fa * fa + ')'); g.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.beginPath(); ctx.arc(195, 395, rr2, 0, 7); ctx.fillStyle = g; ctx.fill();
+        ctx.lineWidth = 12; ctx.strokeStyle = 'rgba(74,59,53,' + 0.16 * fa + ')'; ctx.stroke();
+        ctx.lineWidth = 8; ctx.strokeStyle = 'rgba(255,255,255,' + Math.min(1, fa * 1.4) + ')'; ctx.stroke();
+        ctx.beginPath(); ctx.arc(195, 395, rr2 * 0.82, 0, 7); ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,255,255,' + 0.7 * fa + ')'; ctx.stroke();
+      }
     }
-    ctx.save(); if (!placing) productTf();
     drawDecors(function (it) { return it.clipTo === undefined && it.after === undefined && it.before === undefined; });
-    ctx.restore();
     if (R.phase === 'tapReady') {
       var tt = (clock % 1.2) / 1.2;
       ctx.beginPath(); ctx.arc(195, 400, 26 + 40 * tt, 0, 7); ctx.lineWidth = 3; ctx.strokeStyle = rgba(C.ink, 0.5 * (1 - tt)); ctx.stroke();
