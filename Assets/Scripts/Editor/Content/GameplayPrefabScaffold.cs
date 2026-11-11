@@ -45,6 +45,8 @@ namespace GraphNode.Editor.Content
             var piece = PiecePrefab();
             BoardPrefab(nodeFree, nodeLocked, pin, halo, bead, trail, scissors, piece);
             HudPrefab();
+            UpgradeBoard();
+            UpgradeHud();
             StringsAndAppAssets();
             AssetDatabase.SaveAssets();
             Debug.Log("[GraphNode] gameplay prefabs ready (existing prefabs were kept)");
@@ -140,6 +142,66 @@ namespace GraphNode.Editor.Content
                 ("nodeFreePrefab", nodeFree), ("nodeLockedPrefab", nodeLocked), ("pinPrefab", pin), ("pinHaloPrefab", halo),
                 ("pinchBeadPrefab", bead), ("trailDotPrefab", trail), ("scissorsPrefab", scissors), ("piecePrefab", piece));
             Save(go, path);
+        }
+
+        // Thêm lớp mới vào prefab đã có (không dựng lại, giữ chỉnh sửa trong Editor): viền sáng khi đạt ngưỡng nằm trên
+        // sợi chỉ, lớp hiệu ứng (sóng, bụi chỉ, dây nối ngón tay) nằm trên node.
+        private static void UpgradeBoard()
+        {
+            string path = WorldFolder + "/PuzzleBoard.prefab";
+            if (Existing<GameObject>(path) == null) return;
+            var root = PrefabUtility.LoadPrefabContents(path);
+            try
+            {
+                var view = root.GetComponent<PuzzleView>();
+                var so = new SerializedObject(view);
+                bool changed = false;
+                changed |= EnsureLayer(root.transform, so, "readyGlow", "ReadyGlow", OrderZips);
+                changed |= EnsureLayer(root.transform, so, "effects", "Effects", OrderTrail);
+                if (changed)
+                {
+                    so.ApplyModifiedPropertiesWithoutUndo();
+                    PrefabUtility.SaveAsPrefabAsset(root, path);
+                }
+            }
+            finally { PrefabUtility.UnloadPrefabContents(root); }
+        }
+
+        private static bool EnsureLayer(Transform root, SerializedObject view, string field, string name, int order)
+        {
+            var prop = view.FindProperty(field);
+            if (prop.objectReferenceValue != null) return false;
+            var existing = root.Find(name);
+            prop.objectReferenceValue = existing != null ? existing.GetComponent<MeshFilter>() : MeshLayer(root, name, order);
+            return true;
+        }
+
+        // lớp chớp trắng phủ lên phần đổ của thanh khớp
+        private static void UpgradeHud()
+        {
+            string path = HudFolder + "/GameplayHud.prefab";
+            if (Existing<GameObject>(path) == null) return;
+            var root = PrefabUtility.LoadPrefabContents(path);
+            try
+            {
+                var hud = root.GetComponent<HudView>();
+                var so = new SerializedObject(hud);
+                var prop = so.FindProperty("barFlash");
+                var fill = (RectTransform)so.FindProperty("barFill").objectReferenceValue;
+                if (prop.objectReferenceValue != null || fill == null) return;
+                var flashRect = Rect(fill.parent, "Flash", 0f, 0f, 14f, 16f);
+                flashRect.pivot = fill.pivot;
+                flashRect.anchoredPosition = fill.anchoredPosition;
+                flashRect.sizeDelta = fill.sizeDelta;
+                flashRect.SetSiblingIndex(fill.GetSiblingIndex() + 1);
+                var img = SlicedImage(flashRect, "bar_fill");
+                img.color = new Color(1f, 1f, 1f, 0f);
+                img.enabled = false;
+                prop.objectReferenceValue = img;
+                so.ApplyModifiedPropertiesWithoutUndo();
+                PrefabUtility.SaveAsPrefabAsset(root, path);
+            }
+            finally { PrefabUtility.UnloadPrefabContents(root); }
         }
 
         // ---------- HUD ----------

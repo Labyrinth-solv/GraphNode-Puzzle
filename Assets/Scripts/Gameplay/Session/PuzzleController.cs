@@ -57,6 +57,9 @@ namespace GraphNode.Gameplay.Session
 
         private int _slotIndex;
         private int _hints;
+        private float _lastScore;
+        private bool _wasReady;
+        private static readonly FeelInput Presenting = new FeelInput { RunnerEdge = -1, DragEdge = -1 };
 
         public PuzzleState State => _state;
 
@@ -66,8 +69,10 @@ namespace GraphNode.Gameplay.Session
         /// <param name="runnerSpeed">Tốc độ điểm sáng, bề rộng vải mỗi giây (cấu hình cân bằng).</param>
         /// <param name="onWon">Gọi khi chuỗi thắng chạy xong.</param>
         /// <param name="hints">Số booster gợi ý người chơi đang có (từ LevelRequest).</param>
+        /// <param name="startCue">Màn đầu tiên: vòng nhắc chạm quanh node cần kéo, tới khi người chơi chạm lần đầu.</param>
         public void Begin(PuzzleState state, InputConfig input, float runnerSpeed, WinSequenceParams win, Action onWon,
-            IAudioService audio, ILocalizer localizer, FabricDefinition fabric, int slotIndex, int pieceSlots, int hints)
+            IAudioService audio, ILocalizer localizer, FabricDefinition fabric, int slotIndex, int pieceSlots, int hints,
+            bool startCue = false)
         {
             _audio = audio;
             _slotIndex = slotIndex;
@@ -82,6 +87,8 @@ namespace GraphNode.Gameplay.Session
             _runner = new RunnerSimulator(state.Topology, state.Shape);
             _runnerRule = new ConstantSpeedRule(runnerSpeed);
             view.Bind(state);
+            view.Feel.ShowStartCue = startCue;
+            _lastScore = state.Score;
             if (hud != null)
             {
                 // hình mẫu nhỏ trên HUD: cùng viền lời giải, đổi sang Vector2
@@ -119,7 +126,7 @@ namespace GraphNode.Gameplay.Session
                 // chạm trong chuỗi thắng thì tua nhanh cố định, không tăng thêm
                 if (phase == PointerPhase.Began) _presentation.Speed = _win.FastForward;
                 hud?.SetMatch(1f, _state.Level.WinThreshold, Time.deltaTime);
-                view.Render(Time.deltaTime, -1, 1f);
+                view.Render(Time.deltaTime, -1, 1f, Presenting);
                 return;
             }
             // chạm trúng HUD (nút Gợi ý…) thì để uGUI xử lý, không bắt node hay dây bên dưới
@@ -151,7 +158,8 @@ namespace GraphNode.Gameplay.Session
                 }
             }
             hud?.SetMatch(_state.Score, _state.Level.WinThreshold, dt);
-            view.Render(dt, _grab == Grab.Node ? _state.DraggingNode : -1, hud != null ? hud.BarDisplay : 0f);
+            FlashOnMilestones();
+            view.Render(dt, _grab == Grab.Node ? _state.DraggingNode : -1, hud != null ? hud.BarDisplay : 0f, BuildFeelInput());
             view.RenderRunner(dt, _runner.Edge, _runner.T);
             view.RenderFeedback(dt, new FeedbackInput
             {
@@ -161,6 +169,68 @@ namespace GraphNode.Gameplay.Session
                 SinceNodeRelease = Time.time - _lastNodeReleaseTime
             });
         }
+
+        /// <summary>
+        /// Thanh khớp chớp sáng khi độ khớp vượt lên qua hai mốc màu, và khi vừa kéo lọt vào vùng thắng (đủ ngưỡng và đủ
+        /// chốt) lúc còn giữ tay, như bản web.
+        /// </summary>
+        private void FlashOnMilestones()
+        {
+            float thr = _state.Level.WinThreshold, score = _state.Score;
+            float m1 = Mathf.Min(0.70f, thr - 0.08f), m2 = Mathf.Min(0.85f, thr);
+            if ((_lastScore < m1 && score >= m1) || (_lastScore < m2 && score >= m2)) hud?.Flash();
+            bool ready = score >= thr && _state.Pins.AllFilled;
+            if (ready && !_wasReady && _grab != Grab.None) hud?.Flash();
+            _wasReady = ready;
+            _lastScore = score;
+        }
+
+        private FeelInput BuildFeelInput()
+        {
+            var input = new FeelInput
+            {
+                Dragging = _grab != Grab.None,
+                DragEdge = _grab == Grab.Edge ? _state.DraggingEdge : -1,
+                Ready = _state.Score >= _state.Level.WinThreshold && _state.Pins.AllFilled,
+                SinceAction = Time.time - _lastActionTime,
+                RunnerEdge = _state.Won ? -1 : _runner.Edge,
+                RunnerT = _runner.T
+            };
+            // dây nối mờ từ ngón tay tới thứ đang kéo (node đã nâng khỏi ngón tay nên cần thấy chúng nối nhau)
+            if (_grab == Grab.Node && _state.DraggingNode >= 0)
+            {
+                input.HasFinger = true;
+                input.Finger = PointerWorld();
+                input.Grabbed = FabricLayout.FabricToWorld(_state.Positions[_state.DraggingNode]);
+            }
+            else if (_grab == Grab.Edge && _state.DraggingEdge >= 0)
+            {
+                input.HasFinger = true;
+                input.Finger = PointerWorld();
+                input.Grabbed = view.EdgePoint(_state.DraggingEdge, _edgeU);
+            }
+            return input;
+        }
+
+        private Vector3 PointerWorld()
+        {
+            var w = _camera.ScreenToWorldPoint(new Vector3(pointer.Position.x, pointer.Position.y, 0f));
+            w.z = 0f;
+            return w;
+        }
+
+        // vị trí ngón tay chiếu lên dây k (0 ở node đầu, 1 ở node cuối)
+        private float EdgeU(int k, Float2 f)
+        {
+            var topo = _state.Topology;
+            var a = _state.Positions[topo.RingNode(k)];
+            var b = _state.Positions[topo.RingNode((k + 1) % topo.RingLength)];
+            var ab = b - a;
+            float l2 = ab.LengthSquared;
+            return l2 > 1e-8f ? ((f.X - a.X) * ab.X + (f.Y - a.Y) * ab.Y) / l2 : 0.5f;
+        }
+
+        private float _edgeU = 0.5f;
 
         private Float2 TouchFabric(Vector2 screen) => FabricLayout.WorldToFabric(_camera.ScreenToWorldPoint(new Vector3(screen.x, screen.y, 0f)));
 
@@ -180,6 +250,8 @@ namespace GraphNode.Gameplay.Session
                 case TouchTargetKind.Edge:
                     _grab = Grab.Edge;
                     _state.BeginEdgeDrag(hit.Index, f, hit.EdgeU);
+                    _edgeU = hit.EdgeU;
+                    view.Feel.BeginWave(hit.Index, hit.EdgeU);
                     break;
                 case TouchTargetKind.Needle:
                     _grab = Grab.Needle;
@@ -214,6 +286,12 @@ namespace GraphNode.Gameplay.Session
                     break;
                 case Grab.Edge:
                     _state.DragEdge(f);
+                    int k = _state.DraggingEdge;
+                    if (k >= 0)
+                    {
+                        _edgeU = Mathf.Clamp(EdgeU(k, f), 0.14f, 0.86f);
+                        view.Feel.MoveWave(_edgeU, _state.Bends[k], _state.EdgeInMagnet);
+                    }
                     break;
                 case Grab.Needle:
                     _state.DragNeedle(f);
@@ -234,14 +312,24 @@ namespace GraphNode.Gameplay.Session
             }
             var grab = _grab;
             _grab = Grab.None;
+            if (grab == Grab.Edge) view.Feel.EndWave();
             _lastMagnetPin = -1;
             if (grab == Grab.Node) _lastNodeReleaseTime = Time.time;
             if (result.Relabeled) view.Permute(_state.LastPermutation);
             PlayReleaseSound(grab, result);
-            if (grab == Grab.Edge && result.ContourSnap && edge >= 0) view.Zip(edge);
-            if (grab == Grab.Node && result.Snapped) ZipChainedEdges(result.Pin);
+            if (grab == Grab.Edge && result.ContourSnap && edge >= 0)
+            {
+                view.Zip(edge);
+                view.SnapEdge(edge, _state.Bends[edge] >= 0f ? 1f : -1f, 0f, 5, false);
+            }
+            if (grab == Grab.Node && result.Snapped)
+            {
+                view.PinRipple(result.Pin);
+                ZipChainedEdges(result.Pin);
+            }
             if (result.Won)
             {
+                view.Feel.WinFlash();
                 _audio?.PlaySfx(WinChord);
                 PlayWinAsync().Forget();
             }
@@ -262,6 +350,7 @@ namespace GraphNode.Gameplay.Session
                 if (!_state.Pins.TryGetEdgeTarget(k, _state.Positions, _state.FoldLine, out float h)) continue;
                 if (Mathf.Abs(_state.Bends[k] - h) >= ChainedSnapBend) continue;
                 view.Zip(k, 0.05f);
+                view.SnapEdge(k, 1f, 0.05f, 4, true);
                 zipped++;
             }
             if (zipped > 0) _audio?.PlaySfx(CurveSnap);

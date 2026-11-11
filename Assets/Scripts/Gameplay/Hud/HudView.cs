@@ -42,6 +42,9 @@ namespace GraphNode.Gameplay.Hud
         [SerializeField] private Color barFar = new Color32(0xEE, 0xB8, 0xB0, 0xFF);
         [SerializeField] private Color barMid = new Color32(0xD8, 0x8A, 0x74, 0xFF);
         [SerializeField] private Color barNear = new Color32(0x5D, 0xB5, 0x82, 0xFF);
+        [Tooltip("Lớp trắng phủ lên phần đổ, chớp khi vượt mốc hoặc vừa đạt ngưỡng")]
+        [SerializeField] private Image barFlash;
+        [SerializeField, Range(0f, 1f)] private float barFlashAlpha = 0.6f;
 
         [Header("Gợi ý")]
         [SerializeField] private Button hintButton;
@@ -111,9 +114,21 @@ namespace GraphNode.Gameplay.Hud
             }
             float inner = barTrack.rect.width;
             barFill.sizeDelta = new Vector2(Mathf.Max(barMinFill, inner * _barValue), barFill.sizeDelta.y);
+            _flash = Mathf.Max(0f, _flash - dt * 3f);
+            if (barFlash != null)
+            {
+                barFlash.enabled = _flash > 0f && barFillImage != null && barFillImage.enabled;
+                barFlash.rectTransform.sizeDelta = barFill.sizeDelta;
+                barFlash.color = new Color(1f, 1f, 1f, barFlashAlpha * _flash);
+            }
             if (markerLow != null) markerLow.anchoredPosition = new Vector2(inner * BarValue(m1, threshold), markerLow.anchoredPosition.y);
             if (markerHigh != null) markerHigh.anchoredPosition = new Vector2(inner * BarValue(m2, threshold), markerHigh.anchoredPosition.y);
         }
+
+        /// <summary>Phần đổ chớp trắng rồi tắt trong khoảng 1/3 giây.</summary>
+        public void Flash() => _flash = 1f;
+
+        private float _flash;
 
         /// <summary>Thanh khớp dạng 0–1 đang hiển thị (sợi chỉ căng dần theo số này).</summary>
         public float BarDisplay => _barValue;

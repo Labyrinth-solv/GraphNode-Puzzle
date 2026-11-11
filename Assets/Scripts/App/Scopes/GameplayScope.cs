@@ -67,9 +67,12 @@ namespace GraphNode.App.Scopes
             State = new PuzzleState(level, balance.ToPuzzleConfig());
             int hints = Request.Boosters.TryGetValue(HintBooster, out int owned) ? owned : devHints;
             controller.Begin(State, input, balance.RunnerSpeed, balance.WinSequence, OnWon, _app.Audio, _app.Localizer,
-                fabric, info.SlotIndex, devPieceSlots, hints);
+                fabric, info.SlotIndex, devPieceSlots, hints, IsFirstLevel(Request.LevelId));
             Log.Info($"[Gameplay] level {Request.LevelId}");
         }
+
+        // màn đầu của catalog có vòng nhắc chạm đầu như bản web
+        private bool IsFirstLevel(string levelId) => catalog.Levels.Count > 0 && catalog.Levels[0].id == levelId;
 
         private void OnWon() => WonAsync().Forget();
 

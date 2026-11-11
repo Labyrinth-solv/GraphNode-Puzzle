@@ -144,6 +144,70 @@ namespace GraphNode.Gameplay.View
             _indices.Add(i + 1); _indices.Add(i + 2); _indices.Add(i + 3);
         }
 
+        /// <summary>Vòng tròn rỗng (tâm, bán kính tới giữa nét, bề dày nét).</summary>
+        public void AddRing(Vector3 c, float r, float width, Color32 color, int segments = 32)
+        {
+            int baseIndex = _vertices.Count;
+            float ri = r - width * 0.5f, ro = r + width * 0.5f;
+            for (int s = 0; s < segments; s++)
+            {
+                float a = s * Mathf.PI * 2f / segments;
+                var d = new Vector3(Mathf.Cos(a), Mathf.Sin(a), 0f);
+                _vertices.Add(c + d * ro);
+                _vertices.Add(c + d * ri);
+                _colors.Add(color);
+                _colors.Add(color);
+            }
+            for (int s = 0; s < segments; s++)
+            {
+                int a = baseIndex + 2 * s, b = baseIndex + 2 * ((s + 1) % segments);
+                _indices.Add(a); _indices.Add(b); _indices.Add(a + 1);
+                _indices.Add(a + 1); _indices.Add(b); _indices.Add(b + 1);
+            }
+        }
+
+        /// <summary>Đĩa tròn đặc.</summary>
+        public void AddDisc(Vector3 c, float r, Color32 color, int segments = 24)
+        {
+            int center = _vertices.Count;
+            _vertices.Add(c);
+            _colors.Add(color);
+            for (int s = 0; s < segments; s++)
+            {
+                float a = s * Mathf.PI * 2f / segments;
+                _vertices.Add(c + new Vector3(Mathf.Cos(a), Mathf.Sin(a), 0f) * r);
+                _colors.Add(color);
+            }
+            for (int s = 0; s < segments; s++)
+            {
+                _indices.Add(center); _indices.Add(center + 1 + (s + 1) % segments); _indices.Add(center + 1 + s);
+            }
+        }
+
+        /// <summary>Hình chữ nhật xoay góc angle (radian) quanh tâm.</summary>
+        public void AddRect(Vector3 c, float halfW, float halfH, float angle, Color32 color)
+        {
+            var u = new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0f);
+            var v = new Vector3(-u.y, u.x, 0f);
+            AddQuadCorners(c - u * halfW - v * halfH, c - u * halfW + v * halfH, c + u * halfW - v * halfH, c + u * halfW + v * halfH, color);
+        }
+
+        /// <summary>Hình thoi (đốm lấp lánh): bán trục ngang rx, dọc ry.</summary>
+        public void AddDiamond(Vector3 c, float rx, float ry, Color32 color)
+        {
+            AddQuadCorners(c + new Vector3(-rx, 0f), c + new Vector3(0f, ry), c + new Vector3(0f, -ry), c + new Vector3(rx, 0f), color);
+        }
+
+        // thứ tự đỉnh như AddQuad: (p0+, p0−, p1+, p1−)
+        private void AddQuadCorners(Vector3 a, Vector3 b, Vector3 c, Vector3 d, Color32 color)
+        {
+            int i = _vertices.Count;
+            _vertices.Add(a); _vertices.Add(b); _vertices.Add(c); _vertices.Add(d);
+            for (int k = 0; k < 4; k++) _colors.Add(color);
+            _indices.Add(i); _indices.Add(i + 2); _indices.Add(i + 1);
+            _indices.Add(i + 1); _indices.Add(i + 2); _indices.Add(i + 3);
+        }
+
         /// <summary>Thêm vùng tô đa giác đã tam giác hóa sẵn.</summary>
         public void AddTriangles(List<Vector3> points, List<int> triangles, Color32 color)
         {
