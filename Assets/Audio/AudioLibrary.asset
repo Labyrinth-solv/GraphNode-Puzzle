@@ -18,6 +18,12 @@ MonoBehaviour:
     clip: {fileID: 8300000, guid: 015ab41e017db844ea18c92a0719d222, type: 3}
   - id: drop
     clip: {fileID: 8300000, guid: d0a58f71b59eb0243abe692d291db5c1, type: 3}
+  - id: grab_00
+    clip: {fileID: 8300000, guid: 4dc1110b2c83593499814eea0d0dd252, type: 3}
+  - id: grab_01
+    clip: {fileID: 8300000, guid: cc78da3960214d24489aa8e9ae46abb0, type: 3}
+  - id: hum_loop
+    clip: {fileID: 8300000, guid: 52c0c94cdef263d41ac8746034a317c2, type: 3}
   - id: locked_tap
     clip: {fileID: 8300000, guid: 59b6e1e927fd4034196e2aaf74b77b42, type: 3}
   - id: note_pop_00
@@ -104,5 +110,19 @@ MonoBehaviour:
     clip: {fileID: 8300000, guid: 48154c456b3807b499bf4734ce2114a8, type: 3}
   - id: pin_snap_last_05
     clip: {fileID: 8300000, guid: 2d82da99335670042b69450f5325766c, type: 3}
+  - id: ready_pluck
+    clip: {fileID: 8300000, guid: 03fc7fcc4bf16314f8221875260c09d2, type: 3}
+  - id: rustle_loop
+    clip: {fileID: 8300000, guid: 5c02091ae85e00a45988f8e4278acebd, type: 3}
+  - id: soft_00
+    clip: {fileID: 8300000, guid: 6a007efa11c645f408b905f755e6d228, type: 3}
+  - id: soft_01
+    clip: {fileID: 8300000, guid: f933e6ef1c27d5b49a8fd8573172a96a, type: 3}
+  - id: soft_02
+    clip: {fileID: 8300000, guid: 3c3ae3fa63d0f5e4e9782b6d7d9eb8a3, type: 3}
+  - id: soft_03
+    clip: {fileID: 8300000, guid: 142d102790ab795488d8d5a3fce52874, type: 3}
+  - id: soft_04
+    clip: {fileID: 8300000, guid: 62d71d03cc72b2b4399ef5a5920ac57d, type: 3}
   - id: win_chord
     clip: {fileID: 8300000, guid: 6ae99ad25c0b8b44d843bc82a09e9a1b, type: 3}

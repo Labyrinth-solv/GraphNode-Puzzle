@@ -10,6 +10,13 @@ namespace GraphNode.Foundation.Services
     {
         void PlaySfx(string sfxId, float volume = 1f);
         void PlayNote(string timbreId, int step, float volume = 1f);
+
+        /// <summary>
+        /// Kênh âm lặp theo id clip (tiếng ngân căng chỉ, sột soạt vải). Gọi mỗi khung với giá trị mới; volume là âm lượng
+        /// tuyệt đối như bản web, 0 thì dừng. pitch là tỉ lệ cao độ, lowpassHz là tần số cắt của bộ lọc (0 = không lọc).
+        /// </summary>
+        void SetLoop(string loopId, float volume, float pitch = 1f, float lowpassHz = 0f);
+
         bool Muted { get; set; }
     }
 

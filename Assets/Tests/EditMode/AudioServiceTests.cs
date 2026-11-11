@@ -20,7 +20,7 @@ namespace GraphNode.Tests.EditMode
             _library = ScriptableObject.CreateInstance<AudioLibrary>();
             var so = new SerializedObject(_library);
             var list = so.FindProperty("clips");
-            string[] ids = { "note_pop_00", "note_pop_01", "note_pop_02", "drop" };
+            string[] ids = { "note_pop_00", "note_pop_01", "note_pop_02", "drop", "hum_loop" };
             list.arraySize = ids.Length;
             for (int i = 0; i < ids.Length; i++)
             {
@@ -79,6 +79,30 @@ namespace GraphNode.Tests.EditMode
             sources[1].clip = null;
             service.PlaySfx("drop");
             Assert.IsNull(sources[1].clip, "muted service must not play");
+        }
+
+        [Test]
+        public void SetLoop_UsesOwnChildSource_WithPitchAndFilter_ZeroStops()
+        {
+            var service = new AudioService(_library, _host.transform, 2);
+            service.SetLoop("hum_loop", 0.02f, 1.5f, 900f);
+            var child = _host.transform.Find("Loop hum_loop");
+            Assert.IsNotNull(child, "loop lives on its own child so its filter does not touch the note voices");
+            Assert.AreEqual(2, _host.GetComponents<AudioSource>().Length);
+            Assert.IsNull(_host.GetComponent<AudioLowPassFilter>());
+            var src = child.GetComponent<AudioSource>();
+            var lp = child.GetComponent<AudioLowPassFilter>();
+            Assert.IsTrue(src.loop);
+            Assert.AreEqual(0.2f, src.volume, 1e-6f, "0,02 tuyệt đối / tham chiếu 0,1");
+            Assert.AreEqual(1.5f, src.pitch, 1e-6f);
+            Assert.IsTrue(lp.enabled);
+            Assert.AreEqual(900f, lp.cutoffFrequency, 1e-3f);
+
+            service.SetLoop("hum_loop", 0.02f);
+            Assert.IsFalse(lp.enabled, "no cutoff given: filter off");
+            Assert.DoesNotThrow(() => service.SetLoop("hum_loop", 0f));
+            Assert.DoesNotThrow(() => service.SetLoop("nope", 0.5f));
+            Assert.IsNull(_host.transform.Find("Loop nope"));
         }
 
         [Test]

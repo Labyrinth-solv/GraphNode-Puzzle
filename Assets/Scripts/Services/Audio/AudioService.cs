@@ -17,6 +17,7 @@ namespace GraphNode.Services.Audio
         // âm sắc -> clip theo bậc, dựng một lần từ các id dạng "âm sắc_NN"
         private readonly Dictionary<string, List<AudioClip>> _notes = new Dictionary<string, List<AudioClip>>();
         private int _next;
+        private readonly Transform _host;
 
         public bool Muted { get; set; }
 
@@ -35,6 +36,7 @@ namespace GraphNode.Services.Audio
                     while (list.Count <= step) list.Add(null);
                     list[step] = e.clip;
                 }
+            _host = host;
             _voices = new AudioSource[voices];
             for (int i = 0; i < voices; i++)
             {
@@ -58,6 +60,46 @@ namespace GraphNode.Services.Audio
             var clip = list[Mathf.Clamp(step, 0, list.Count - 1)];
             if (clip != null) Play(clip, volume / _reference);
         }
+
+        public void SetLoop(string loopId, float volume, float pitch = 1f, float lowpassHz = 0f)
+        {
+            bool on = !Muted && volume > 1e-4f;
+            if (!_loops.TryGetValue(loopId, out var loop))
+            {
+                if (!on || !_clips.TryGetValue(loopId, out var clip) || _host == null) return;
+                // mỗi vòng lặp một đối tượng con riêng: bộ lọc của Unity áp lên mọi nguồn cùng đối tượng, đặt chung host
+                // thì lọc luôn các nốt; tạo lần đầu dùng rồi giữ lại
+                var child = new GameObject("Loop " + loopId);
+                child.transform.SetParent(_host, false);
+                var src = child.AddComponent<AudioSource>();
+                src.playOnAwake = false;
+                src.spatialBlend = 0f;
+                src.loop = true;
+                src.clip = clip;
+                var lp = child.AddComponent<AudioLowPassFilter>();
+                lp.enabled = false;
+                _loops[loopId] = loop = new Loop { Source = src, Filter = lp };
+            }
+            if (loop.Source == null) return;
+            if (!on)
+            {
+                if (loop.Source.isPlaying) loop.Source.Stop();
+                return;
+            }
+            loop.Source.volume = Mathf.Clamp01(volume / _reference);
+            loop.Source.pitch = pitch;
+            loop.Filter.enabled = lowpassHz > 0f;
+            if (lowpassHz > 0f) loop.Filter.cutoffFrequency = lowpassHz;
+            if (!loop.Source.isPlaying) loop.Source.Play();
+        }
+
+        private sealed class Loop
+        {
+            public AudioSource Source;
+            public AudioLowPassFilter Filter;
+        }
+
+        private readonly Dictionary<string, Loop> _loops = new Dictionary<string, Loop>();
 
         private void Play(AudioClip clip, float volume)
         {

@@ -13,6 +13,7 @@ namespace GraphNode.Services
         public bool Muted { get; set; }
         public void PlaySfx(string sfxId, float volume = 1f) { }
         public void PlayNote(string timbreId, int step, float volume = 1f) { }
+        public void SetLoop(string loopId, float volume, float pitch = 1f, float lowpassHz = 0f) { }
     }
 
     public sealed class NullHaptics : IHaptics

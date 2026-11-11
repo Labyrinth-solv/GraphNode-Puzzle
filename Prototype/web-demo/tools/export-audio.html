@@ -109,9 +109,46 @@ jobs.push(['curve_snap', 1.7, (AC, o, t) => { sweep(AC, o, t, 0.12, 0.08, 1300, 
 jobs.push(['drop', 0.2, (AC, o, t) => pop(AC, o, t, noteF(0) * 0.5, 0.07, 0, 0.12)]);
 jobs.push(['locked_tap', 0.2, (AC, o, t) => pop(AC, o, t, 220, 0.05, 0, 0.12)]);
 jobs.push(['win_chord', 0.75, (AC, o, t) => [4, 7, 9].forEach((n, i) => pop(AC, o, t, noteF(n), 0.06, i * 0.06, 0.5))]);
+// tiếng khi kéo (game.js: playDown, applyEdgeDrag, needleMove, mốc khớp, vừa đạt ngưỡng, hum)
+// nắm node: pop(noteF(1)/2); nắm dây hay kim: pop(noteF(2)/2)
+jobs.push(['grab_00', 0.2, (AC, o, t) => pop(AC, o, t, noteF(1) * 0.5, VOL_REF, 0, 0.14)]);
+jobs.push(['grab_01', 0.2, (AC, o, t) => pop(AC, o, t, noteF(2) * 0.5, VOL_REF, 0, 0.14)]);
+for (let s = 0; s < 5; s++) jobs.push([`soft_${String(s).padStart(2, '0')}`, 0.2, (AC, o, t) => softTone(AC, o, t, pentaF(s, -1), VOL_REF, 0.14)]);
+// vừa kéo lọt vào vùng thắng: gảy Đô 4 rồi Mi 4 sau 45 ms
+jobs.push(['ready_pluck', 1.7, (AC, o, t) => { pluck(AC, o, t, pentaF(0, -1), 0.075); pluck(AC, o, t + 0.045, pentaF(2, -1), 0.05); }]);
+// vòng lặp: dây trầm ở Đô 3 (Unity đổi cao độ bằng pitch, lọc bằng AudioLowPassFilter) và sột soạt vải
+const HUM_F = pentaF(0, -2), HUM_SECONDS = 131 / HUM_F;
+jobs.push(['hum_loop', HUM_SECONDS, (AC, o, t0) => humLoop(AC, o, HUM_F, VOL_REF)]);
+jobs.push(['rustle_loop', 2, (AC, o, t0) => rustleLoop(AC, o, 2, VOL_REF)]);
+function softTone(AC, out, t, f, vol, dur) {
+  const v = vol * 2.2, o = AC.createOscillator(), o2 = AC.createOscillator(), lp = AC.createBiquadFilter(), g = AC.createGain();
+  o.type = 'sine'; o2.type = 'triangle';
+  o.frequency.setValueAtTime(f * 1.18, t); o.frequency.exponentialRampToValueAtTime(f, t + 0.035);
+  o2.frequency.setValueAtTime(f * 0.5, t);
+  lp.type = 'lowpass'; lp.frequency.value = f * 2.2;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(lp); o2.connect(lp); lp.connect(g); g.connect(out);
+  o.start(t); o2.start(t); o.stop(t + dur + 0.02); o2.stop(t + dur + 0.02);
+}
+// vòng lặp không qua bộ nén (tiếng liên tục, âm lượng do Unity điều khiển); bắt đầu từ 0 để nối vòng không lách cách
+function humLoop(AC, out, f, vol) {
+  const o1 = AC.createOscillator(), o2 = AC.createOscillator(), g2 = AC.createGain(), g = AC.createGain();
+  o1.type = 'triangle'; o2.type = 'sine'; o1.frequency.value = f; o2.frequency.value = f * 2; g2.gain.value = 0.35; g.gain.value = vol;
+  o1.connect(g); o2.connect(g2); g2.connect(g); g.connect(AC.destination); o1.start(0); o2.start(0);
+}
+function rustleLoop(AC, out, seconds, vol) {
+  const s = AC.createBufferSource(), bp = AC.createBiquadFilter(), g = AC.createGain();
+  s.buffer = noiseBuf(AC, seconds, () => 1); s.loop = true;
+  bp.type = 'bandpass'; bp.frequency.value = 1300; bp.Q.value = 0.7; g.gain.value = vol;
+  s.connect(bp); bp.connect(g); g.connect(AC.destination); s.start(0);
+}
+// ?only=tiền_tố,tiền_tố: chỉ kết xuất các clip có tên bắt đầu như vậy (không ghi đè clip cũ có nhiễu ngẫu nhiên)
+const only = new URLSearchParams(location.search).get('only');
+const prefixes = only ? only.split(',') : null;
 (async function () {
   const names = [];
   for (const [name, secs, build] of jobs) {
+    if (prefixes && !prefixes.some(p => name.startsWith(p))) continue;
     const data = await render(secs, build);
     await fetch('/save?kind=audio&name=' + name, { method: 'POST', body: wav(data) });
     names.push(name);

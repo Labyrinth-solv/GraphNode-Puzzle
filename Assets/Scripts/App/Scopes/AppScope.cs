@@ -43,7 +43,12 @@ namespace GraphNode.App.Scopes
             Bus = new MessageBus();
             var audioLibrary = assets != null ? assets.AudioLibrary : null;
             Audio = audioLibrary != null ? new AudioService(audioLibrary, host.transform) : new NullAudioService();
+#if UNITY_ANDROID && !UNITY_EDITOR
+            Haptics = new Services.Haptics.AndroidHaptics();
+#else
+            // iOS làm khi bắt đầu build iOS (tài liệu kiến trúc mục 8)
             Haptics = new NullHaptics();
+#endif
             Save = new MemorySaveService();
             Analytics = new NullAnalytics();
             Localizer = assets != null && assets.Strings != null ? new TableLocalizer(assets.Strings) : new KeyLocalizer();
