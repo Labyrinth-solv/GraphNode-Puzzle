@@ -116,7 +116,7 @@ function reward(p) {
 
 step(70);
 const W = sb.window;
-const LI = LV.findIndex(l => l.id === 'flower_leaves'), LVL = LV[LI], PI = P.findIndex(p => p.levels.includes(LI));
+const LI = LV.findIndex(l => l.id === 'shirt'), LVL = LV[LI], PI = P.findIndex(p => p.levels.includes(LI));
 const S2 = (q) => [FX + q[0] * FS, FY + q[1] * FS];
 function jump() { W.GNJumpTo({ pi: PI, li: LI }); step(80); }
 function dragNode(i, to) {
@@ -140,31 +140,33 @@ function dragEdge(k, off, u) {
 let fail = 0;
 function check(name, ok, info) { console.log((ok ? '✅ ' : '❌ ') + name + (info ? ' (' + info + ')' : '')); if (!ok) fail++; }
 
-// 1. Cắm đúng 4 chốt, uốn lệch một đường chéo: đường chéo đó phải có gợi ý (trước đây chỉ cạnh bendFree mới có)
+// 1. Cắm đúng 5 chốt (màn Áo lót trong), uốn lệch một đoạn thẳng (cạnh 0): đoạn đó phải có gợi ý
 jump();
-for (let i = 0; i < 4; i++) dragNode(i, LVL.sol[i]);
-dragEdge(0, 0.07, 0.3); // tránh chỗ hai đường chéo bắt chéo nhau ở giữa
+for (let i = 0; i < LVL.sol.length; i++) if (!LVL.locked.includes(i)) dragNode(i, LVL.sol[i]);
+dragEdge(0, 0.07);
 let he = W.GNHintEdges(), d0 = he.find(e => e.k === 0);
-check('đường chéo uốn lệch có gợi ý', !!d0 && Math.abs(d0.h) < 0.01, 'bend ' + W.GNState().bend[0].toFixed(3) + ', gợi ý ' + JSON.stringify(he.map(e => e.k)));
+check('đoạn thẳng uốn lệch có gợi ý', !!d0 && Math.abs(d0.h) < 0.01, 'bend ' + W.GNState().bend[0].toFixed(3) + ', gợi ý ' + JSON.stringify(he.map(e => e.k)));
 
-// 1b. Nắn đường chéo đang lệch về thẳng: phải có hiệu ứng khớp dây như cạnh cong
-let zBack = dragEdge(0, -0.066, 0.3), bBack = W.GNState().bend[0];
-check('nắn đường chéo về thẳng có hiệu ứng khớp dây', zBack > 0 && Math.abs(bBack) < 1e-3, 'tia sáng ' + zBack + ', bend ' + bBack.toFixed(4));
-// 1c. Kéo nhẹ đường chéo đang đúng, vẫn trong vùng hút: không có hiệu ứng
-let zTap = dragEdge(2, 0.025, 0.3);
-check('kéo nhẹ đường chéo đang đúng không có hiệu ứng', zTap === 0, 'tia sáng ' + zTap + ', bend ' + W.GNState().bend[2].toFixed(4));
+// 1b. Nắn đoạn đang lệch về thẳng: phải có hiệu ứng khớp dây như cạnh cong
+let zBack = dragEdge(0, -0.066), bBack = W.GNState().bend[0];
+check('nắn đoạn về thẳng có hiệu ứng khớp dây', zBack > 0 && Math.abs(bBack) < 1e-3, 'tia sáng ' + zBack + ', bend ' + bBack.toFixed(4));
+// 1c. Kéo nhẹ đoạn thẳng đang đúng, vẫn trong vùng hút: không có hiệu ứng
+let zTap = dragEdge(2, 0.02);
+check('kéo nhẹ đoạn thẳng đang đúng không có hiệu ứng', zTap === 0, 'tia sáng ' + zTap + ', bend ' + W.GNState().bend[2].toFixed(4));
 
 // 2. Hai đầu dây ở hai chốt liền nhau nhưng khác thứ tự lời giải: dây hút về độ uốn của cạnh lời giải giữa hai chốt đó
+// Đưa node 4 lên sol[3] và node 0 lên sol[4] -> cạnh 4 (4→0) nằm trên cạnh lời giải 3 (3→4, solBend = -0.0975)
 jump();
-dragNode(0, LVL.sol[1]); dragNode(1, LVL.sol[2]); // cạnh 0 (node 0 → 1) nằm trên cạnh lời giải 1 (mút lá phải, +0,16)
-dragEdge(0, 0.145);
-let b0 = W.GNState().bend[0];
-check('dây hút đúng đích khi đặt khác thứ tự', Math.abs(b0 - 0.16) < 1e-3, 'bend ' + b0.toFixed(4) + ', đích 0.16');
+dragNode(4, LVL.sol[3]); dragNode(0, LVL.sol[4]);
+dragEdge(4, -0.088);
+let b0 = W.GNState().bend[4];
+check('dây hút đúng đích khi đặt khác thứ tự', Math.abs(b0 - (-0.0975)) < 1e-3, 'bend ' + b0.toFixed(4) + ', đích -0.0975');
 
-// 3. Hai đầu dây chưa ở chốt: không hút, dây giữ đúng chỗ thả (trước đây bị hút về độ uốn lời giải theo số thứ tự)
+// 3. Hai đầu dây chưa ở chốt: không hút, dây giữ đúng chỗ thả
 jump();
-dragEdge(1, 0.145);
-let b1 = W.GNState().bend[1];
-check('dây chưa có chốt không bị hút', Math.abs(b1 - 0.16) > 0.005 && Math.abs(b1) > 0.1, 'bend ' + b1.toFixed(4) + ', solBend 0.16');
-check('dây chưa có chốt không có gợi ý', !W.GNHintEdges().some(e => e.k === 1));
+dragNode(3, [0.80, 0.84]); dragNode(4, [0.20, 0.84]); // tách 2 đầu dây ra xa chốt để không dính chốt hay vùng bắt node
+dragEdge(3, -0.082);
+let b1 = W.GNState().bend[3];
+check('dây chưa có chốt không bị hút', Math.abs(b1 - (-0.0975)) > 0.005 && Math.abs(b1) > 0.07, 'bend ' + b1.toFixed(4) + ', solBend -0.0975');
+check('dây chưa có chốt không có gợi ý', !W.GNHintEdges().some(e => e.k === 3));
 if (fail) { console.log(fail + ' kiểm tra không đạt'); process.exit(1); }

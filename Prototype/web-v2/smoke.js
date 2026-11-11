@@ -1,6 +1,6 @@
 // Test mô phỏng chạy toàn bộ các màn trên bản clone Prototype/web-v2 (gồm cả kéo node và kéo dây uốn cong)
 const fs = require('fs'), path = require('path'), vm = require('vm');
-const dir = __dirname;
+const dir = fs.existsSync(path.join(__dirname, 'web')) ? path.join(__dirname, 'web') : __dirname;
 const texts = new Set();
 const ctxProxy = new Proxy({}, {
   get: (t, k) => {
@@ -137,4 +137,4 @@ for (const p of P) {
     L.pointerdown(ev(195, 761)); L.pointerup(ev(195, 761)); step(70);
   }
 }
-console.log('🎉 Toàn bộ ' + P.length + ' sản phẩm (Kem, Cardigan, Trái tim gấp, Bé thỏ, Chậu hoa) chạy mượt mà với cơ chế Kéo Dây Uốn Cong!');
+console.log('🎉 Toàn bộ ' + P.length + ' sản phẩm (Kem, Cardigan, Bé thỏ, Nấm đỏ, Hạt dẻ, Hướng dương) chạy mượt mà với cơ chế Kéo Dây Uốn Cong!');

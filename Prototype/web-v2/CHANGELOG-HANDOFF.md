@@ -841,3 +841,133 @@ Các thay đổi dưới đây làm và thử ở `Prototype/web-demo` trước,
    - `node alt-solve.js`, `bend-target.js`, `check.js`: **PASS 100%**.
    - Đã đồng bộ mã nguồn sang máy local tại `D:\Work\Unity-project\GraphNode Puzzle\Prototype\web-v2\`.
    - Cam kết giữ vững: **Không thay đổi bất kỳ file nào trong `Prototype/web-demo`**.
+
+
+### 22. Đồng bộ chuẩn từ `Prototype/web-demo` bản mới nhất (2026-11-11)
+
+1. **Nguồn chuẩn đồng bộ**:
+   - Đồng bộ toàn bộ mã nguồn mới nhất ngày `2026-11-11` từ `D:\Work\Unity-project\GraphNode Puzzle\Prototype\web-demo` (`web/core.js`, `web/levels.js`, `web/game.js`, `web/mask.js`, `web/startgen.js`, `web/thresholds.js`, `web/cat-vai-nam.html`, cùng các script kiểm thử `alt-solve.js`, `bend-target.js`, `check.js`, `smoke2.js` -> `smoke.js`).
+   - Đồng bộ đầy đủ vào cả hai thư mục `web-v2` (worktree `explain_git_worktree/Prototype/web-v2/` và local `D:\Work\Unity-project\GraphNode Puzzle\Prototype\web-v2/`), giữ nguyên cấu trúc phẳng (`index.html`, `server.js`) và **tuyệt đối không chỉnh sửa Unity hay `web-demo`**.
+
+2. **Nội dung thay đổi đồng bộ từ `web-demo`**:
+   - Bộ 6 sản phẩm (`icecream`, `cardigan`, `heart`, `bunny`, `flowerpot`, `strawberry` — Màn 1–6) với bảng màu `fabric.deep` + viền đen dày `#2A2326` kiểu tranh tô màu, cơ chế ép con dấu tròn (`drawPressPlate`, `drawPressRing`, `drawSheen`), hiệu ứng loang màu nền `C.baseDeep` và nhãn `"Hoàn thành!"` (`drawDoneLabel`).
+   - Các file logic `core.js`, `mask.js`, `startgen.js`, `thresholds.js` khớp 100% với `web-demo`.
+
+3. **Kiểm thử sau đồng bộ**:
+   - `node smoke.js`: **PASS 6/6 sản phẩm** (`icecream`, `cardigan`, `heart`, `bunny`, `flowerpot`, `strawberry`).
+   - `node alt-solve.js`: **PASS 7/7 trường hợp**.
+   - `node bend-target.js`: **PASS 6/6 kiểm tra**.
+   - `node check.js`: Hoàn tất cho 14 level.
+
+### 23. [ĐÃ DUYỆT / APPROVED] Nâng Cấp Nghệ Thuật Hướng A (Cozy Storybook Ink) & Trang Trí Cartoon Không Mặt Cười (2026-11-11)
+
+1. **Yêu cầu & định hướng thẩm mỹ**:
+   - Áp dụng **Hướng A (Cozy Storybook Ink)** trong phạm vi `Prototype/web-v2/` (tuyệt đối không sửa Unity hay `web-demo`).
+   - Nâng cấp toàn bộ phần trang trí (`DECOR`) theo phong cách **Cartoon nghệ thuật**, loại bỏ hoàn toàn kiểu mặt cười kawaii trên đồ vật (`icecream`, `heart`, `flowerpot`, `strawberry`) và tinh giản đôi mắt anime cỡ lớn trên `bunny`.
+
+2. **Các cải tiến cụ thể trong `Prototype/web-v2/game.js`**:
+   - **Đổ bóng, khối màu & nét đồng tông Hướng A (`drawPiece`, `fab`, `paintStoryGrad`, `paintInnerEdge`, `paintFabric`, `paintFlat`)**:
+     - Cho `fab(i)` dùng `fb.deep.line` pha 28% `#2A2326` (và `#5E1222` pha 28% cho `strawberry`), gỡ bỏ ghi đè cứng `if (cloth) ctx.strokeStyle = '#2A2326'`.
+     - Chuyển sắc tỏa tròn ánh sáng kem ấm góc trên-trái (`#FFF8EA`), râm nhẹ dưới-phải, kết hợp viền sáng mảnh bên trong (`#FFF9EE`) và bóng đổ tách lớp giữa các mảnh.
+   - **Nền sân khấu theo từng sản phẩm & vị trí nhãn (`STAGE_BG`, `drawRewardScene`, `drawDoneLabel`)**:
+     - Thay `C.baseDeep` phẳng bằng nền tỏa tròn pastel bổ trợ riêng từng màn (`STAGE_BG`) kèm bóng tiếp đất nhẹ dưới chân sản phẩm.
+     - Đẩy vị trí `drawDoneLabel` lên khoảng trống phía trên (`clamp(R.top - 66, 118, 168)`) để không che mất quả cherry hay cuống dâu khi hoàn thành.
+   - **Hiển thị `DECOR` đúng thứ tự chiều sâu (`clipTo` / `after`)**:
+     - Bổ sung cơ chế vẽ `clipTo` (cắt khít trong đường viền mảnh trước khi tô nét viền ngoài) và `after` (vẽ ngay sau từng mảnh để mảnh trên che đúng phần gốc, ví dụ bánh quế sau viên kem, gân lá sau chậu hoa, dây ruy-băng sau tim trong, nơ hoa sau mặt thỏ).
+     - Thiết kế mới chi tiết cho cả 6 màn:
+       - `icecream`: Sốt kem chảy gợn sóng, cốm màu pastel, bánh quế cuộn, cherry + lá bạc hà, áo giấy nếp sọc mint có ruy-băng cong.
+       - `cardigan`: Bo gân len ở cả gấu áo lẫn 2 cổ tay, dải nẹp áo + bóng cổ áo, 4 khuy gỗ chữ X, khăn gấp ló túi trái, ghim hoa cúc.
+       - `heart`: Chấm ngọc trai, dải ruy-băng vàng kem vắt chéo + nơ lụa vai phải, nhánh hoa 5 cánh + lá vai trái, vệt bóng men sứ tim trong.
+       - `bunny`: Hoa cúc có lá cài tai phải, mắt oval cartoon tối giản, má hồng loang mềm, mũi nhỏ tĩnh (không miệng cười ω), chấm bi trên nơ đỏ.
+       - `flowerpot`: Vẽ gân lá trước phần chậu để sạch mép chậu, bọ rùa cartoon đậu lá phải, dải men kem chấm đất nung + bóng vành chậu, nhụy hướng dương xoắn ốc Fibonacci.
+       - `strawberry`: Đài lá 2 tầng, cuống cong + hoa dâu trắng 5 cánh, lưới hạt dâu hình giọt nước xếp đều có hõm bóng và vệt sương căng mọng.
+
+3. **Đồng bộ & Kiểm thử**:
+   - Đã chạy `smoke.js`, `alt-solve.js`, `bend-target.js`, `check.js` và kiểm tra trực tiếp trên ảnh chụp Chrome của `http://localhost:3000/` cho toàn bộ 6 màn hoàn thiện + màn chơi.
+   - Đồng bộ `game.js` và `CHANGELOG-HANDOFF.md` sang bản `D:\Work\Unity-project\GraphNode Puzzle\Prototype\web-v2\` (chỉ trong thư mục `web-v2`).
+
+### 24. [MỚI / FEATURE] Thêm Màn 7 (`dogman`): Đầu Chó – Thân Người (3 Mảnh, Standalone) (2026-11-11)
+
+1. **Thiết kế màn chơi mới trong `Prototype/web-v2/levels.js` (`LEVELS[14..16]` & `PRODUCTS[6]`)**:
+   - Tạo **Màn 7 (`id: 'dogman'`, `standalone: true`)** gồm 3 mảnh theo thứ tự chơi `[14, 15, 16]` và thứ tự xếp lớp sau–trước `order: [14, 16, 15]` (áo thun xám bọc sát quanh chân cổ chú chó và phủ qua cạp quần kaki):
+     - `LEVELS[14]` (`dogman_pants` – **Quần kaki**, `tier: 'easy'`, 9 node, 3 node tự do, `bendFree: [1, 7]`, vải gân kem ấm `#E8DAC0`).
+     - `LEVELS[15]` (`dogman_shirt` – **Áo thun xám**, `tier: 'medium'`, 13 node, 6 node tự do, `bendFree: [7]`, vải len xám mát `#DDE3EC`).
+     - `LEVELS[16]` (`dogman_head` – **Đầu chú chó**, `tier: 'medium'`, 12 node, 5 node tự do, `bendFree: [7, 8]`, `solBendOverride: { 7: -0.026, 8: -0.028 }`, vải nỉ nâu caramel `#CC8242`).
+
+2. **Trang trí Cartoon Hướng A & tinh chỉnh Menu trong `Prototype/web-v2/game.js`**:
+   - Bổ sung màu nền sân khấu `STAGE_BG.dogman = '#DEE4F2'` và `DECOR.dogman` gồm 6 bước theo chiều sâu (`dogPantsDecor`, `dogHeadShade`, `dogHeadFace`, `dogShirtDecor`, `dogArm` trái/phải):
+     - Quần kaki có bóng đổ trong ống quần, đường may khóa kéo, hai túi chéo đính đinh tán vàng và nếp gấp đùi ngồi.
+     - Đầu chú chó tô loang mõm đen đặc trưng, quầng mắt tối, mảng lông cổ ấm, hõm tai trong, mũi đen bóng, nét mép trầm tư (không mặt cười), râu mép và mắt cartoon có chân mày nhẹ.
+     - Áo thun xám bo cổ ôm sát cổ chó, nếp gấp vải bụng áo, chữ ngực `YODY`, cùng hai cẳng tay/bàn tay cartoon (`dogArm`) thò ra từ dưới gấu tay áo ngắn đặt nhẹ lên đùi.
+   - Điều chỉnh bố cục menu thả xuống (`MENU_Y = 58`, `CHIP_H = 36`, `HEAD_H = 20`, `MENU_PAD = 10`) để tất cả 7 màn không chạm vào hai nút footer bên dưới trên khung `390×844`.
+
+### 25. [MỚI / FEATURE] Thêm Màn 8 (`mushroom`): Nấm Đỏ Từ Color Page Data (3 Mảnh, Standalone) (2026-11-11)
+
+1. **Bóc tách biên dạng từ dữ liệu Color Page (`ICON-mushroom.png` & `mushroom.json`) trong `Prototype/web-v2/levels.js` (`LEVELS[17..19]` & `PRODUCTS[7]`)**:
+   - Tạo **Màn 8 (`id: 'mushroom'`, `standalone: true`)** gồm 3 mảnh theo đúng thứ tự chơi và xếp lớp `order: [17, 18, 19]` (`mũ nấm` đè sạch mép cổ thân nấm, `cụm cỏ` đè sạch chân thân nấm — không lộ phần dư phía sau):
+     - `LEVELS[17]` (`mushroom_stem` – **Thân nấm**, `tier: 'medium'`, `winThreshold: 0.95`, 8 node, 4 node tự do `[2, 3, 6, 7]`, `bendFree: [4]`, `solBendOverride: {'3':-0.075,'4':-0.145,'5':-0.075}`).
+     - `LEVELS[18]` (`mushroom_cap` – **Mũ nấm đỏ**, `tier: 'medium'`, `winThreshold: 0.95`, 7 node, 4 node tự do `[1, 2, 5, 6]`, `bendFree: [3]`, `solBendOverride: {'3':-0.110}`).
+     - `LEVELS[19]` (`mushroom_grass` – **Cụm cỏ**, `tier: 'hard'`, `winThreshold: 0.94`, 5 node, 3 node tự do `[0, 2, 3]`, `bendFree: [2]`, `solBendOverride: {'0':-0.015,'1':-0.055,'2':-0.210,'3':-0.055,'4':-0.015}`).
+   - Toàn bộ biên dạng mảnh ghép khớp sát silhouette gốc `ICON-mushroom.png` (~96.76% hợp nhất 3 mảnh, ~98.08% mũ nấm, ~90.36% cụm cỏ), giữ `minNN >= 0.15` và đáp ứng đầy đủ ràng buộc `startgen` (`0` cảnh báo).
+
+2. **Trang trí Cartoon Hướng A theo Color Page & gọn Menu cho 8 màn trong `Prototype/web-v2/game.js`**:
+   - Thêm màu nền sân khấu `STAGE_BG.mushroom = '#EFF2E4'` và `DECOR.mushroom` (`clipTo` các mảnh `17, 18, 19`) với 3 hàm `mushroomStemDecor`, `mushroomCapDecor`, `mushroomGrassDecor` tái hiện bảng màu cel-shading gốc và đủ 6 đốm trắng trên mũ nấm.
+   - Thu gọn bố cục menu thả xuống (`MENU_Y = 56`, `MENU_PAD = 8`, `CHIP_H = 30`, `CHIP_GAP = 4`, `HEAD_H = 16`, font `12.5px`) để toàn bộ 28 mục thuộc 8 màn nằm gọn trên nút footer (`y <= 678`).
+
+### 26. [CẬP NHẬT / UPDATE] Vỏ Kem Ốc Quế Lên Lớp Trên & Rút Gọn Bộ 4 Màn Chính (`Màn 1`–`Màn 4`) (2026-11-11)
+
+1. **Đảo lớp vỏ bánh ốc quế lên trên viên kem ở Màn 1 (`icecream`)**:
+   - Trong `Prototype/web-v2/levels.js`: Đổi thứ tự vẽ thành phần hoàn thiện từ `order: [1, 0]` sang `order: [0, 1]` để mảnh `Ốc quế` (`1`) nằm đè lên `Viên kem` (`0`), hiện trọn vẹn toàn bộ hình tam giác vỏ ốc quế (mép trên tới mũi nhọn) kết hợp giữ nguyên lớp áo giấy sọc mint.
+   - Trong `Prototype/web-v2/game.js`: Bổ sung hỗ trợ hook `before` trong `drawRewardScene`, chuyển thanh bánh quế cuộn sang `{ before: 0 }` để giữ đúng chiều sâu phía sau viên kem, đồng thời gỡ bóng đổ ngược của viên kem lên mặt trước vỏ ốc quế trong `clipTo: 1`.
+
+2. **Bỏ Màn 3 (`heart`), Màn 5 (`flowerpot`), Màn 6 (`strawberry`), Màn 7 (`dogman`) và đánh số lại**:
+   - Trong `Prototype/web-v2/levels.js`: Rút gọn `LEVELS` về `11` mảnh (`0..10`) và `PRODUCTS` về `4` màn nối tiếp liền mạch:
+     - **Màn 1 (`icecream`)**: `[0, 1]` (`scoop`, `cone`)
+     - **Màn 2 (`cardigan`)**: `[2, 3, 4]` (`cardigan`, `shirt`, `collar`)
+     - **Màn 3 (`bunny`)** *(trước là Màn 4)*: `[5, 6, 7]` (`bunny_ears`, `bunny_head`, `bunny_bow`)
+     - **Màn 4 (`mushroom`)** *(trước là Màn 8, bỏ `standalone: true`)*: `[8, 9, 10]` (`mushroom_stem`, `mushroom_cap`, `mushroom_grass`)
+   - Trong `Prototype/web-v2/game.js`: Cập nhật lại toàn bộ chỉ số mảnh trong `DECOR.bunny` (`5, 6, 7`) và `DECOR.mushroom` (`8, 9, 10`); gỡ `STAGE_BG`, `DECOR` và các hàm trang trí của 4 màn đã bỏ; mở rộng lại kích thước menu thả xuống cho 4 màn (`MENU_Y = 62`, `MENU_PAD = 10`, `CHIP_H = 36`, `CHIP_GAP = 6`, `HEAD_H = 20`, font `13.5px`).
+   - Cập nhật bộ test trong `Prototype/web-v2/` (`alt-solve.js`, `bend-target.js`, `smoke.js`) cho đúng 4 màn còn lại.
+
+
+### 27. [CẬP NHẬT / FEATURE] Đảo Vỏ Ốc Quế Ra Sau Viên Kem (Màn 1) & Thêm Màn 5 (`acorn`: Hạt Dẻ & Lá Sồi Color Page) (2026-11-11)
+
+1. **Đưa vỏ ốc quế về lớp sau viên kem ở Màn 1 (`icecream`)**:
+   - Trong `Prototype/web-v2/levels.js`: Đổi thứ tự vẽ thành phẩm từ `order: [0, 1]` về lại `order: [1, 0]` để vỏ ốc quế (`1`) nằm phía sau viên kem (`0`), đồng bộ đúng phần chồng mép trên.
+   - Trong `Prototype/web-v2/game.js`: Khôi phục bóng đổ mềm của viên kem (`LV[0]`) lên miệng vỏ ốc quế trong `clipTo: 1`, chuyển que bánh quế cuộn về `{ after: 1 }` nằm sau viên kem và trước lớp trên cùng, cập nhật lại chú thích `drawRewardScene`.
+
+2. **Thêm Màn 5 (`acorn` – Hạt dẻ & Lá sồi) từ Color Page Data (`ICON-acorn.png` & `acorn.json`)**:
+   - Trong `Prototype/web-v2/levels.js` (`LEVELS[11..13]` & `PRODUCTS[4]`):
+     - Xây dựng **Màn 5** nối tiếp bình thường sau Màn 4 (`levels: [11, 12, 13]`, `order: [11, 12, 13]`, `seams: [[11, 0, 0], [12, 0, 0], [13, 0, 0]]`) với độ khớp hợp nhất 3 mảnh đạt **95.22% IoU** so với silhouette gốc `ICON-acorn.png`:
+       - `LEVELS[11]` (`oak_leaf` – **Lá sồi**, `tier: 'hard'`, `winThreshold: 0.94`, `12` node, `6` node tự do `[1, 4, 6, 8, 10, 11]`, `bendFree: [0, 10]`, `minNN: 0.154`).
+       - `LEVELS[12]` (`acorn_nut` – **Hạt dẻ**, `tier: 'medium'`, `winThreshold: 0.95`, `8` node, `4` node tự do `[2, 3, 5, 6]`, `bendFree: [2, 3]`, `minNN: 0.172`).
+       - `LEVELS[13]` (`acorn_cap` – **Mũ hạt dẻ**, `tier: 'medium'`, `winThreshold: 0.95`, `8` node, `4` node tự do `[1, 3, 5, 7]`, `bendFree: [0, 4]`, `minNN: 0.162`).
+   - Trong `Prototype/web-v2/game.js`: Bổ sung nền sân khấu `STAGE_BG.acorn = '#F2E7D5'`, trang trí Cartoon Hướng A `DECOR.acorn` và 3 hàm `oakLeafDecor`, `acornNutDecor`, `acornCapDecor` (dùng chung `acornImgMapper` để tái hiện đúng mảng cel-shading xanh `#3A7C00`, gân lá & giọt sương, bóng đổ hạt dẻ/mũ lên lá, vệt sáng `#FAB86E` trên hạt dẻ, bóng dưới vành mũ và hai dải vân sóng `#4F1A04` đặc trưng trên mũ hạt dẻ).
+   - Cập nhật `Prototype/web-v2/smoke.js` thông báo đủ 5 sản phẩm (`Kem, Cardigan, Bé thỏ, Nấm đỏ, Hạt dẻ`).
+
+3. **Kiểm chứng tổng thể**:
+   - Menu 5 màn (`19` nút) giữ nguyên bố cục rộng thoáng, đáy nút thấp nhất ở `y = 552` (an toàn phía trên footer).
+   - Kiểm tra đồng bộ 4 script (`check.js`, `bend-target.js`, `alt-solve.js`, `smoke.js`) và xác nhận trực quan bằng Chrome headless cho thấy 0 lỗi JS, 0 cảnh báo `startgen`.
+
+
+### 28. [CẬP NHẬT / FIX & FEATURE] Sửa Kéo Độ Cong Vòng Cung (`mushroom_grass`), Đặt Toàn Bộ Màn Độ Khó `hard` & Thêm Màn 6 (`sunflower`: Hoa Hướng Dương Color Page) (2026-11-11)
+
+1. **Sửa giới hạn kéo độ cong vòng cung trong `Prototype/web-v2/game.js`**:
+   - **Nguyên nhân**: Giới hạn `clamp(..., -0.18, 0.18)` trong `applyEdgeDrag` chặn cứng các cạnh có độ võng lớn hơn `0.18` (như cạnh `2` của `mushroom_grass` ở Màn 4 có `solBend[2] = -0.210`), cộng thêm độ trễ khi người chơi chạm lệch vào vùng hở giữa dây cung phẳng và viền mẫu.
+   - **Khắc phục**:
+     - `hitTestEdge`: trả thêm tọa độ gần nhất trên dây cung `cx, cy`.
+     - `startEdgeDrag` & `playDown`: lưu độ lệch pháp tuyến ban đầu `grabBias = pointerH0 - curveH0`.
+     - `applyEdgeDrag`: mở rộng biên độ võng lên `[-0.35, 0.35]` và bù mượt `grabBias` trong khoảng kéo `[8..32 px]` khi `Math.abs(ed.h0) < 0.02` (chỉ áp dụng cho dây gần phẳng, bảo toàn hành vi của các cạnh đã cong sẵn).
+
+2. **Chuyển toàn bộ màn sang mức độ `hard` & thêm Màn 6 (`sunflower` – Hoa hướng dương)**:
+   - Trong `Prototype/web-v2/levels.js`:
+     - Đặt toàn bộ `17` level (`LEVELS[0..16]`, Màn 1–6) về `tier: 'hard'`.
+     - Thêm **Màn 6** (`PRODUCTS[5]`, `id: 'sunflower'`, `label: 'Màn 6'`, `levels: [14, 15, 16]`, `order: [14, 15, 16]`, `seams: [[14, 0, 0], [15, 0, 0], [16, 0, 0]]`) dựng từ `IconSunflower.png` & `sunflower.json`, tổng IoU silhouette đạt **94.96%** (theo từng mảng Green/Yellow/Brown đạt `85.5% / 92.0% / 95.7%`, `minNN` `0.146 / 0.233 / 0.282`):
+       - `LEVELS[14]` (`sunflower_leaves` – **Đôi lá xanh**)
+       - `LEVELS[15]` (`sunflower_petals` – **Vòng cánh hoa**)
+       - `LEVELS[16]` (`sunflower_center` – **Nhụy hoa**)
+   - Trong `Prototype/web-v2/game.js`: Bổ sung nền sân khấu `STAGE_BG.sunflower = '#E3EFE4'`, `DECOR.sunflower` và 3 hàm `sunflowerLeavesDecor`, `sunflowerPetalsDecor`, `sunflowerCenterDecor` (tái sử dụng `acornImgMapper`, giữ phong cách cartoon Hướng A không mặt cười với gân lá, mảng bóng cánh hoa và vân lưới nhụy nâu).
+   - Cập nhật `Prototype/web-v2/smoke.js` log đủ 6 sản phẩm (`Kem, Cardigan, Bé thỏ, Nấm đỏ, Hạt dẻ, Hướng dương`).
+
+3. **Kiểm chứng**:
+   - Xác nhận bằng Node (`check.js`, `bend-target.js`, `alt-solve.js`, `smoke.js`) và Chrome headless (`23` mục menu, đáy chip thấp nhất ở `y = 658` phía trên footer; kéo cạnh đáy `mushroom_grass` đạt `-0.2100` và snap sạch; khay & màn hoàn thành Màn 6 khớp tạo hình).
