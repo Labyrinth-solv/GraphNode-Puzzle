@@ -197,6 +197,7 @@ MonoBehaviour:
   settleTime: 0.12
   pulseTime: 0.45
   snipRate: 3.2
+  hole: {r: 0.8901961, g: 0.7607843, b: 0.7137255, a: 1}
 --- !u!114 &42649024
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -254,6 +255,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   catalog: {fileID: 11400000, guid: 73f4b9271d6e0374b9cf8ca1218b32f2, type: 2}
+  fabrics: {fileID: 11400000, guid: 6080e7ef6cfd76640bc5a70ec471de32, type: 2}
   balance: {fileID: 11400000, guid: af0dd5710875b3e4aa8be42a0f10ac7a, type: 2}
   input: {fileID: 11400000, guid: 612f9e1ea83bf704c9c53d498a0a42ca, type: 2}
   controller: {fileID: 42649022}

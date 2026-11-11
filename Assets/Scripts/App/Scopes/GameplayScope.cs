@@ -17,6 +17,7 @@ namespace GraphNode.App.Scopes
     public sealed class GameplayScope : MonoBehaviour
     {
         [SerializeField] private LevelCatalog catalog;
+        [SerializeField] private FabricCatalog fabrics;
         [SerializeField] private GameplayBalanceConfig balance;
         [SerializeField] private InputConfig input;
         [SerializeField] private PuzzleController controller;
@@ -47,13 +48,18 @@ namespace GraphNode.App.Scopes
                 Log.Error("[Gameplay] scope is missing catalog, configs or controller references");
                 return;
             }
-            if (!catalog.TryLoad(Request.LevelId, out var level))
+            if (!catalog.TryLoad(Request.LevelId, out var level, out var info))
             {
                 Log.Error($"[Gameplay] level '{Request.LevelId}' is not in the catalog");
                 return;
             }
+            // vải người chơi tự chọn (LevelRequest) đè lên vải mặc định của level
+            string fabricId = Request.FabricId ?? info.FabricId;
+            FabricDefinition fabric = null;
+            if (fabrics == null || !fabrics.TryGet(fabricId, out fabric))
+                Log.Warn($"[Gameplay] fabric '{fabricId}' is not in the fabric catalog");
             State = new PuzzleState(level, balance.ToPuzzleConfig());
-            controller.Begin(State, input, balance.RunnerSpeed, balance.WinSequence, OnWon);
+            controller.Begin(State, input, balance.RunnerSpeed, balance.WinSequence, OnWon, fabric, info.SlotIndex);
             Log.Info($"[Gameplay] level {Request.LevelId}");
         }
 

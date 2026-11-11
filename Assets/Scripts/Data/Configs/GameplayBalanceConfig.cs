@@ -65,13 +65,16 @@ namespace GraphNode.Data.Configs
         [SerializeField, Range(0f, 1f)] private float cutNodeSize = 0.75f;
         [Tooltip("Chạm trong chuỗi thắng thì tua nhanh cố định lần này")]
         [SerializeField] private float fastForward = 1.5f;
-        [Tooltip("Dừng sau cảnh cắt trước khi sang bước sau")]
-        [SerializeField] private float afterCutSeconds = 0.6f;
+        [Tooltip("Dừng sau cảnh cắt trước khi nhấc mảnh")]
+        [SerializeField] private float afterCutSeconds = 0.2f;
+        [SerializeField] private float liftSeconds = 0.45f;
+        [SerializeField] private float fillSeconds = 0.75f;
+        [SerializeField] private float flySeconds = 0.65f;
 
         public float RunnerSpeed => runnerSpeed;
 
         public WinSequenceParams WinSequence => new WinSequenceParams(snapSpeed, snapMinSeconds, snapMaxSeconds, snapHoldSeconds,
-            cutNodeAlpha, cutNodeSize, fastForward, afterCutSeconds, CutTiming);
+            cutNodeAlpha, cutNodeSize, fastForward, afterCutSeconds, CutTiming, liftSeconds, fillSeconds, flySeconds);
 
         public CutTimingParams CutTiming => new CutTimingParams(runnerSpeed, cutTargetSeconds, cutMinMultiplier, cutMaxMultiplier);
 

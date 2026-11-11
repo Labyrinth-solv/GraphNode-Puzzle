@@ -10,10 +10,15 @@ namespace GraphNode.Data.Configs
         public readonly float FastForward;
         public readonly float AfterCutSeconds;
         public readonly CutTimingParams Cut;
+        public readonly float LiftSeconds, FillSeconds, FlySeconds;
 
         public WinSequenceParams(float snapSpeed, float snapMinSeconds, float snapMaxSeconds, float snapHoldSeconds,
-            float cutNodeAlpha, float cutNodeSize, float fastForward, float afterCutSeconds, CutTimingParams cut)
+            float cutNodeAlpha, float cutNodeSize, float fastForward, float afterCutSeconds, CutTimingParams cut,
+            float liftSeconds, float fillSeconds, float flySeconds)
         {
+            LiftSeconds = liftSeconds;
+            FillSeconds = fillSeconds;
+            FlySeconds = flySeconds;
             SnapSpeed = snapSpeed;
             SnapMinSeconds = snapMinSeconds;
             SnapMaxSeconds = snapMaxSeconds;

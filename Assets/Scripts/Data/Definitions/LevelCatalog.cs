@@ -25,17 +25,38 @@ namespace GraphNode.Data.Definitions
 
         public IReadOnlyList<Entry> Levels => levels;
 
-        public bool TryLoad(string levelId, out LevelModel level)
+        public bool TryLoad(string levelId, out LevelModel level) => TryLoad(levelId, out level, out _);
+
+        /// <param name="info">Phần dữ liệu ngoài luật chơi của level (vải, sản phẩm, ô trong sản phẩm).</param>
+        public bool TryLoad(string levelId, out LevelModel level, out LevelInfo info)
         {
             for (int i = 0; i < levels.Count; i++)
             {
                 var e = levels[i];
                 if (e == null || e.id != levelId || e.json == null) continue;
-                level = LevelJson.Parse(e.json.text);
+                var dto = Newtonsoft.Json.JsonConvert.DeserializeObject<LevelDto>(e.json.text);
+                level = LevelJson.ToModel(dto);
+                info = new LevelInfo(dto.FabricId, dto.ProductId, dto.SlotIndex);
                 return true;
             }
             level = null;
+            info = default;
             return false;
+        }
+    }
+
+    /// <summary>Dữ liệu của level mà lõi không cần: vải, sản phẩm và vị trí mảnh trong sản phẩm.</summary>
+    public readonly struct LevelInfo
+    {
+        public readonly string FabricId;
+        public readonly string ProductId;
+        public readonly int SlotIndex;
+
+        public LevelInfo(string fabricId, string productId, int slotIndex)
+        {
+            FabricId = fabricId;
+            ProductId = productId;
+            SlotIndex = slotIndex;
         }
     }
 }

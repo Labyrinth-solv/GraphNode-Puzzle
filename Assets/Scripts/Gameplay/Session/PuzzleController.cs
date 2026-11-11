@@ -6,6 +6,7 @@ using GraphNode.Core.Input;
 using GraphNode.Core.Runner;
 using GraphNode.Core.Session;
 using GraphNode.Data.Configs;
+using GraphNode.Data.Definitions;
 using GraphNode.Gameplay.Input;
 using GraphNode.Gameplay.View;
 using UnityEngine;
@@ -43,8 +44,10 @@ namespace GraphNode.Gameplay.Session
 
         /// <param name="runnerSpeed">Tốc độ điểm sáng, bề rộng vải mỗi giây (cấu hình cân bằng).</param>
         /// <param name="onWon">Gọi khi chuỗi thắng chạy xong.</param>
-        public void Begin(PuzzleState state, InputConfig input, float runnerSpeed, WinSequenceParams win, Action onWon)
+        public void Begin(PuzzleState state, InputConfig input, float runnerSpeed, WinSequenceParams win, Action onWon,
+            FabricDefinition fabric = null, int slotIndex = 0)
         {
+            if (fabric != null) view.SetPiece(fabric.Base, fabric.Light, fabric.Dark, fabric.Line, slotIndex);
             _state = state ?? throw new ArgumentNullException(nameof(state));
             _input = input;
             _win = win;

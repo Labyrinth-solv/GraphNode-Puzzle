@@ -108,12 +108,34 @@ namespace GraphNode.Gameplay.View
         private readonly List<Vector3> _cutPoints = new List<Vector3>(512);
         private readonly List<Color32> _cutColors = new List<Color32>(512);
         private const float CutRunnerSize = 20f;
+        private const float SlotFit = 34f;
+
+        // nhấc, đổ màu, bay về ô
+        private readonly List<Vector3> _outline = new List<Vector3>(512);
+        private readonly List<int> _outlineTris = new List<int>(1024);
+        private MeshRenderer _ghostRenderer;
+        private PieceView _pieceView;
+        private Color _fabricBase, _fabricLight, _fabricDark, _fabricLine;
+        private int _slotIndex;
+        [SerializeField] private Color hole = new Color32(0xE3, 0xC2, 0xB6, 0xFF);
         private const int TrailDots = 7;
         private const float RunnerSize = 17f;
+
+        /// <summary>Màu vải của mảnh (FabricDefinition của level) và vị trí ô trong hàng Bộ vải ghép.</summary>
+        public void SetPiece(Color baseColor, Color light, Color dark, Color line, int slotIndex)
+        {
+            _fabricBase = baseColor;
+            _fabricLight = light;
+            _fabricDark = dark;
+            _fabricLine = line;
+            pieceColor = baseColor;
+            _slotIndex = slotIndex;
+        }
 
         public void Bind(PuzzleState state)
         {
             _state = state;
+            if (_fabricLine.a == 0f) SetPiece(pieceColor, pieceColor, pieceColor, ink, 0);
             BuildStatic();
             BuildDynamic();
         }
@@ -154,7 +176,11 @@ namespace GraphNode.Gameplay.View
             _veilRenderer.enabled = false;
             _cutLine = MeshObject("CutLine", OrderThread + 1, out _cutLineRenderer);
 
-            _ghost = MeshObject("Ghost", OrderGhost);
+            _outline.Clear();
+            _outline.AddRange(outline);
+            _outlineTris.Clear();
+            _outlineTris.AddRange(tris);
+            _ghost = MeshObject("Ghost", OrderGhost, out _ghostRenderer);
             _ghost.AddTriangles(outline, tris, WithAlpha(thread, 0.13f));
             _ghost.AddDashedLoop(outline, WithAlpha(thread, 0.9f), 2f, 7f, 6f);
             _ghost.Apply();
@@ -349,6 +375,33 @@ namespace GraphNode.Gameplay.View
             }
         }
 
+        /// <summary>Cắt xong: bỏ lớp chơi (node, chốt, kéo, hình mẫu, nét cắt), để lại lỗ trên vải và miếng vải để nhấc.</summary>
+        public void BeginLift()
+        {
+            _cutting = false;
+            _ghostRenderer.enabled = false;
+            _veilRenderer.enabled = false;
+            _cutLineRenderer.enabled = false;
+            _fill.enabled = false;
+            _threadRenderer.enabled = false;
+            _runner.gameObject.SetActive(false);
+            foreach (var t in _trail) t.enabled = false;
+            foreach (var n in _nodes) n.enabled = false;
+            foreach (var p in _pins) p.enabled = false;
+            _pieceView = new PieceView(transform, strokeMaterial, _outline, _outlineTris,
+                _fabricBase, _fabricLight, _fabricDark, _fabricLine, hole, WithAlpha(thread, 1f), OrderGhost);
+        }
+
+        public void SetLift(float lift) => _pieceView.SetLift(lift, Mathf.Sin(_clock * 4.5f) * 0.022f * lift);
+
+        public void SetFill(float fill) => _pieceView.SetFill(fill);
+
+        public void SetFly(float u)
+        {
+            var slot = FabricLayout.LayoutToWorld(SlotX + _slotIndex * SlotStep + SlotSize / 2f, SlotY + SlotSize / 2f);
+            _pieceView.SetFly(u, slot, SlotFit);
+        }
+
         /// <summary>Chu vi đường cắt theo bề rộng vải (để tính tốc độ cảnh cắt).</summary>
         public float CutPerimeter => _solTotal / FabricLayout.FabricSize;
 
@@ -424,7 +477,7 @@ namespace GraphNode.Gameplay.View
                 _nodes[i].transform.position = _shown[i];
                 _nodes[i].transform.localScale = Vector3.one * ((i == draggingNode ? 1.15f : 1f) * _nodeSize * (1f + 0.3f * _pulse[i]));
                 // cảnh cắt: node đầu kéo đã chạm sáng lại đủ màu
-                float a = _cutting && _cutHit[i] ? 1f : _nodeAlpha;
+                float a = _cutting && _cutHit != null && _cutHit[i] ? 1f : _nodeAlpha;
                 _nodes[i].color = new Color(1f, 1f, 1f, a);
             }
             for (int j = 0; j < _pins.Length; j++) _pins[j].sprite = _state.Pins.PinToNode[j] >= 0 ? pinFilled : pinEmpty;
@@ -586,6 +639,7 @@ namespace GraphNode.Gameplay.View
             if (_mini != null) Destroy(_mini.Mesh);
             if (_cutLine != null) Destroy(_cutLine.Mesh);
             if (_veil != null) Destroy(_veil.Mesh);
+            _pieceView?.Destroy();
         }
     }
 }

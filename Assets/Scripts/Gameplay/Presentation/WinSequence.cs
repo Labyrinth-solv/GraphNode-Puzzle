@@ -79,6 +79,70 @@ namespace GraphNode.Gameplay.Presentation
         }
     }
 
+    /// <summary>Nhấc mảnh vừa cắt lên (nảy vượt rồi về), để lại lỗ trên vải; mảnh lắc nhẹ.</summary>
+    public sealed class LiftStep : IPresentationStep
+    {
+        public async UniTask PlayAsync(PresentationContext c, CancellationToken ct)
+        {
+            c.View.BeginLift();
+            float d = c.Params.LiftSeconds;
+            for (float t = 0f; t < d; t += c.Delta)
+            {
+                c.View.SetLift(Easing.Back(t / d));
+                await UniTask.Yield(PlayerLoopTiming.Update, ct);
+            }
+            c.View.SetLift(1f);
+        }
+    }
+
+    /// <summary>Màu vải loang từ đáy mảnh lên, mảnh vẫn nhấc và lắc nhẹ.</summary>
+    public sealed class FillStep : IPresentationStep
+    {
+        public async UniTask PlayAsync(PresentationContext c, CancellationToken ct)
+        {
+            float d = c.Params.FillSeconds;
+            for (float t = 0f; t < d; t += c.Delta)
+            {
+                c.View.SetLift(1f);
+                c.View.SetFill(Easing.InOut(t / d));
+                await UniTask.Yield(PlayerLoopTiming.Update, ct);
+            }
+            c.View.SetFill(1f);
+        }
+    }
+
+    /// <summary>Mảnh bay theo cung vào ô của nó trong hàng Bộ vải ghép.</summary>
+    public sealed class FlyStep : IPresentationStep
+    {
+        public async UniTask PlayAsync(PresentationContext c, CancellationToken ct)
+        {
+            float d = c.Params.FlySeconds;
+            for (float t = 0f; t < d; t += c.Delta)
+            {
+                c.View.SetFly(Easing.InOut(t / d));
+                await UniTask.Yield(PlayerLoopTiming.Update, ct);
+            }
+            c.View.SetFly(1f);
+        }
+    }
+
+    internal static class Easing
+    {
+        public static float InOut(float t)
+        {
+            t = Mathf.Clamp01(t);
+            return t < 0.5f ? 2f * t * t : 1f - Mathf.Pow(-2f * t + 2f, 2f) / 2f;
+        }
+
+        /// <summary>Vượt quá một chút rồi về (easeOutBack).</summary>
+        public static float Back(float t)
+        {
+            t = Mathf.Clamp01(t);
+            const float c1 = 1.70158f, c3 = c1 + 1f;
+            return 1f + c3 * Mathf.Pow(t - 1f, 3f) + c1 * Mathf.Pow(t - 1f, 2f);
+        }
+    }
+
     /// <summary>Chạy lần lượt các bước của chuỗi thắng.</summary>
     public sealed class WinSequence
     {
@@ -95,7 +159,8 @@ namespace GraphNode.Gameplay.Presentation
             for (int i = 0; i < _steps.Count; i++) await _steps[i].PlayAsync(context, ct);
         }
 
-        /// <summary>Chuỗi mặc định của màn thường: snap rồi cắt (nhấc mảnh, đổ màu, bay về thẻ thêm sau).</summary>
-        public static WinSequence Default() => new WinSequence().Add(new SnapStep()).Add(new CutStep());
+        /// <summary>Chuỗi mặc định của màn thường: snap, cắt, nhấc, đổ màu, bay về ô (màn gấp thêm lật bung sau).</summary>
+        public static WinSequence Default() => new WinSequence()
+            .Add(new SnapStep()).Add(new CutStep()).Add(new LiftStep()).Add(new FillStep()).Add(new FlyStep());
     }
 }
