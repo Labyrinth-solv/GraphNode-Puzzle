@@ -33,6 +33,13 @@ namespace GraphNode.UI.Common
             SetVerticesDirty();
         }
 
+        /// <summary>Như trên, kèm màu viền riêng (mảnh vải dùng nét mực đồng tông của chính nó).</summary>
+        public void SetShape(IReadOnlyList<Vector2> points, IReadOnlyList<int> triangles, Color fill, Color line)
+        {
+            lineColor = line;
+            SetShape(points, triangles, fill);
+        }
+
         protected override void OnPopulateMesh(VertexHelper vh)
         {
             vh.Clear();

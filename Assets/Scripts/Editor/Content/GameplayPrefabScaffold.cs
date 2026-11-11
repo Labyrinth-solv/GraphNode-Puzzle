@@ -47,6 +47,7 @@ namespace GraphNode.Editor.Content
             HudPrefab();
             UpgradeBoard();
             UpgradeHud();
+            UpgradeHudSlotPiece();
             StringsAndAppAssets();
             AssetDatabase.SaveAssets();
             Debug.Log("[GraphNode] gameplay prefabs ready (existing prefabs were kept)");
@@ -198,6 +199,38 @@ namespace GraphNode.Editor.Content
                 img.color = new Color(1f, 1f, 1f, 0f);
                 img.enabled = false;
                 prop.objectReferenceValue = img;
+                so.ApplyModifiedPropertiesWithoutUndo();
+                PrefabUtility.SaveAsPrefabAsset(root, path);
+            }
+            finally { PrefabUtility.UnloadPrefabContents(root); }
+        }
+
+        // Hình mảnh đã xong trong ô Bộ vải ghép: prefab riêng (UIShapeGraphic viền liền) để chỉnh nét trong Editor.
+        private static void UpgradeHudSlotPiece()
+        {
+            string piecePath = HudFolder + "/SlotPiece.prefab";
+            var piece = Existing<GameObject>(piecePath);
+            if (piece == null)
+            {
+                var go = new GameObject("SlotPiece", typeof(RectTransform), typeof(CanvasRenderer));
+                var shape = go.AddComponent<UIShapeGraphic>();
+                shape.raycastTarget = false;
+                var sso = new SerializedObject(shape);
+                sso.FindProperty("lineWidth").floatValue = 5f; // ×3 của Canvas: khoảng 1,7 pt như nét viền mảnh nhỏ của bản web
+                sso.FindProperty("gap").floatValue = 0f;      // viền liền, không nét đứt
+                sso.ApplyModifiedPropertiesWithoutUndo();
+                piece = PrefabUtility.SaveAsPrefabAsset(go, piecePath);
+                Object.DestroyImmediate(go);
+            }
+            string path = HudFolder + "/GameplayHud.prefab";
+            if (Existing<GameObject>(path) == null) return;
+            var root = PrefabUtility.LoadPrefabContents(path);
+            try
+            {
+                var so = new SerializedObject(root.GetComponent<HudView>());
+                var prop = so.FindProperty("slotPiecePrefab");
+                if (prop.objectReferenceValue != null) return;
+                prop.objectReferenceValue = piece.GetComponent<UIShapeGraphic>();
                 so.ApplyModifiedPropertiesWithoutUndo();
                 PrefabUtility.SaveAsPrefabAsset(root, path);
             }

@@ -31,6 +31,12 @@ namespace GraphNode.Data.Definitions
 
         public bool TryLoad(string levelId, out LevelModel level) => TryLoad(levelId, out level, out _);
 
+        public bool TryGetEntry(string levelId, out Entry entry)
+        {
+            entry = levels.Find(e => e != null && e.id == levelId);
+            return entry != null;
+        }
+
         /// <summary>Số mảnh của một sản phẩm (số ô trong hàng Bộ vải ghép).</summary>
         public int PieceCount(string productId)
         {

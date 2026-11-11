@@ -68,12 +68,27 @@ namespace GraphNode.App.Scopes
             State = new PuzzleState(level, balance.ToPuzzleConfig());
             int hints = Request.Boosters.TryGetValue(HintBooster, out int owned) ? owned : devHints;
             controller.Begin(State, input, balance.RunnerSpeed, balance.WinSequence, OnWon, _app.Audio, _app.Localizer,
-                fabric, info.SlotIndex, PieceSlots(info.ProductId), hints, IsFirstLevel(Request.LevelId), _app.Haptics);
+                fabric, info.SlotIndex, PieceSlots(info.ProductId), hints, IsFirstLevel(Request.LevelId), _app.Haptics,
+                DonePieces(info.ProductId));
             Log.Info($"[Gameplay] level {Request.LevelId}");
         }
 
         // màn đầu của catalog có vòng nhắc chạm đầu như bản web
         private bool IsFirstLevel(string levelId) => catalog.Levels.Count > 0 && catalog.Levels[0].id == levelId;
+
+        // mảnh đã xong của sản phẩm (từ LevelRequest): đọc level và vải để màn chơi vẽ lại vào ô
+        private List<DonePiece> DonePieces(string productId)
+        {
+            var list = new List<DonePiece>();
+            foreach (string id in Request.DonePieces)
+            {
+                if (!catalog.TryLoad(id, out var level, out var info) || info.ProductId != productId) continue;
+                Color fill = Color.white, line = Color.black;
+                if (fabrics != null && fabrics.TryGet(info.FabricId, out var f)) { fill = f.Base; line = f.Line; }
+                list.Add(new DonePiece(level, info.SlotIndex, fill, line));
+            }
+            return list;
+        }
 
         private int PieceSlots(string productId)
         {
@@ -89,8 +104,7 @@ namespace GraphNode.App.Scopes
             // chờ theo vòng đời scene này; đổi scene theo token phạm vi App (xem HomeScope.StartLevelAsync)
             await UniTask.Delay(System.TimeSpan.FromSeconds(replayDelaySeconds), cancellationToken: this.GetCancellationTokenOnDestroy());
             // chưa có Meta chọn màn kế: tạm đi lần lượt theo thứ tự catalog (mảnh kế của sản phẩm, hết sản phẩm sang sản phẩm sau)
-            string next = catalog != null ? catalog.NextLevelId(Request.LevelId) : null;
-            await _app.Flow.StartLevelAsync(next != null ? new LevelRequest(next) : Request, _app.LifetimeToken);
+            await _app.Flow.StartLevelAsync(Flow.DevLevelChain.Next(catalog, Request), _app.LifetimeToken);
         }
 
         /// <summary>Thoát giữa màn: vẫn phát LevelResult (bỏ) để Meta trừ booster đã dùng, rồi về Home.</summary>

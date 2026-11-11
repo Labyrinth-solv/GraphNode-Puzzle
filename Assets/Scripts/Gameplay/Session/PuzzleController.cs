@@ -82,9 +82,10 @@ namespace GraphNode.Gameplay.Session
         /// <param name="onWon">Gọi khi chuỗi thắng chạy xong.</param>
         /// <param name="hints">Số booster gợi ý người chơi đang có (từ LevelRequest).</param>
         /// <param name="startCue">Màn đầu tiên: vòng nhắc chạm quanh node cần kéo, tới khi người chơi chạm lần đầu.</param>
+        /// <param name="donePieces">Các mảnh cùng sản phẩm đã xong, vẽ lại vào ô của chúng.</param>
         public void Begin(PuzzleState state, InputConfig input, float runnerSpeed, WinSequenceParams win, Action onWon,
             IAudioService audio, ILocalizer localizer, FabricDefinition fabric, int slotIndex, int pieceSlots, int hints,
-            bool startCue = false, IHaptics haptics = null)
+            bool startCue = false, IHaptics haptics = null, System.Collections.Generic.IReadOnlyList<DonePiece> donePieces = null)
         {
             _audio = audio;
             _haptics = haptics;
@@ -110,7 +111,21 @@ namespace GraphNode.Gameplay.Session
                 foreach (var p in view.Outline) shape.Add(p);
                 hud.Bind(localizer, shape, view.OutlineTriangles, fabric != null ? fabric.Base : Color.white, pieceSlots);
                 hud.SetHints(_hints);
+                ShowDonePieces(donePieces);
                 hud.HintPressed += OnHint;
+            }
+        }
+
+        private void ShowDonePieces(System.Collections.Generic.IReadOnlyList<DonePiece> pieces)
+        {
+            if (pieces == null) return;
+            var points = new System.Collections.Generic.List<Vector2>(256);
+            var triangles = new System.Collections.Generic.List<int>(768);
+            foreach (var p in pieces)
+            {
+                if (p.Level == null) continue;
+                PieceOutline.Build(p.Level, points, triangles);
+                hud.ShowDonePiece(p.Slot, points, triangles, p.Fill, p.Line);
             }
         }
 

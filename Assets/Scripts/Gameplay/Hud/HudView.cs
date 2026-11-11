@@ -30,6 +30,10 @@ namespace GraphNode.Gameplay.Hud
         [Header("Bộ vải ghép")]
         [SerializeField] private RectTransform slotRow;
         [SerializeField] private GameObject slotPrefab;
+        [Tooltip("Hình mảnh đã xong vẽ trong ô (UIShapeGraphic)")]
+        [SerializeField] private UIShapeGraphic slotPiecePrefab;
+        [Tooltip("Mảnh chiếm phần này của cạnh ô (bản web: 34 trên 46 pt)")]
+        [SerializeField, Range(0.3f, 1f)] private float slotPieceFit = 0.74f;
 
         [Header("Thanh khớp")]
         [Tooltip("Vùng trong của thanh (phần đổ chạy trong bề rộng này)")]
@@ -91,6 +95,19 @@ namespace GraphNode.Gameplay.Hud
                     _slots.Add(slot);
                 }
             }
+        }
+
+        /// <summary>Vẽ một mảnh đã xong vào ô của nó (hình viền lời giải, màu vải và nét viền của mảnh).</summary>
+        public void ShowDonePiece(int slot, IReadOnlyList<Vector2> shape, IReadOnlyList<int> triangles, Color fill, Color line)
+        {
+            if (slotPiecePrefab == null || slot < 0 || slot >= _slots.Count || _slots[slot] == null) return;
+            var piece = Instantiate(slotPiecePrefab, _slots[slot]);
+            var rt = piece.rectTransform;
+            float inset = (1f - slotPieceFit) * 0.5f;
+            rt.anchorMin = new Vector2(inset, inset);
+            rt.anchorMax = new Vector2(1f - inset, 1f - inset);
+            rt.offsetMin = rt.offsetMax = Vector2.zero;
+            piece.SetShape(shape, triangles, fill, line);
         }
 
         public void SetHints(int count)

@@ -9,7 +9,8 @@
         "GraphNode.Data",
         "GraphNode.Foundation",
         "UniTask",
-        "GraphNode.Core"
+        "GraphNode.Core",
+        "GraphNode.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

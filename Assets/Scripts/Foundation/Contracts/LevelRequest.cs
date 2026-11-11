@@ -18,14 +18,19 @@ namespace GraphNode.Foundation.Contracts
 
         public IReadOnlyList<string> Modifiers { get; }
 
+        /// <summary>Các mảnh cùng sản phẩm đã xong (id level), để hàng Bộ vải ghép vẽ lại vào đúng ô.</summary>
+        public IReadOnlyList<string> DonePieces { get; }
+
         public LevelRequest(string levelId, string fabricId = null,
-            IReadOnlyDictionary<string, int> boosters = null, IReadOnlyList<string> modifiers = null)
+            IReadOnlyDictionary<string, int> boosters = null, IReadOnlyList<string> modifiers = null,
+            IReadOnlyList<string> donePieces = null)
         {
             if (string.IsNullOrEmpty(levelId)) throw new ArgumentException("levelId is required", nameof(levelId));
             LevelId = levelId;
             FabricId = fabricId;
             Boosters = boosters ?? EmptyBoosters;
             Modifiers = modifiers ?? Array.Empty<string>();
+            DonePieces = donePieces ?? Array.Empty<string>();
         }
 
         private static readonly IReadOnlyDictionary<string, int> EmptyBoosters = new Dictionary<string, int>();

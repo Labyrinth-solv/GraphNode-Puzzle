@@ -334,6 +334,8 @@ MonoBehaviour:
   miniFillAlpha: 0.45
   slotRow: {fileID: 604775832489496278}
   slotPrefab: {fileID: 544247653658851526, guid: 54f63f2e92d51d645951d7d3090a7804, type: 3}
+  slotPiecePrefab: {fileID: 910880428372377254, guid: 2fe6d827218c7d84fbc7a2a6434e0843, type: 3}
+  slotPieceFit: 0.74
   barTrack: {fileID: 8746614371264269615}
   barFill: {fileID: 1659461641189233064}
   barFillImage: {fileID: 5366722208121114716}
