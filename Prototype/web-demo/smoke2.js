@@ -117,9 +117,11 @@ function reward(p) {
 step(70);
 for (const p of P) {
   if (p.standalone) {
-    const row = sb.PRODUCTS.slice(0, P.indexOf(p)).reduce((a, q) => a + q.levels.length + 1, 0);
+    // mở danh sách màn rồi chạm đúng nút mảnh đầu của sản phẩm (vị trí nút lấy từ game)
     L.pointerdown(ev(40, 38)); L.pointerup(ev(40, 38)); step(5);
-    L.pointerdown(ev(100, 62 + 6 + row * 44 + 22)); L.pointerup(ev(100, 62 + 6 + row * 44 + 22)); step(70);
+    const it = sb.window.GNMenuItems().find(m => m.pi === P.indexOf(p) && m.li === p.levels[0]);
+    const cx = it.r[0] + it.r[2] / 2, cy = it.r[1] + it.r[3] / 2;
+    L.pointerdown(ev(cx, cy)); L.pointerup(ev(cx, cy)); step(70);
   }
   for (const li of p.levels) {
     solve(li); step(400);
