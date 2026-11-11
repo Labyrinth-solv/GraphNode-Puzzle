@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 2,
+  "id": "mushroom_grass",
+  "productId": "mushroom",
+  "slotIndex": 2,
+  "difficulty": "hard",
+  "winThreshold": 0.94,
+  "startSeed": 0,
+  "keepStart": false,
+  "nodes": [
+    {
+      "id": 0,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.5,
+        0.335
+      ],
+      "startPos": [
+        0.371605,
+        0.209951
+      ]
+    },
+    {
+      "id": 1,
+      "type": "s",
+      "locked": true,
+      "solutionPos": [
+        0.65,
+        0.51
+      ],
+      "startPos": [
+        0.65,
+        0.51
+      ]
+    },
+    {
+      "id": 2,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.905,
+        0.465
+      ],
+      "startPos": [
+        0.896925,
+        0.678338
+      ]
+    },
+    {
+      "id": 3,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.095,
+        0.465
+      ],
+      "startPos": [
+        0.266895,
+        0.664687
+      ]
+    },
+    {
+      "id": 4,
+      "type": "s",
+      "locked": true,
+      "solutionPos": [
+        0.35,
+        0.51
+      ],
+      "startPos": [
+        0.35,
+        0.51
+      ]
+    }
+  ],
+  "ring": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "innerEdges": [],
+  "bendFree": [
+    2
+  ],
+  "startBend": [
+    -0.015,
+    -0.055,
+    0,
+    -0.055,
+    -0.015
+  ],
+  "fabricId": "mushroom_grass",
+  "solBendOverride": {
+    "0": -0.015,
+    "1": -0.055,
+    "2": -0.21,
+    "3": -0.055,
+    "4": -0.015
+  }
+}

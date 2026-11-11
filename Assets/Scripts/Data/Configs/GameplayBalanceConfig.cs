@@ -28,7 +28,7 @@ namespace GraphNode.Data.Configs
         [SerializeField] private float pinFoldLineTolerance = 0.025f;
 
         [Header("Uốn dây")]
-        [SerializeField] private float bendLimit = 0.18f;
+        [SerializeField] private float bendLimit = 0.35f;
         [SerializeField] private float bendMagnetRadius = 0.035f;
         [SerializeField, Range(0f, 1f)] private float bendMagnetPull = 0.5f;
         [SerializeField] private float bendSnapStraight = 0.018f;

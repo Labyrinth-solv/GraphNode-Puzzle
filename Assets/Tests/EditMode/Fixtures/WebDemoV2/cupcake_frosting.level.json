@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 2,
+  "id": "cupcake_frosting",
+  "productId": "cupcake",
+  "slotIndex": 1,
+  "difficulty": "hard",
+  "winThreshold": 0.94,
+  "startSeed": 0,
+  "keepStart": false,
+  "nodes": [
+    {
+      "id": 0,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.105,
+        0.527
+      ],
+      "startPos": [
+        0.097572,
+        0.183915
+      ]
+    },
+    {
+      "id": 1,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.22,
+        0.39
+      ],
+      "startPos": [
+        0.22,
+        0.39
+      ]
+    },
+    {
+      "id": 2,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.41,
+        0.332
+      ],
+      "startPos": [
+        0.632157,
+        0.187223
+      ]
+    },
+    {
+      "id": 3,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.64,
+        0.372
+      ],
+      "startPos": [
+        0.64,
+        0.372
+      ]
+    },
+    {
+      "id": 4,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.892,
+        0.534
+      ],
+      "startPos": [
+        0.768389,
+        0.799067
+      ]
+    },
+    {
+      "id": 5,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.753,
+        0.6
+      ],
+      "startPos": [
+        0.94,
+        0.364943
+      ]
+    },
+    {
+      "id": 6,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.493,
+        0.579
+      ],
+      "startPos": [
+        0.493,
+        0.579
+      ]
+    },
+    {
+      "id": 7,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.232,
+        0.592
+      ],
+      "startPos": [
+        0.386911,
+        0.739242
+      ]
+    }
+  ],
+  "ring": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "innerEdges": [],
+  "bendFree": [
+    0,
+    3
+  ],
+  "startBend": [
+    0,
+    -0.018,
+    0.011,
+    0,
+    -0.03,
+    0.003,
+    -0.002,
+    -0.037
+  ],
+  "fabricId": "cupcake_frosting",
+  "solBendOverride": {
+    "0": -0.02,
+    "1": -0.018,
+    "2": 0.011,
+    "3": -0.045,
+    "4": -0.03,
+    "5": 0.003,
+    "6": -0.002,
+    "7": -0.037
+  }
+}

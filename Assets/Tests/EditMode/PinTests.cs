@@ -177,7 +177,9 @@ namespace GraphNode.Tests.EditMode
         public void BendMagnet_ClampsPullsAndSnapsStraight()
         {
             var m = new BendMagnet(BendParams.WebDemo);
-            Assert.AreEqual(0.18f, m.Apply(0.5f, false, 0f).Bend, 1e-7f, "clamped to the limit");
+            // bản web 2 đã duyệt kẹp ±0,35 (cung võng sâu như Cụm cỏ −0,21)
+            Assert.AreEqual(0.35f, m.Apply(0.5f, false, 0f).Bend, 1e-7f, "clamped to the limit");
+            Assert.AreEqual(-0.21f, m.Apply(-0.21f, false, 0f).Bend, 1e-7f, "deep sag no longer clipped");
             var straight = m.Apply(0.01f, false, 0f);
             Assert.AreEqual(0f, straight.Bend);
             Assert.IsTrue(straight.SnappedStraight);

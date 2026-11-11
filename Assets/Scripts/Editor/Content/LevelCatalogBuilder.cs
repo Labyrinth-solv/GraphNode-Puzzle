@@ -26,7 +26,7 @@ namespace GraphNode.Editor.Content
                 Debug.LogError($"[GraphNode] {CatalogPath} not found; run GraphNode/Content/Create Missing Default Configs first");
                 return;
             }
-            var entries = new List<(string id, TextAsset json)>();
+            var entries = new List<(string id, TextAsset json, string chapter, string product, int slot)>();
             int errors = 0;
             foreach (string guid in AssetDatabase.FindAssets("t:TextAsset", new[] { LevelFolder }))
             {
@@ -50,9 +50,16 @@ namespace GraphNode.Editor.Content
                     if (issue.Severity == IssueSeverity.Error) { errors++; Debug.LogError($"[GraphNode] {path}: {issue}"); }
                     else Debug.LogWarning($"[GraphNode] {path}: {issue}");
                 }
-                entries.Add((level.Id, text));
+                var dto = Newtonsoft.Json.JsonConvert.DeserializeObject<LevelDto>(text.text);
+                entries.Add((level.Id, text, dto.ChapterId ?? "", dto.ProductId ?? "", dto.SlotIndex));
             }
-            entries.Sort((a, b) => string.CompareOrdinal(a.id, b.id));
+            // thứ tự chơi: chương, rồi ô trong sản phẩm, rồi id (để danh sách ổn định)
+            entries.Sort((a, b) =>
+            {
+                int c = string.CompareOrdinal(a.chapter, b.chapter);
+                if (c == 0) c = a.slot.CompareTo(b.slot);
+                return c != 0 ? c : string.CompareOrdinal(a.id, b.id);
+            });
 
             var so = new SerializedObject(catalog);
             var list = so.FindProperty("levels");
@@ -62,6 +69,9 @@ namespace GraphNode.Editor.Content
                 var item = list.GetArrayElementAtIndex(i);
                 item.FindPropertyRelative("id").stringValue = entries[i].id;
                 item.FindPropertyRelative("json").objectReferenceValue = entries[i].json;
+                item.FindPropertyRelative("chapterId").stringValue = entries[i].chapter;
+                item.FindPropertyRelative("productId").stringValue = entries[i].product;
+                item.FindPropertyRelative("slotIndex").intValue = entries[i].slot;
             }
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(catalog);

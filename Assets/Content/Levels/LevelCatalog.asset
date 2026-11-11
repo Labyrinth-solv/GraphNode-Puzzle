@@ -15,3 +15,86 @@ MonoBehaviour:
   levels:
   - id: scoop
     json: {fileID: 4900000, guid: ee67fe6e2d18ce6439c72910e195a63f, type: 3}
+    chapterId: ch01
+    productId: icecream
+    slotIndex: 0
+  - id: cone
+    json: {fileID: 4900000, guid: 79d6521b7be116b4f90b54031ca6ff6a, type: 3}
+    chapterId: ch01
+    productId: icecream
+    slotIndex: 1
+  - id: cupcake_base
+    json: {fileID: 4900000, guid: cc5cb836d0391544c8ed685aa8f174b4, type: 3}
+    chapterId: ch02
+    productId: cupcake
+    slotIndex: 0
+  - id: cupcake_frosting
+    json: {fileID: 4900000, guid: af38ea8b6d4e1ae48805381d782bdaf2, type: 3}
+    chapterId: ch02
+    productId: cupcake
+    slotIndex: 1
+  - id: cupcake_heart
+    json: {fileID: 4900000, guid: 5e62096773b5cea4e851465ea6562ca9, type: 3}
+    chapterId: ch02
+    productId: cupcake
+    slotIndex: 2
+  - id: duck_body
+    json: {fileID: 4900000, guid: 407f822ab223ef349ae50b4672b4c9c1, type: 3}
+    chapterId: ch03
+    productId: duck
+    slotIndex: 0
+  - id: duck_head
+    json: {fileID: 4900000, guid: 42c3837c2538fe24697a818e6df960f5, type: 3}
+    chapterId: ch03
+    productId: duck
+    slotIndex: 1
+  - id: duck_waves
+    json: {fileID: 4900000, guid: 61abbd2221991194ea0daf01ace41c36, type: 3}
+    chapterId: ch03
+    productId: duck
+    slotIndex: 2
+  - id: mushroom_stem
+    json: {fileID: 4900000, guid: 0b8d36d008e2c9e48b75c8c3af64f360, type: 3}
+    chapterId: ch04
+    productId: mushroom
+    slotIndex: 0
+  - id: mushroom_cap
+    json: {fileID: 4900000, guid: 130178405aab2d645bd44fb338f50528, type: 3}
+    chapterId: ch04
+    productId: mushroom
+    slotIndex: 1
+  - id: mushroom_grass
+    json: {fileID: 4900000, guid: 052f16d60b1e50644a568f696fd3f67c, type: 3}
+    chapterId: ch04
+    productId: mushroom
+    slotIndex: 2
+  - id: oak_leaf
+    json: {fileID: 4900000, guid: e188cbcd7fa9526499965784ca96b6ad, type: 3}
+    chapterId: ch05
+    productId: acorn
+    slotIndex: 0
+  - id: acorn_nut
+    json: {fileID: 4900000, guid: 78bcb898313772c41b722a70dc760275, type: 3}
+    chapterId: ch05
+    productId: acorn
+    slotIndex: 1
+  - id: acorn_cap
+    json: {fileID: 4900000, guid: 58e964adbe2e2e241b3bd7915e4fe3b4, type: 3}
+    chapterId: ch05
+    productId: acorn
+    slotIndex: 2
+  - id: sunflower_leaves
+    json: {fileID: 4900000, guid: 2d5b63294473d7f40ba2b3e766d6b960, type: 3}
+    chapterId: ch06
+    productId: sunflower
+    slotIndex: 0
+  - id: sunflower_petals
+    json: {fileID: 4900000, guid: 67977fbbc8b740b43ac2725d906a34ee, type: 3}
+    chapterId: ch06
+    productId: sunflower
+    slotIndex: 1
+  - id: sunflower_center
+    json: {fileID: 4900000, guid: 92148a137e8825e42853156c2c150fab, type: 3}
+    chapterId: ch06
+    productId: sunflower
+    slotIndex: 2

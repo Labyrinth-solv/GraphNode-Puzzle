@@ -27,15 +27,16 @@ namespace GraphNode.App.Scopes
         [SerializeField] private string editorFallbackLevel = "scoop";
         [Tooltip("Số gợi ý khi LevelRequest không mang booster (chưa có Meta). Số tạm cho bản thử.")]
         [SerializeField] private int devHints = 3;
-        [Tooltip("Số ô trong hàng Bộ vải ghép khi chưa có ProductDefinition. Số tạm: viên kem thuộc sản phẩm 2 mảnh.")]
+        [Tooltip("Số ô trong hàng Bộ vải ghép khi level không thuộc sản phẩm nào trong catalog")]
         [SerializeField] private int devPieceSlots = 2;
-        [Tooltip("Chưa có Home: chuỗi thắng xong thì chờ ngần này rồi chơi lại màn này")]
+        [Tooltip("Chưa có Meta: chuỗi thắng xong thì chờ ngần này rồi sang mảnh kế theo thứ tự catalog")]
         [SerializeField] private float replayDelaySeconds = 0.5f;
 
         private AppScope _app;
         private float _startTime;
 
         public LevelRequest Request { get; private set; }
+        public LevelCatalog Catalog => catalog;
         public PuzzleState State { get; private set; }
 
         private void Awake()
@@ -67,12 +68,18 @@ namespace GraphNode.App.Scopes
             State = new PuzzleState(level, balance.ToPuzzleConfig());
             int hints = Request.Boosters.TryGetValue(HintBooster, out int owned) ? owned : devHints;
             controller.Begin(State, input, balance.RunnerSpeed, balance.WinSequence, OnWon, _app.Audio, _app.Localizer,
-                fabric, info.SlotIndex, devPieceSlots, hints, IsFirstLevel(Request.LevelId));
+                fabric, info.SlotIndex, PieceSlots(info.ProductId), hints, IsFirstLevel(Request.LevelId), _app.Haptics);
             Log.Info($"[Gameplay] level {Request.LevelId}");
         }
 
         // màn đầu của catalog có vòng nhắc chạm đầu như bản web
         private bool IsFirstLevel(string levelId) => catalog.Levels.Count > 0 && catalog.Levels[0].id == levelId;
+
+        private int PieceSlots(string productId)
+        {
+            int count = string.IsNullOrEmpty(productId) ? 0 : catalog.PieceCount(productId);
+            return count > 0 ? count : devPieceSlots;
+        }
 
         private void OnWon() => WonAsync().Forget();
 
@@ -81,7 +88,9 @@ namespace GraphNode.App.Scopes
             Publish(LevelOutcome.Won);
             // chờ theo vòng đời scene này; đổi scene theo token phạm vi App (xem HomeScope.StartLevelAsync)
             await UniTask.Delay(System.TimeSpan.FromSeconds(replayDelaySeconds), cancellationToken: this.GetCancellationTokenOnDestroy());
-            await _app.Flow.StartLevelAsync(Request, _app.LifetimeToken);
+            // chưa có Meta chọn màn kế: tạm đi lần lượt theo thứ tự catalog (mảnh kế của sản phẩm, hết sản phẩm sang sản phẩm sau)
+            string next = catalog != null ? catalog.NextLevelId(Request.LevelId) : null;
+            await _app.Flow.StartLevelAsync(next != null ? new LevelRequest(next) : Request, _app.LifetimeToken);
         }
 
         /// <summary>Thoát giữa màn: vẫn phát LevelResult (bỏ) để Meta trừ booster đã dùng, rồi về Home.</summary>

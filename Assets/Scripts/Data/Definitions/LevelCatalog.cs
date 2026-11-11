@@ -19,6 +19,10 @@ namespace GraphNode.Data.Definitions
         {
             public string id;
             public TextAsset json;
+            [Tooltip("Sinh lại từ file level: chương, sản phẩm, ô trong sản phẩm (để sắp thứ tự chơi mà không đọc JSON)")]
+            public string chapterId;
+            public string productId;
+            public int slotIndex;
         }
 
         [SerializeField] private List<Entry> levels = new List<Entry>();
@@ -26,6 +30,24 @@ namespace GraphNode.Data.Definitions
         public IReadOnlyList<Entry> Levels => levels;
 
         public bool TryLoad(string levelId, out LevelModel level) => TryLoad(levelId, out level, out _);
+
+        /// <summary>Số mảnh của một sản phẩm (số ô trong hàng Bộ vải ghép).</summary>
+        public int PieceCount(string productId)
+        {
+            int count = 0;
+            for (int i = 0; i < levels.Count; i++)
+                if (levels[i] != null && levels[i].productId == productId) count++;
+            return count;
+        }
+
+        /// <summary>Mảnh chơi sau mảnh này theo thứ tự catalog (hết danh sách thì quay về đầu), hoặc null.</summary>
+        public string NextLevelId(string levelId)
+        {
+            if (levels.Count == 0) return null;
+            for (int i = 0; i < levels.Count; i++)
+                if (levels[i] != null && levels[i].id == levelId) return levels[(i + 1) % levels.Count].id;
+            return levels[0].id;
+        }
 
         /// <param name="info">Phần dữ liệu ngoài luật chơi của level (vải, sản phẩm, ô trong sản phẩm).</param>
         public bool TryLoad(string levelId, out LevelModel level, out LevelInfo info)

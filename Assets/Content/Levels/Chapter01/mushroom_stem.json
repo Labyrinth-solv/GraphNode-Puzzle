@@ -1,0 +1,147 @@
+{
+  "schemaVersion": 2,
+  "id": "mushroom_stem",
+  "chapterId": "ch04",
+  "productId": "mushroom",
+  "slotIndex": 0,
+  "difficulty": "hard",
+  "winThreshold": 0.95,
+  "startSeed": 0,
+  "keepStart": false,
+  "nodes": [
+    {
+      "id": 0,
+      "type": "s",
+      "locked": true,
+      "solutionPos": [
+        0.215,
+        0.145
+      ],
+      "startPos": [
+        0.215,
+        0.145
+      ]
+    },
+    {
+      "id": 1,
+      "type": "s",
+      "locked": true,
+      "solutionPos": [
+        0.785,
+        0.145
+      ],
+      "startPos": [
+        0.785,
+        0.145
+      ]
+    },
+    {
+      "id": 2,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.88,
+        0.32
+      ],
+      "startPos": [
+        0.599337,
+        0.390031
+      ]
+    },
+    {
+      "id": 3,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.822,
+        0.46
+      ],
+      "startPos": [
+        0.94,
+        0.294424
+      ]
+    },
+    {
+      "id": 4,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.832,
+        0.775
+      ],
+      "startPos": [
+        0.832,
+        0.775
+      ]
+    },
+    {
+      "id": 5,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.168,
+        0.775
+      ],
+      "startPos": [
+        0.168,
+        0.775
+      ]
+    },
+    {
+      "id": 6,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.178,
+        0.46
+      ],
+      "startPos": [
+        0.529428,
+        0.563832
+      ]
+    },
+    {
+      "id": 7,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.12,
+        0.32
+      ],
+      "startPos": [
+        0.330048,
+        0.433386
+      ]
+    }
+  ],
+  "ring": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "innerEdges": [],
+  "bendFree": [
+    4
+  ],
+  "startBend": [
+    0,
+    0,
+    0,
+    -0.075,
+    0,
+    -0.075,
+    0,
+    0
+  ],
+  "fabricId": "mushroom_stem",
+  "solBendOverride": {
+    "3": -0.075,
+    "4": -0.145,
+    "5": -0.075
+  }
+}

@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 2,
+  "id": "acorn_nut",
+  "chapterId": "ch05",
+  "productId": "acorn",
+  "slotIndex": 1,
+  "difficulty": "hard",
+  "winThreshold": 0.95,
+  "startSeed": 0,
+  "keepStart": false,
+  "nodes": [
+    {
+      "id": 0,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.517,
+        0.155
+      ],
+      "startPos": [
+        0.517,
+        0.155
+      ]
+    },
+    {
+      "id": 1,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.816,
+        0.351
+      ],
+      "startPos": [
+        0.816,
+        0.351
+      ]
+    },
+    {
+      "id": 2,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.837,
+        0.527
+      ],
+      "startPos": [
+        0.938266,
+        0.787638
+      ]
+    },
+    {
+      "id": 3,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.688,
+        0.752
+      ],
+      "startPos": [
+        0.502653,
+        0.94
+      ]
+    },
+    {
+      "id": 4,
+      "type": "s",
+      "locked": true,
+      "solutionPos": [
+        0.373,
+        0.78
+      ],
+      "startPos": [
+        0.373,
+        0.78
+      ]
+    },
+    {
+      "id": 5,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.167,
+        0.609
+      ],
+      "startPos": [
+        0.06,
+        0.94
+      ]
+    },
+    {
+      "id": 6,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.144,
+        0.38
+      ],
+      "startPos": [
+        0.546049,
+        0.338702
+      ]
+    },
+    {
+      "id": 7,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.201,
+        0.218
+      ],
+      "startPos": [
+        0.201,
+        0.218
+      ]
+    }
+  ],
+  "ring": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "innerEdges": [],
+  "bendFree": [
+    2,
+    3
+  ],
+  "startBend": [
+    -0.022601,
+    -0.028018,
+    0,
+    0,
+    -0.022,
+    -0.016299,
+    -0.02343,
+    -0.0249
+  ],
+  "fabricId": "acorn_nut",
+  "solBendOverride": {
+    "2": -0.026,
+    "3": -0.03,
+    "4": -0.022
+  }
+}

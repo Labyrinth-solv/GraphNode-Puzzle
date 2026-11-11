@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 2,
+  "id": "cupcake_heart",
+  "productId": "cupcake",
+  "slotIndex": 2,
+  "difficulty": "hard",
+  "winThreshold": 0.94,
+  "startSeed": 0,
+  "keepStart": false,
+  "nodes": [
+    {
+      "id": 0,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.556,
+        0.385
+      ],
+      "startPos": [
+        0.399248,
+        0.593266
+      ]
+    },
+    {
+      "id": 1,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.744,
+        0.394
+      ],
+      "startPos": [
+        0.744,
+        0.394
+      ]
+    },
+    {
+      "id": 2,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.723,
+        0.637
+      ],
+      "startPos": [
+        0.94,
+        0.787854
+      ]
+    },
+    {
+      "id": 3,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.32,
+        0.737
+      ],
+      "startPos": [
+        0.483516,
+        0.94
+      ]
+    },
+    {
+      "id": 4,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.224,
+        0.464
+      ],
+      "startPos": [
+        0.224,
+        0.464
+      ]
+    },
+    {
+      "id": 5,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.355,
+        0.22
+      ],
+      "startPos": [
+        0.605466,
+        0.446906
+      ]
+    }
+  ],
+  "ring": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "innerEdges": [],
+  "bendFree": [
+    1,
+    4
+  ],
+  "startBend": [
+    -0.055,
+    0,
+    -0.028,
+    -0.032,
+    0,
+    -0.062
+  ],
+  "fabricId": "cupcake_heart",
+  "solBendOverride": {
+    "0": -0.055,
+    "1": -0.028,
+    "2": -0.028,
+    "3": -0.032,
+    "4": -0.048,
+    "5": -0.062
+  }
+}

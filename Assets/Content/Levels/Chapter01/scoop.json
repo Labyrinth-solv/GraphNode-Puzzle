@@ -1,10 +1,10 @@
 {
   "schemaVersion": 2,
   "id": "scoop",
-  "chapterId": "ch1",
+  "chapterId": "ch01",
   "productId": "icecream",
   "slotIndex": 0,
-  "difficulty": "easy",
+  "difficulty": "hard",
   "winThreshold": 0.94,
   "startSeed": 0,
   "keepStart": false,
@@ -18,8 +18,8 @@
         0.6
       ],
       "startPos": [
-        0.154853,
-        0.714625
+        0.06,
+        0.400987
       ]
     },
     {
@@ -57,8 +57,8 @@
         0.3
       ],
       "startPos": [
-        0.885893,
-        0.278321
+        0.672931,
+        0.478581
       ]
     },
     {
@@ -83,8 +83,8 @@
         0.73
       ],
       "startPos": [
-        0.696907,
-        0.675561
+        0.572365,
+        0.39099
       ]
     },
     {
@@ -112,20 +112,17 @@
   ],
   "innerEdges": [],
   "bendFree": [
-    2
+    2,
+    3
   ],
   "startBend": [
     -0.032047,
     -0.031838,
     0,
-    -0.032127,
+    0,
     -0.031004,
     -0.010385,
     -0.017516
   ],
-  "fabricId": "scoop",
-  "tags": [
-    "pins",
-    "bend"
-  ]
+  "fabricId": "scoop"
 }

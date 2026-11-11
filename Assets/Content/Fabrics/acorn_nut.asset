@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4fa68b871be185a4fac72359420e738a, type: 3}
+  m_Name: acorn_nut
+  m_EditorClassIdentifier: 
+  id: acorn_nut
+  baseColor: {r: 0.87058824, g: 0.50980395, b: 0.1254902, a: 1}
+  light: {r: 0.96862745, g: 0.6862745, b: 0.3764706, a: 1}
+  dark: {r: 0.72156864, g: 0.3647059, b: 0.023529412, a: 1}
+  line: {r: 0.26666668, g: 0.13725491, b: 0.047058824, a: 1}

@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 2,
+  "id": "cone",
+  "chapterId": "ch01",
+  "productId": "icecream",
+  "slotIndex": 1,
+  "difficulty": "hard",
+  "winThreshold": 0.94,
+  "startSeed": 0,
+  "keepStart": false,
+  "nodes": [
+    {
+      "id": 0,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.2,
+        0.16
+      ],
+      "startPos": [
+        0.06,
+        0.235856
+      ]
+    },
+    {
+      "id": 1,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.8,
+        0.16
+      ],
+      "startPos": [
+        0.827089,
+        0.455811
+      ]
+    },
+    {
+      "id": 2,
+      "type": "s",
+      "locked": true,
+      "solutionPos": [
+        0.5,
+        0.9
+      ],
+      "startPos": [
+        0.5,
+        0.9
+      ]
+    }
+  ],
+  "ring": [
+    0,
+    1,
+    2
+  ],
+  "innerEdges": [],
+  "bendFree": [],
+  "startBend": [
+    0,
+    0,
+    0
+  ],
+  "fabricId": "cone"
+}

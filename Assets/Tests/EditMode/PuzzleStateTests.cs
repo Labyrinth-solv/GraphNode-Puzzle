@@ -1,3 +1,4 @@
+using GraphNode.Core.Constraints;
 using GraphNode.Core.Geometry;
 using GraphNode.Core.Levels;
 using GraphNode.Core.Rules;
@@ -41,6 +42,45 @@ namespace GraphNode.Tests.EditMode
             s.BeginNeedleDrag(from);
             s.DragNeedle(new Float2(to, 0.5f));
             return s.EndNeedleDrag(false, true);
+        }
+
+        [Test]
+        public void V2_DeepSagEdge_BendsPastTheOldLimit_AndWins()
+        {
+            // Cụm cỏ (bản web 2): cạnh 2 võng −0,21, quá giới hạn kéo cũ ±0,18
+            var s = Make("v2/mushroom_grass");
+            for (int i = 0; i < s.Level.NodeCount; i++)
+                if (!s.Level.Locked[i]) PlaceNode(s, i, i);
+            Assert.IsTrue(s.Pins.AllFilled);
+            Assert.IsTrue(s.Pins.TryGetEdgeTarget(2, s.Positions, s.FoldLine, out float h));
+            Assert.Less(h, -0.18f);
+            var r = BendEdge(s, 2, h);
+            Assert.AreEqual(h, s.Bends[2], 1e-6f);
+            Assert.IsTrue(r.Won, $"score {s.Score:0.000}");
+        }
+
+        [Test]
+        public void GrabBias_StraightEdgeGrabbedOffTheThread_ApexFollowsTheFinger()
+        {
+            var s = Make("v2/scoop");
+            int k = s.Level.BendFree[0];
+            Assert.AreEqual(0f, s.Bends[k], 1e-6f, "bend-free edges start straight");
+            int n = s.Topology.RingLength;
+            var a = s.Positions[s.Topology.RingNode(k)];
+            var b = s.Positions[s.Topology.RingNode((k + 1) % n)];
+            var t = (b - a).Normalized();
+            var normal = new Float2(-t.Y, t.X);
+            var grab = Float2.Lerp(a, b, 0.5f) + normal * 0.03f; // chạm lệch thân dây 3% bề rộng vải
+            s.BeginEdgeDrag(k, grab, 0.5f);
+
+            // trượt ngắn (7 pt, dưới 8 pt): chưa bù, độ uốn chỉ theo quãng trượt
+            s.DragEdge(grab + normal * 0.02f);
+            Assert.AreEqual(0.02f * BendDrag.Gain(0.5f), s.Bends[k], 1e-5f);
+
+            // trượt xa (quá 32 pt): bù hết, độ uốn tính từ thân dây tới ngón tay
+            s.DragEdge(grab + normal * 0.12f);
+            Assert.AreEqual((0.12f + 0.03f) * BendDrag.Gain(0.5f), s.Bends[k], 1e-4f);
+            s.EndEdgeDrag(true, true);
         }
 
         [Test]

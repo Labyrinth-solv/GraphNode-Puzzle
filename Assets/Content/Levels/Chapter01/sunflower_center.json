@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 2,
+  "id": "sunflower_center",
+  "chapterId": "ch06",
+  "productId": "sunflower",
+  "slotIndex": 2,
+  "difficulty": "hard",
+  "winThreshold": 0.94,
+  "startSeed": 0,
+  "keepStart": false,
+  "nodes": [
+    {
+      "id": 0,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.499,
+        0.218
+      ],
+      "startPos": [
+        0.299763,
+        0.121734
+      ]
+    },
+    {
+      "id": 1,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.76,
+        0.36
+      ],
+      "startPos": [
+        0.76,
+        0.36
+      ]
+    },
+    {
+      "id": 2,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.76,
+        0.642
+      ],
+      "startPos": [
+        0.94,
+        0.680644
+      ]
+    },
+    {
+      "id": 3,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.499,
+        0.783
+      ],
+      "startPos": [
+        0.499,
+        0.783
+      ]
+    },
+    {
+      "id": 4,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.239,
+        0.642
+      ],
+      "startPos": [
+        0.421267,
+        0.439153
+      ]
+    },
+    {
+      "id": 5,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.239,
+        0.36
+      ],
+      "startPos": [
+        0.06,
+        0.16657
+      ]
+    }
+  ],
+  "ring": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "innerEdges": [],
+  "bendFree": [
+    1,
+    4
+  ],
+  "startBend": [
+    -0.048,
+    0,
+    -0.048,
+    -0.048,
+    0,
+    -0.048
+  ],
+  "fabricId": "sunflower_center",
+  "solBendOverride": {
+    "0": -0.048,
+    "1": -0.048,
+    "2": -0.048,
+    "3": -0.048,
+    "4": -0.048,
+    "5": -0.048
+  }
+}

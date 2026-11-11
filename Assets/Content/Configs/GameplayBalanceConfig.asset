@@ -20,7 +20,7 @@ MonoBehaviour:
   pinMagnetRadius: 0.048
   pinMagnetPull: 0.5
   pinFoldLineTolerance: 0.025
-  bendLimit: 0.18
+  bendLimit: 0.35
   bendMagnetRadius: 0.035
   bendMagnetPull: 0.5
   bendSnapStraight: 0.018
@@ -36,3 +36,14 @@ MonoBehaviour:
   cutTargetSeconds: 1.5
   cutMinMultiplier: 1.6
   cutMaxMultiplier: 2.5
+  snapSpeed: 0.4
+  snapMinSeconds: 0.2
+  snapMaxSeconds: 0.5
+  snapHoldSeconds: 0.48
+  cutNodeAlpha: 0.35
+  cutNodeSize: 0.75
+  fastForward: 1.5
+  afterCutSeconds: 0.2
+  liftSeconds: 0.45
+  fillSeconds: 0.75
+  flySeconds: 0.65

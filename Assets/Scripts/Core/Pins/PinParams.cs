@@ -38,16 +38,25 @@ namespace GraphNode.Core.Pins
         public readonly float SnapStraight;
         /// <summary>Đích là cạnh thẳng: trong vùng hút và gần thẳng hơn ngần này thì bật về thẳng.</summary>
         public readonly float SnapStraightAtStraightTarget;
+        /// <summary>Bù điểm bắt chỉ áp cho dây gần thẳng lúc bắt (|độ uốn| dưới ngưỡng này).</summary>
+        public readonly float GrabBiasMaxBend;
+        /// <summary>Quãng ngón tay trượt (bề rộng vải) trước khi bắt đầu bù, và quãng để bù hết.</summary>
+        public readonly float GrabBiasStart, GrabBiasSpan;
 
-        public BendParams(float limit, float magnetRadius, float magnetPull, float snapStraight, float snapStraightAtStraightTarget)
+        public BendParams(float limit, float magnetRadius, float magnetPull, float snapStraight, float snapStraightAtStraightTarget,
+            float grabBiasMaxBend = 0.02f, float grabBiasStart = 8f / 362f, float grabBiasSpan = 24f / 362f)
         {
             Limit = limit;
             MagnetRadius = magnetRadius;
             MagnetPull = magnetPull;
             SnapStraight = snapStraight;
             SnapStraightAtStraightTarget = snapStraightAtStraightTarget;
+            GrabBiasMaxBend = grabBiasMaxBend;
+            GrabBiasStart = grabBiasStart;
+            GrabBiasSpan = grabBiasSpan;
         }
 
-        public static readonly BendParams WebDemo = new BendParams(0.18f, 0.035f, 0.5f, 0.018f, 0.022f);
+        // bản web 2 đã duyệt (2026-11-12): kẹp ±0,35 cho cung võng sâu; bù điểm bắt 8–32 pt trên khung vải 362 pt
+        public static readonly BendParams WebDemo = new BendParams(0.35f, 0.035f, 0.5f, 0.018f, 0.022f);
     }
 }

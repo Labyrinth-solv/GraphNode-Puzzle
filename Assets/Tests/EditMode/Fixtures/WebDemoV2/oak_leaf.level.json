@@ -1,0 +1,213 @@
+{
+  "schemaVersion": 2,
+  "id": "oak_leaf",
+  "productId": "acorn",
+  "slotIndex": 0,
+  "difficulty": "hard",
+  "winThreshold": 0.94,
+  "startSeed": 0,
+  "keepStart": false,
+  "nodes": [
+    {
+      "id": 0,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.471,
+        0.06
+      ],
+      "startPos": [
+        0.471,
+        0.06
+      ]
+    },
+    {
+      "id": 1,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.876,
+        0.081
+      ],
+      "startPos": [
+        0.6397,
+        0.179962
+      ]
+    },
+    {
+      "id": 2,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.805,
+        0.268
+      ],
+      "startPos": [
+        0.805,
+        0.268
+      ]
+    },
+    {
+      "id": 3,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.704,
+        0.616
+      ],
+      "startPos": [
+        0.704,
+        0.616
+      ]
+    },
+    {
+      "id": 4,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.553,
+        0.884
+      ],
+      "startPos": [
+        0.847246,
+        0.94
+      ]
+    },
+    {
+      "id": 5,
+      "type": "s",
+      "locked": true,
+      "solutionPos": [
+        0.398,
+        0.855
+      ],
+      "startPos": [
+        0.398,
+        0.855
+      ]
+    },
+    {
+      "id": 6,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.253,
+        0.906
+      ],
+      "startPos": [
+        0.06,
+        0.94
+      ]
+    },
+    {
+      "id": 7,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.163,
+        0.735
+      ],
+      "startPos": [
+        0.163,
+        0.735
+      ]
+    },
+    {
+      "id": 8,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.072,
+        0.598
+      ],
+      "startPos": [
+        0.393434,
+        0.701023
+      ]
+    },
+    {
+      "id": 9,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.218,
+        0.468
+      ],
+      "startPos": [
+        0.218,
+        0.468
+      ]
+    },
+    {
+      "id": 10,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.116,
+        0.341
+      ],
+      "startPos": [
+        0.06,
+        0.388259
+      ]
+    },
+    {
+      "id": 11,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.336,
+        0.174
+      ],
+      "startPos": [
+        0.066941,
+        0.06
+      ]
+    }
+  ],
+  "ring": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+  ],
+  "innerEdges": [],
+  "bendFree": [
+    0,
+    10
+  ],
+  "startBend": [
+    0,
+    0,
+    -0.003391,
+    -0.014507,
+    -0.026,
+    -0.022,
+    -0.016,
+    -0.014,
+    -0.012,
+    0.006,
+    0,
+    -0.055
+  ],
+  "fabricId": "oak_leaf",
+  "solBendOverride": {
+    "0": 0.025,
+    "4": -0.026,
+    "5": -0.022,
+    "6": -0.016,
+    "7": -0.014,
+    "8": -0.012,
+    "9": 0.006,
+    "10": -0.028,
+    "11": -0.055
+  }
+}

@@ -1,0 +1,168 @@
+{
+  "schemaVersion": 2,
+  "id": "duck_body",
+  "productId": "duck",
+  "slotIndex": 0,
+  "difficulty": "hard",
+  "winThreshold": 0.94,
+  "startSeed": 0,
+  "keepStart": false,
+  "nodes": [
+    {
+      "id": 0,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.06,
+        0.43
+      ],
+      "startPos": [
+        0.06,
+        0.637992
+      ]
+    },
+    {
+      "id": 1,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.25,
+        0.445
+      ],
+      "startPos": [
+        0.25,
+        0.445
+      ]
+    },
+    {
+      "id": 2,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.448,
+        0.398
+      ],
+      "startPos": [
+        0.311798,
+        0.707873
+      ]
+    },
+    {
+      "id": 3,
+      "type": "s",
+      "locked": true,
+      "solutionPos": [
+        0.605,
+        0.315
+      ],
+      "startPos": [
+        0.605,
+        0.315
+      ]
+    },
+    {
+      "id": 4,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.745,
+        0.32
+      ],
+      "startPos": [
+        0.497729,
+        0.52283
+      ]
+    },
+    {
+      "id": 5,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.807,
+        0.47
+      ],
+      "startPos": [
+        0.807,
+        0.47
+      ]
+    },
+    {
+      "id": 6,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.878,
+        0.67
+      ],
+      "startPos": [
+        0.94,
+        0.655359
+      ]
+    },
+    {
+      "id": 7,
+      "type": "s",
+      "locked": true,
+      "solutionPos": [
+        0.505,
+        0.735
+      ],
+      "startPos": [
+        0.505,
+        0.735
+      ]
+    },
+    {
+      "id": 8,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.115,
+        0.695
+      ],
+      "startPos": [
+        0.06,
+        0.866359
+      ]
+    }
+  ],
+  "ring": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "innerEdges": [],
+  "bendFree": [
+    0,
+    5
+  ],
+  "startBend": [
+    0,
+    0.017,
+    0.006,
+    -0.008,
+    -0.008,
+    0,
+    0.013,
+    0.017,
+    -0.029
+  ],
+  "fabricId": "duck_body",
+  "solBendOverride": {
+    "0": 0.035,
+    "1": 0.017,
+    "2": 0.006,
+    "3": -0.008,
+    "4": -0.008,
+    "5": -0.043,
+    "6": 0.013,
+    "7": 0.017,
+    "8": -0.029
+  }
+}

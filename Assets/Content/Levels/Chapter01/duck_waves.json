@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 2,
+  "id": "duck_waves",
+  "chapterId": "ch03",
+  "productId": "duck",
+  "slotIndex": 2,
+  "difficulty": "hard",
+  "winThreshold": 0.92,
+  "startSeed": 0,
+  "keepStart": false,
+  "nodes": [
+    {
+      "id": 0,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.065,
+        0.46
+      ],
+      "startPos": [
+        0.065,
+        0.46
+      ]
+    },
+    {
+      "id": 1,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.235,
+        0.455
+      ],
+      "startPos": [
+        0.107929,
+        0.623797
+      ]
+    },
+    {
+      "id": 2,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.5,
+        0.455
+      ],
+      "startPos": [
+        0.339747,
+        0.248829
+      ]
+    },
+    {
+      "id": 3,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.765,
+        0.455
+      ],
+      "startPos": [
+        0.94,
+        0.598669
+      ]
+    },
+    {
+      "id": 4,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.935,
+        0.46
+      ],
+      "startPos": [
+        0.935,
+        0.46
+      ]
+    },
+    {
+      "id": 5,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.815,
+        0.595
+      ],
+      "startPos": [
+        0.620295,
+        0.643584
+      ]
+    },
+    {
+      "id": 6,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.5,
+        0.605
+      ],
+      "startPos": [
+        0.5,
+        0.605
+      ]
+    },
+    {
+      "id": 7,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.185,
+        0.595
+      ],
+      "startPos": [
+        0.161335,
+        0.780965
+      ]
+    }
+  ],
+  "ring": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "innerEdges": [],
+  "bendFree": [
+    1,
+    2
+  ],
+  "startBend": [
+    -0.036,
+    0,
+    0,
+    -0.036,
+    -0.026,
+    -0.022,
+    -0.022,
+    -0.026
+  ],
+  "fabricId": "duck_waves",
+  "solBendOverride": {
+    "0": -0.036,
+    "1": -0.044,
+    "2": -0.044,
+    "3": -0.036,
+    "4": -0.026,
+    "5": -0.022,
+    "6": -0.022,
+    "7": -0.026
+  }
+}

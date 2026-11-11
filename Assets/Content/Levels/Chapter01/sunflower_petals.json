@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 2,
+  "id": "sunflower_petals",
+  "chapterId": "ch06",
+  "productId": "sunflower",
+  "slotIndex": 1,
+  "difficulty": "hard",
+  "winThreshold": 0.94,
+  "startSeed": 0,
+  "keepStart": false,
+  "nodes": [
+    {
+      "id": 0,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.392,
+        0.18
+      ],
+      "startPos": [
+        0.302051,
+        0.411963
+      ]
+    },
+    {
+      "id": 1,
+      "type": "s",
+      "locked": true,
+      "solutionPos": [
+        0.625,
+        0.174
+      ],
+      "startPos": [
+        0.625,
+        0.174
+      ]
+    },
+    {
+      "id": 2,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.823,
+        0.347
+      ],
+      "startPos": [
+        0.753087,
+        0.645286
+      ]
+    },
+    {
+      "id": 3,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.815,
+        0.613
+      ],
+      "startPos": [
+        0.810061,
+        0.847074
+      ]
+    },
+    {
+      "id": 4,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.623,
+        0.829
+      ],
+      "startPos": [
+        0.672359,
+        0.94
+      ]
+    },
+    {
+      "id": 5,
+      "type": "s",
+      "locked": true,
+      "solutionPos": [
+        0.39,
+        0.81
+      ],
+      "startPos": [
+        0.39,
+        0.81
+      ]
+    },
+    {
+      "id": 6,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.197,
+        0.608
+      ],
+      "startPos": [
+        0.06,
+        0.38916
+      ]
+    },
+    {
+      "id": 7,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.193,
+        0.371
+      ],
+      "startPos": [
+        0.344555,
+        0.614585
+      ]
+    }
+  ],
+  "ring": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "innerEdges": [],
+  "bendFree": [
+    0,
+    4
+  ],
+  "startBend": [
+    0,
+    -0.138,
+    -0.138,
+    -0.146,
+    0,
+    -0.142,
+    -0.128,
+    -0.138
+  ],
+  "fabricId": "sunflower_petals",
+  "solBendOverride": {
+    "0": -0.132,
+    "1": -0.138,
+    "2": -0.138,
+    "3": -0.146,
+    "4": -0.132,
+    "5": -0.142,
+    "6": -0.128,
+    "7": -0.138
+  }
+}

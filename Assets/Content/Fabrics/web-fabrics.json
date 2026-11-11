@@ -1,0 +1,124 @@
+{
+  "source": "Prototype/web-demo",
+  "fabrics": [
+    {
+      "id": "scoop",
+      "base": "#F2557E",
+      "light": "#FF97B0",
+      "dark": "#C42E5C",
+      "line": "#6F203A"
+    },
+    {
+      "id": "cone",
+      "base": "#E0943A",
+      "light": "#F5B867",
+      "dark": "#B06A1E",
+      "line": "#5B3715"
+    },
+    {
+      "id": "cupcake_base",
+      "base": "#D62898",
+      "light": "#F068BE",
+      "dark": "#961264",
+      "line": "#4F1237"
+    },
+    {
+      "id": "cupcake_frosting",
+      "base": "#FA9654",
+      "light": "#FFC284",
+      "dark": "#C86026",
+      "line": "#642F16"
+    },
+    {
+      "id": "cupcake_heart",
+      "base": "#E61E24",
+      "light": "#FF5E66",
+      "dark": "#AC0A12",
+      "line": "#570E13"
+    },
+    {
+      "id": "duck_body",
+      "base": "#F2D218",
+      "light": "#FFE95C",
+      "dark": "#BE9408",
+      "line": "#5C450E"
+    },
+    {
+      "id": "duck_head",
+      "base": "#F2D218",
+      "light": "#FFE95C",
+      "dark": "#BE9408",
+      "line": "#5C450E"
+    },
+    {
+      "id": "duck_waves",
+      "base": "#0C46A4",
+      "light": "#3A7AD8",
+      "dark": "#062C6E",
+      "line": "#0F1E3E"
+    },
+    {
+      "id": "mushroom_stem",
+      "base": "#E3D19B",
+      "light": "#F8ECBE",
+      "dark": "#AE9D78",
+      "line": "#332921"
+    },
+    {
+      "id": "mushroom_cap",
+      "base": "#EA121C",
+      "light": "#FF4E56",
+      "dark": "#A6040A",
+      "line": "#291316"
+    },
+    {
+      "id": "mushroom_grass",
+      "base": "#2FA236",
+      "light": "#54CA5A",
+      "dark": "#1D7822",
+      "line": "#1D291A"
+    },
+    {
+      "id": "oak_leaf",
+      "base": "#47940A",
+      "light": "#68B624",
+      "dark": "#326A00",
+      "line": "#1D2F0D"
+    },
+    {
+      "id": "acorn_nut",
+      "base": "#DE8220",
+      "light": "#F7AF60",
+      "dark": "#B85D06",
+      "line": "#44230C"
+    },
+    {
+      "id": "acorn_cap",
+      "base": "#90330D",
+      "light": "#B44B1B",
+      "dark": "#652407",
+      "line": "#33170D"
+    },
+    {
+      "id": "sunflower_leaves",
+      "base": "#0E8C30",
+      "light": "#3EB84A",
+      "dark": "#04641E",
+      "line": "#112715"
+    },
+    {
+      "id": "sunflower_petals",
+      "base": "#F7C21E",
+      "light": "#FFE45E",
+      "dark": "#DD840E",
+      "line": "#4D2C0E"
+    },
+    {
+      "id": "sunflower_center",
+      "base": "#8B2614",
+      "light": "#B04028",
+      "dark": "#591408",
+      "line": "#30100D"
+    }
+  ]
+}

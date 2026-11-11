@@ -183,7 +183,7 @@ namespace GraphNode.Core.Session
         private struct EdgeDrag
         {
             public Float2 Start, Anchor, Tangent, Normal;
-            public float Length, H0, Target, MaxError;
+            public float Length, H0, Target, MaxError, GrabBias;
             public bool HasTarget, InMagnet, HasMagnetBend;
             public float MagnetBend;
         }
@@ -202,18 +202,54 @@ namespace GraphNode.Core.Session
             if (len < 1e-6f) len = 1f;
             var t = ab / len;
             DraggingEdge = edge;
+            var normal = new Float2(-t.Y, t.X);
             _edge = new EdgeDrag
             {
-                Start = touch, Anchor = a, Tangent = t, Normal = new Float2(-t.Y, t.X), Length = len, H0 = Bends[edge],
-                HasTarget = Pins.TryGetEdgeTarget(edge, Positions, FoldLine, out float target), Target = target
+                Start = touch, Anchor = a, Tangent = t, Normal = normal, Length = len, H0 = Bends[edge],
+                HasTarget = Pins.TryGetEdgeTarget(edge, Positions, FoldLine, out float target), Target = target,
+                GrabBias = GrabBias(edge, touch, a, normal)
             };
         }
+
+        /// <summary>
+        /// Độ lệch theo pháp tuyến giữa điểm chạm và điểm gần nhất trên thân dây (bản web 2): khi kéo một dây gần thẳng,
+        /// lệch này được bù dần để đỉnh cung bám đúng đầu ngón tay thay vì cách ngón tay một khoảng.
+        /// </summary>
+        private float GrabBias(int edge, Float2 touch, Float2 a, Float2 normal)
+        {
+            int n = Topology.RingLength;
+            int count = Shape.Sample(Positions, Bends, Topology.RingNode(edge), Topology.RingNode((edge + 1) % n), GrabSteps, false, _grabBuffer);
+            if (count < 2) return 0f;
+            var closest = _grabBuffer[0];
+            float best = float.MaxValue;
+            for (int s = 0; s + 1 < count; s++)
+            {
+                var p = _grabBuffer[s];
+                var d = _grabBuffer[s + 1] - p;
+                float l2 = d.LengthSquared;
+                float u = l2 > 0f ? Math.Max(0f, Math.Min(1f, Float2.Dot(touch - p, d) / l2)) : 0f;
+                var q = p + d * u;
+                float dist = (touch - q).LengthSquared;
+                if (dist < best) { best = dist; closest = q; }
+            }
+            return Float2.Dot(touch - a, normal) - Float2.Dot(closest - a, normal);
+        }
+
+        private const int GrabSteps = 20;
+        private readonly Float2[] _grabBuffer = new Float2[GrabSteps + 1];
 
         public void DragEdge(Float2 touch)
         {
             if (DraggingEdge < 0) return;
             float u = BendDrag.ClampGrab(Float2.Dot(touch - _edge.Anchor, _edge.Tangent) / _edge.Length);
             float delta = Float2.Dot(touch - _edge.Start, _edge.Normal);
+            // dây gần thẳng: bù dần lệch điểm bắt khi ngón tay trượt rõ (smoothstep), dây đã cong thì không bù
+            var bend = _config.Bend;
+            if (Math.Abs(_edge.H0) < bend.GrabBiasMaxBend && bend.GrabBiasSpan > 0f)
+            {
+                float c = Math.Max(0f, Math.Min(1f, ((touch - _edge.Start).Length - bend.GrabBiasStart) / bend.GrabBiasSpan));
+                delta += _edge.GrabBias * c * c * (3f - 2f * c);
+            }
             float raw = _edge.H0 + delta * BendDrag.Gain(u);
             float limit = _config.Bend.Limit;
             raw = Math.Max(-limit, Math.Min(limit, raw));

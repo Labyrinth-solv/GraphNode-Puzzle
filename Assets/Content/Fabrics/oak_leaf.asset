@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4fa68b871be185a4fac72359420e738a, type: 3}
+  m_Name: oak_leaf
+  m_EditorClassIdentifier: 
+  id: oak_leaf
+  baseColor: {r: 0.2784314, g: 0.5803922, b: 0.039215688, a: 1}
+  light: {r: 0.40784314, g: 0.7137255, b: 0.14117648, a: 1}
+  dark: {r: 0.19607843, g: 0.41568628, b: 0, a: 1}
+  line: {r: 0.11372549, g: 0.18431373, b: 0.050980393, a: 1}
