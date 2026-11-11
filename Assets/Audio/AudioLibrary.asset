@@ -1,0 +1,108 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 84d941bea7c2b1c468ebccbf159eebf2, type: 3}
+  m_Name: AudioLibrary
+  m_EditorClassIdentifier: 
+  referenceVolume: 0.1
+  clips:
+  - id: curve_snap
+    clip: {fileID: 8300000, guid: 015ab41e017db844ea18c92a0719d222, type: 3}
+  - id: drop
+    clip: {fileID: 8300000, guid: d0a58f71b59eb0243abe692d291db5c1, type: 3}
+  - id: locked_tap
+    clip: {fileID: 8300000, guid: 59b6e1e927fd4034196e2aaf74b77b42, type: 3}
+  - id: note_pop_00
+    clip: {fileID: 8300000, guid: dde468fd0b3eaff40a6813981d2d9877, type: 3}
+  - id: note_pop_01
+    clip: {fileID: 8300000, guid: a041a834038d11f42925024b99ce9756, type: 3}
+  - id: note_pop_02
+    clip: {fileID: 8300000, guid: cd588fca6b82c98479c246ec81a1bd0e, type: 3}
+  - id: note_pop_03
+    clip: {fileID: 8300000, guid: 87968783433762e469f04de7c08eac38, type: 3}
+  - id: note_pop_04
+    clip: {fileID: 8300000, guid: be2e82703f1d2bb4d95097a487efff7c, type: 3}
+  - id: note_pop_05
+    clip: {fileID: 8300000, guid: 31694996b51914649b513b9bc73aac41, type: 3}
+  - id: note_pop_06
+    clip: {fileID: 8300000, guid: ebacad6f5fade7b4cae50276981f8312, type: 3}
+  - id: note_pop_07
+    clip: {fileID: 8300000, guid: 5d6383453be664b4c85670e10f1b76dd, type: 3}
+  - id: note_pop_08
+    clip: {fileID: 8300000, guid: 890714b064c588e41bc90e36d2c64762, type: 3}
+  - id: note_pop_09
+    clip: {fileID: 8300000, guid: 51650fde3f1ef3c43b6dee9cacb9546f, type: 3}
+  - id: note_rise_00
+    clip: {fileID: 8300000, guid: 17baa40ec2ecef64591880c1330dbdc8, type: 3}
+  - id: note_rise_01
+    clip: {fileID: 8300000, guid: 0e8298f6264b2684dbb3d4b1b1a765b0, type: 3}
+  - id: note_rise_02
+    clip: {fileID: 8300000, guid: b6e39718b4c0eb546a6ab29eb39dbe19, type: 3}
+  - id: note_rise_03
+    clip: {fileID: 8300000, guid: 7af6bcca54c32d848a2e6fcd6b8fe868, type: 3}
+  - id: note_rise_04
+    clip: {fileID: 8300000, guid: f7ca45bdc0bd8944f84193bd4629d46c, type: 3}
+  - id: note_rise_05
+    clip: {fileID: 8300000, guid: 2b269c1626511554b97e68cebb877133, type: 3}
+  - id: note_rise_06
+    clip: {fileID: 8300000, guid: 0b14a95f69bca63438b1f91c936efd86, type: 3}
+  - id: note_rise_07
+    clip: {fileID: 8300000, guid: bc45358da591f4a4fa48ad22ccecaaf3, type: 3}
+  - id: note_rise_08
+    clip: {fileID: 8300000, guid: 3b5bcb574dd4aa94692dc8c81c0ccc96, type: 3}
+  - id: note_rise_09
+    clip: {fileID: 8300000, guid: aa934016abfa14c4a84e08fa406a52e0, type: 3}
+  - id: note_rise_10
+    clip: {fileID: 8300000, guid: 02c17514a0fb2974fbbfb2acfe1f3458, type: 3}
+  - id: note_rise_11
+    clip: {fileID: 8300000, guid: 45a563406f51c514e8953c9f7af94445, type: 3}
+  - id: note_rise_12
+    clip: {fileID: 8300000, guid: 000b9e099c23dd641b5a578f416317a1, type: 3}
+  - id: note_rise_13
+    clip: {fileID: 8300000, guid: a1ea8cbec3faed343bd3f960c0551417, type: 3}
+  - id: note_rise_14
+    clip: {fileID: 8300000, guid: f2f789bb92baee7409b415ca2d5d1651, type: 3}
+  - id: pin_hover_00
+    clip: {fileID: 8300000, guid: 52ae750747850f5469f76536685670d1, type: 3}
+  - id: pin_hover_01
+    clip: {fileID: 8300000, guid: 8e2ea0e7cb9f6204eb3aaf62d0bbb206, type: 3}
+  - id: pin_hover_02
+    clip: {fileID: 8300000, guid: d8b20dd914bba3c4b92234f7e06f4e29, type: 3}
+  - id: pin_hover_03
+    clip: {fileID: 8300000, guid: 08172961e7cdb1c4da42492ac1b1bccf, type: 3}
+  - id: pin_hover_04
+    clip: {fileID: 8300000, guid: 2d41681546615e746bdb71e48b595e83, type: 3}
+  - id: pin_snap_00
+    clip: {fileID: 8300000, guid: 2fb8cf7a2d92cba409015fefbe6d273c, type: 3}
+  - id: pin_snap_01
+    clip: {fileID: 8300000, guid: 332195cb7cfbbbb4bae9a9d146646e00, type: 3}
+  - id: pin_snap_02
+    clip: {fileID: 8300000, guid: 4c2b2f3149825434f964583c359e298c, type: 3}
+  - id: pin_snap_03
+    clip: {fileID: 8300000, guid: 76ea5392416f6724ca5dbfa3bda3469b, type: 3}
+  - id: pin_snap_04
+    clip: {fileID: 8300000, guid: e901d4f38046c914a837187b63b79e46, type: 3}
+  - id: pin_snap_05
+    clip: {fileID: 8300000, guid: 496c5a0422f83fb478094b1d206a5ee3, type: 3}
+  - id: pin_snap_last_00
+    clip: {fileID: 8300000, guid: cd80bd26650972349ab0920fc60f55c4, type: 3}
+  - id: pin_snap_last_01
+    clip: {fileID: 8300000, guid: 79004deafd084094baae9f8c7cab90a4, type: 3}
+  - id: pin_snap_last_02
+    clip: {fileID: 8300000, guid: 54cd5b96d9597f843becb3e2770dc875, type: 3}
+  - id: pin_snap_last_03
+    clip: {fileID: 8300000, guid: 12a070ea6c444ee429508108caabf084, type: 3}
+  - id: pin_snap_last_04
+    clip: {fileID: 8300000, guid: 48154c456b3807b499bf4734ce2114a8, type: 3}
+  - id: pin_snap_last_05
+    clip: {fileID: 8300000, guid: 2d82da99335670042b69450f5325766c, type: 3}
+  - id: win_chord
+    clip: {fileID: 8300000, guid: 6ae99ad25c0b8b44d843bc82a09e9a1b, type: 3}

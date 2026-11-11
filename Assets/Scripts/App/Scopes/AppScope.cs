@@ -3,6 +3,7 @@ using GraphNode.App.Flow;
 using GraphNode.Foundation.Messaging;
 using GraphNode.Foundation.Services;
 using GraphNode.Services;
+using GraphNode.Services.Audio;
 using UnityEngine;
 
 namespace GraphNode.App.Scopes
@@ -34,11 +35,11 @@ namespace GraphNode.App.Scopes
 
         private readonly AppScopeHost _host;
 
-        private AppScope(AppScopeHost host)
+        private AppScope(AppScopeHost host, AudioLibrary audioLibrary)
         {
             _host = host;
             Bus = new MessageBus();
-            Audio = new NullAudioService();
+            Audio = audioLibrary != null ? new AudioService(audioLibrary, host.transform) : new NullAudioService();
             Haptics = new NullHaptics();
             Save = new MemorySaveService();
             Analytics = new NullAnalytics();
@@ -52,14 +53,15 @@ namespace GraphNode.App.Scopes
         /// Dựng phạm vi App nếu chưa có. Boot gọi đầu tiên; Home và Gameplay cũng gọi để bấm Play thẳng từ scene đó
         /// trong Editor vẫn chạy được.
         /// </summary>
-        public static AppScope EnsureCreated()
+        /// <param name="audioLibrary">Clip âm thanh (scene đầu tiên dựng phạm vi đưa vào); null thì âm thanh im.</param>
+        public static AppScope EnsureCreated(AudioLibrary audioLibrary = null)
         {
             if (Current != null) return Current;
             Application.targetFrameRate = TargetFrameRate;
             var go = new GameObject("[AppScope]");
             Object.DontDestroyOnLoad(go);
             var host = go.AddComponent<AppScopeHost>();
-            Current = new AppScope(host);
+            Current = new AppScope(host, audioLibrary);
             return Current;
         }
 

@@ -5,7 +5,8 @@
         "Unity.TextMeshPro",
         "GraphNode.Core",
         "GraphNode.Data",
-        "GraphNode.Foundation"
+        "GraphNode.Foundation",
+        "GraphNode.Services"
     ],
     "includePlatforms": [
         "Editor"

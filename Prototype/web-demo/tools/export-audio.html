@@ -1,0 +1,122 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Export audio</title>
+<body style="font:14px system-ui"><p id="st">rendering…</p>
+<script>
+// Kết xuất tiếng tổng hợp của web-demo (game.js: pop, pinSnapSound, pinHoverSound, curveSnapSound, chord) ra WAV
+// 48 kHz 16-bit mono bằng OfflineAudioContext, qua cùng bộ nén master như bản web, cho Unity dùng làm clip.
+// Mỗi clip vẽ ở âm lượng tham chiếu VOL_REF; Unity nhân âm lượng = âm lượng muốn có / VOL_REF.
+const SR = 48000, VOL_REF = 0.1;
+const P = [0, 2, 4, 7, 9];
+const PENTA = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21];
+const noteF = n => 523.25 * Math.pow(2, PENTA[((n % 10) + 10) % 10] / 12);
+const risingF = k => 523.25 * Math.pow(2, (12 * Math.floor(k / 5) + P[k % 5]) / 12);
+const pentaF = (step, oct) => { const o = Math.floor(step / 5), k = ((step % 5) + 5) % 5; return 523.25 * Math.pow(2, oct + o + P[k] / 12); };
+
+async function render(seconds, build) {
+  const AC = new OfflineAudioContext(1, Math.ceil(SR * seconds), SR);
+  const master = AC.createGain();
+  const comp = AC.createDynamicsCompressor();
+  comp.threshold.value = -22; comp.knee.value = 30; comp.ratio.value = 4; comp.attack.value = 0.003; comp.release.value = 0.18;
+  master.connect(comp); comp.connect(AC.destination);
+  build(AC, master, 0.005);
+  return (await AC.startRendering()).getChannelData(0);
+}
+function pop(AC, out, t0, f, vol, when, dur) {
+  const t = t0 + (when || 0); dur = dur || 0.22; const v = vol * 2.2;
+  const o = AC.createOscillator(), g = AC.createGain();
+  o.type = 'sine'; o.frequency.setValueAtTime(f * 1.9, t); o.frequency.exponentialRampToValueAtTime(f, t + 0.025);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(out); o.start(t); o.stop(t + dur + 0.02);
+  const o2 = AC.createOscillator(), g2 = AC.createGain();
+  o2.type = 'sine'; o2.frequency.setValueAtTime(f * 2.01, t);
+  g2.gain.setValueAtTime(0.0001, t); g2.gain.exponentialRampToValueAtTime(v * 0.25, t + 0.004); g2.gain.exponentialRampToValueAtTime(0.0001, t + dur * 0.4);
+  o2.connect(g2); g2.connect(out); o2.start(t); o2.stop(t + dur);
+}
+function noiseBuf(AC, seconds, shape) {
+  const n = Math.floor(AC.sampleRate * seconds), b = AC.createBuffer(1, n, AC.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * shape(i, n);
+  return b;
+}
+function click(AC, out, t, len, tau, freq, q, gain) {
+  const s = AC.createBufferSource(), bp = AC.createBiquadFilter(), ng = AC.createGain();
+  s.buffer = noiseBuf(AC, len, (i, n) => Math.exp(-i / (n * tau)));
+  bp.type = 'bandpass'; bp.frequency.value = freq; bp.Q.value = q;
+  ng.gain.setValueAtTime(gain, t); ng.gain.exponentialRampToValueAtTime(0.0001, t + len);
+  s.connect(bp); bp.connect(ng); ng.connect(out); s.start(t);
+}
+function pinSnap(AC, out, t, step, last) {
+  const f = pentaF(step, 0);
+  click(AC, out, t, 0.016, 0.26, 2500, 3.2, 0.32);
+  const o = AC.createOscillator(), g = AC.createGain();
+  o.type = 'sine'; o.frequency.setValueAtTime(f * 1.18, t); o.frequency.exponentialRampToValueAtTime(f, t + 0.012);
+  g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.38, t + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+  o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.24);
+  const o2 = AC.createOscillator(), g2 = AC.createGain(), lp = AC.createBiquadFilter();
+  o2.type = 'triangle'; o2.frequency.value = f * 2; lp.type = 'lowpass'; lp.frequency.value = f * 3.2;
+  g2.gain.setValueAtTime(0.0001, t); g2.gain.linearRampToValueAtTime(0.14, t + 0.003); g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+  o2.connect(lp); lp.connect(g2); g2.connect(out); o2.start(t); o2.stop(t + 0.09);
+  if (last) {
+    const o3 = AC.createOscillator(), g3 = AC.createGain();
+    o3.type = 'sine'; o3.frequency.setValueAtTime(f * 1.5, t + 0.035);
+    g3.gain.setValueAtTime(0.0001, t + 0.035); g3.gain.linearRampToValueAtTime(0.22, t + 0.04); g3.gain.exponentialRampToValueAtTime(0.0001, t + 0.32);
+    o3.connect(g3); g3.connect(out); o3.start(t + 0.035); o3.stop(t + 0.35);
+  }
+}
+function pinHover(AC, out, t, step) {
+  const f = pentaF(step, 0);
+  click(AC, out, t, 0.010, 0.3, 2600, 3.5, 0.18);
+  const o = AC.createOscillator(), g = AC.createGain();
+  o.type = 'sine'; o.frequency.setValueAtTime(f * 1.15, t); o.frequency.exponentialRampToValueAtTime(f, t + 0.010);
+  g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.18, t + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.11);
+  o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.12);
+}
+function sweep(AC, out, t, dur, vol, f0, f1) {
+  const s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain();
+  s.buffer = noiseBuf(AC, dur, (i, n) => Math.sin(Math.PI * i / n));
+  f.type = 'bandpass'; f.Q.value = 1.4; f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(f1, t + dur);
+  g.gain.value = vol * 2.8; s.connect(f); f.connect(g); g.connect(out); s.start(t);
+}
+function pluck(AC, out, t, f, vol) {
+  // Karplus-Strong như ksBuffer của bản web, bù cao độ bằng playbackRate
+  const sr = AC.sampleRate, N = Math.max(2, Math.round(sr / f)), len = Math.floor(sr * 1.6);
+  const b = AC.createBuffer(1, len, sr), d = b.getChannelData(0), ring = new Float32Array(N);
+  let prev = 0; for (let i = 0; i < N; i++) { prev = prev * 0.55 + (Math.random() * 2 - 1) * 0.45; ring[i] = prev; }
+  for (let j = 0, idx = 0; j < len; j++) { const a = ring[idx], nb = ring[(idx + 1) % N]; d[j] = a; ring[idx] = (a + nb) * 0.5 * 0.996; idx = (idx + 1) % N; }
+  const s = AC.createBufferSource(), lp = AC.createBiquadFilter(), g = AC.createGain();
+  s.buffer = b; s.playbackRate.value = f * (N + 0.5) / sr; lp.type = 'lowpass'; lp.frequency.value = Math.min(4200, f * 5);
+  const v = vol * 2.2; g.gain.setValueAtTime(v, t); g.gain.setTargetAtTime(0.0001, t + 0.45, 0.3);
+  s.connect(lp); lp.connect(g); g.connect(out); s.start(t); s.stop(t + 1.6);
+}
+function wav(samples) {
+  const n = samples.length, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+  const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true);
+  v.setUint16(22, 1, true); v.setUint32(24, SR, true); v.setUint32(28, SR * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  w(36, 'data'); v.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, samples[i])) * 32767, true);
+  return new Blob([buf], { type: 'audio/wav' });
+}
+const jobs = [];
+for (let k = 0; k < 10; k++) jobs.push([`note_pop_${String(k).padStart(2, '0')}`, 0.35, (AC, o, t) => pop(AC, o, t, noteF(k), VOL_REF, 0, 0.26)]);
+for (let k = 0; k < 15; k++) jobs.push([`note_rise_${String(k).padStart(2, '0')}`, 0.4, (AC, o, t) => pop(AC, o, t, risingF(k), VOL_REF, 0, 0.3)]);
+for (let s = 0; s < 6; s++) {
+  jobs.push([`pin_snap_${String(s).padStart(2, '0')}`, 0.3, (AC, o, t) => pinSnap(AC, o, t, s, false)]);
+  jobs.push([`pin_snap_last_${String(s).padStart(2, '0')}`, 0.4, (AC, o, t) => pinSnap(AC, o, t, s, true)]);
+}
+for (let s = 0; s < 5; s++) jobs.push([`pin_hover_${String(s).padStart(2, '0')}`, 0.15, (AC, o, t) => pinHover(AC, o, t, s)]);
+jobs.push(['curve_snap', 1.7, (AC, o, t) => { sweep(AC, o, t, 0.12, 0.08, 1300, 3200); pluck(AC, o, t, pentaF(3, 0), 0.11); }]);
+jobs.push(['drop', 0.2, (AC, o, t) => pop(AC, o, t, noteF(0) * 0.5, 0.07, 0, 0.12)]);
+jobs.push(['locked_tap', 0.2, (AC, o, t) => pop(AC, o, t, 220, 0.05, 0, 0.12)]);
+jobs.push(['win_chord', 0.75, (AC, o, t) => [4, 7, 9].forEach((n, i) => pop(AC, o, t, noteF(n), 0.06, i * 0.06, 0.5))]);
+(async function () {
+  const names = [];
+  for (const [name, secs, build] of jobs) {
+    const data = await render(secs, build);
+    await fetch('/save?kind=audio&name=' + name, { method: 'POST', body: wav(data) });
+    names.push(name);
+  }
+  document.getElementById('st').textContent = 'done: ' + names.length;
+  window.EXPORT_DONE = names;
+})();
+</script>

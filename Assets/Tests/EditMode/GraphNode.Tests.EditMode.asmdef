@@ -6,7 +6,8 @@
         "UnityEditor.TestRunner",
         "GraphNode.Core",
         "GraphNode.Foundation",
-        "GraphNode.Data"
+        "GraphNode.Data",
+        "GraphNode.Services"
     ],
     "includePlatforms": [
         "Editor"

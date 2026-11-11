@@ -3,6 +3,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using GraphNode.Core.Runner;
 using GraphNode.Data.Configs;
+using GraphNode.Foundation.Services;
 using GraphNode.Gameplay.View;
 using UnityEngine;
 
@@ -16,10 +17,14 @@ namespace GraphNode.Gameplay.Presentation
         /// <summary>1 lúc thường; chạm trong chuỗi thì tăng lên hệ số tua nhanh cố định.</summary>
         public float Speed { get; set; } = 1f;
 
-        public PresentationContext(PuzzleView view, WinSequenceParams parameters)
+        /// <summary>Có thể null (test, tắt tiếng).</summary>
+        public IAudioService Audio { get; }
+
+        public PresentationContext(PuzzleView view, WinSequenceParams parameters, IAudioService audio = null)
         {
             View = view;
             Params = parameters;
+            Audio = audio;
         }
 
         /// <summary>Thời gian khung hình đã nhân hệ số tua.</summary>
@@ -69,13 +74,21 @@ namespace GraphNode.Gameplay.Presentation
             c.View.BeginCut();
             float perimeter = c.View.CutPerimeter;
             float duration = CutTiming.Duration(perimeter, c.Params.Cut);
+            int rank = 0;
             for (float t = 0f; t < duration; t += c.Delta)
             {
-                c.View.SetCut(perimeter * t / duration, c.Delta);
+                rank = PlayRising(c, rank, c.View.SetCut(perimeter * t / duration, c.Delta));
                 await UniTask.Yield(PlayerLoopTiming.Update, ct);
             }
-            c.View.SetCut(perimeter, 0f);
+            PlayRising(c, rank, c.View.SetCut(perimeter, 0f));
             await UniTask.Delay(System.TimeSpan.FromSeconds(c.Params.AfterCutSeconds / c.Speed), cancellationToken: ct);
+        }
+
+        // mỗi node lưỡi kéo chạm phát một nốt cao hơn nốt trước (thang ngũ cung leo, không vòng về)
+        private static int PlayRising(PresentationContext c, int rank, int newHits)
+        {
+            for (int i = 0; i < newHits; i++) c.Audio?.PlayNote("note_rise", rank++, 0.07f);
+            return rank;
         }
     }
 

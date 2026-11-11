@@ -7,6 +7,7 @@ using GraphNode.Core.Runner;
 using GraphNode.Core.Session;
 using GraphNode.Data.Configs;
 using GraphNode.Data.Definitions;
+using GraphNode.Foundation.Services;
 using GraphNode.Gameplay.Input;
 using GraphNode.Gameplay.View;
 using UnityEngine;
@@ -39,14 +40,22 @@ namespace GraphNode.Gameplay.Session
         private readonly int[] _passed = new int[16];
         private WinSequenceParams _win;
         private PresentationContext _presentation;
+        private IAudioService _audio;
+        private int _lastMagnetPin = -1;
+
+        // tên clip và âm lượng theo bản web (âm lượng tuyệt đối như WebAudio)
+        private const string NotePop = "note_pop", PinSnap = "pin_snap", PinSnapLast = "pin_snap_last", PinHover = "pin_hover";
+        private const string CurveSnap = "curve_snap", Drop = "drop", LockedTap = "locked_tap", WinChord = "win_chord";
+        private const int PentatonicSteps = 5;
 
         public PuzzleState State => _state;
 
         /// <param name="runnerSpeed">Tốc độ điểm sáng, bề rộng vải mỗi giây (cấu hình cân bằng).</param>
         /// <param name="onWon">Gọi khi chuỗi thắng chạy xong.</param>
         public void Begin(PuzzleState state, InputConfig input, float runnerSpeed, WinSequenceParams win, Action onWon,
-            FabricDefinition fabric = null, int slotIndex = 0)
+            IAudioService audio = null, FabricDefinition fabric = null, int slotIndex = 0)
         {
+            _audio = audio;
             if (fabric != null) view.SetPiece(fabric.Base, fabric.Light, fabric.Dark, fabric.Line, slotIndex);
             _state = state ?? throw new ArgumentNullException(nameof(state));
             _input = input;
@@ -84,7 +93,14 @@ namespace GraphNode.Gameplay.Session
             if (!_state.Won)
             {
                 int count = _runner.Step(dt, _runnerRule, _grab != Grab.None, _state.Positions, _state.Bends, _passed);
-                for (int i = 0; i < count; i++) view.Pulse(_passed[i]);
+                // mỗi node một nốt cố định theo chỗ của nó trên vòng; khớp cao thì to hơn, đang kéo thì nhỏ lại
+                float match = Mathf.Clamp01((_state.Score - 0.5f) / (_state.Level.WinThreshold - 0.5f));
+                float vol = (0.045f + 0.045f * match) * (_grab != Grab.None ? 0.6f : 1f);
+                for (int i = 0; i < count; i++)
+                {
+                    view.Pulse(_passed[i]);
+                    _audio?.PlayNote(NotePop, _state.Topology.RingIndexOf(_passed[i]), vol);
+                }
             }
             view.Render(dt, _grab == Grab.Node ? _state.DraggingNode : -1);
             view.RenderRunner(dt, _runner.Edge, _runner.T);
@@ -113,6 +129,10 @@ namespace GraphNode.Gameplay.Session
                     _grab = Grab.Needle;
                     _state.BeginNeedleDrag(f);
                     break;
+                case TouchTargetKind.LockedNode:
+                    _grab = Grab.None;
+                    _audio?.PlaySfx(LockedTap);
+                    break;
                 default:
                     _grab = Grab.None;
                     break;
@@ -131,6 +151,10 @@ namespace GraphNode.Gameplay.Session
                     // cảm ứng: node nâng dần lên trên ngón tay để không bị che; vị trí chấm điểm là vị trí nhìn thấy
                     float lift = pointer.IsTouch ? _input.LiftPt * Mathf.Clamp01(slidPt / _input.LiftRampPt) : 0f;
                     _state.DragNode(f + _grabOffset - new Float2(0f, lift / FabricLayout.FabricSize));
+                    // vừa lọt vào vùng hút của một chốt: tiếng chạm nhẹ theo cao độ của chốt
+                    int pin = _state.NodeMagnetPin;
+                    if (pin >= 0 && pin != _lastMagnetPin) _audio?.PlayNote(PinHover, pin % PentatonicSteps, 0.1f);
+                    _lastMagnetPin = pin;
                     break;
                 case Grab.Edge:
                     _state.DragEdge(f);
@@ -150,9 +174,31 @@ namespace GraphNode.Gameplay.Session
                 case Grab.Edge: result = _state.EndEdgeDrag(cancelled, _moved); break;
                 case Grab.Needle: result = _state.EndNeedleDrag(cancelled, _moved); break;
             }
+            var grab = _grab;
             _grab = Grab.None;
+            _lastMagnetPin = -1;
             if (result.Relabeled) view.Permute(_state.LastPermutation);
-            if (result.Won) PlayWinAsync().Forget();
+            PlayReleaseSound(grab, result);
+            if (result.Won)
+            {
+                _audio?.PlaySfx(WinChord);
+                PlayWinAsync().Forget();
+            }
+        }
+
+        private void PlayReleaseSound(Grab grab, ReleaseResult result)
+        {
+            if (_audio == null || grab == Grab.None) return;
+            if (grab == Grab.Node && result.Snapped)
+            {
+                // tiếng chốt gỗ leo dần theo số chốt đã lấp; chốt cuối có thêm quãng 5 ngân
+                _state.Refresh();
+                int step = Mathf.Clamp(_state.Pins.FilledCount - 1, 0, 5);
+                _audio.PlayNote(_state.Pins.AllFilled ? PinSnapLast : PinSnap, step, 0.1f);
+            }
+            else if (grab == Grab.Edge && result.ContourSnap) _audio.PlaySfx(CurveSnap);
+            // clip "drop" kết xuất ở 0,07 (thả node); thả dây của bản web nhỏ hơn (0,06)
+            else _audio.PlaySfx(Drop, grab == Grab.Edge ? 0.06f / 0.07f : 1f);
         }
 
         private async UniTaskVoid PlayWinAsync() => await PlayWinSequenceAsync();
@@ -161,7 +207,7 @@ namespace GraphNode.Gameplay.Session
         internal async UniTask PlayWinSequenceAsync()
         {
             if (_presentation != null) return;
-            _presentation = new PresentationContext(view, _win);
+            _presentation = new PresentationContext(view, _win, _audio);
             await WinSequence.Default().PlayAsync(_presentation, this.GetCancellationTokenOnDestroy());
             _onWon?.Invoke();
         }

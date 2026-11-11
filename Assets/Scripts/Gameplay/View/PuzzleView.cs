@@ -406,8 +406,10 @@ namespace GraphNode.Gameplay.View
         public float CutPerimeter => _solTotal / FabricLayout.FabricSize;
 
         /// <summary>Cảnh cắt tới quãng L (theo bề rộng vải): nét cắt mực sau lưỡi kéo, node chạm thì sáng và nảy.</summary>
-        public void SetCut(float l, float dt)
+        /// <returns>Số node lưỡi kéo vừa chạm lần này (để phát nốt leo).</returns>
+        public int SetCut(float l, float dt)
         {
+            int newHits = 0;
             float d = Mathf.Clamp(l * FabricLayout.FabricSize, 0f, _solTotal);
             _cutPoints.Clear();
             _cutColors.Clear();
@@ -428,6 +430,7 @@ namespace GraphNode.Gameplay.View
                 if (_cutHit[i] || _cutNodeD[i] > d) continue;
                 _cutHit[i] = true;
                 _pulse[i] = 1f;
+                newHits++;
             }
 
             var dir = (SolPointAt(d + 0.01f * FabricLayout.FabricSize) - head).normalized;
@@ -439,6 +442,7 @@ namespace GraphNode.Gameplay.View
             float th = (0.02f + SnipOpen(_snipPhase) * 0.55f) * Mathf.Rad2Deg;
             _bladeDown.localRotation = Quaternion.Euler(0f, 0f, th);
             _bladeUp.localRotation = Quaternion.Euler(0f, 0f, -th);
+            return newHits;
         }
 
         private Vector3 SolPointAt(float d)

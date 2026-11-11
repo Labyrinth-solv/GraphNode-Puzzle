@@ -18,6 +18,8 @@ namespace GraphNode.App.Scopes
     {
         [SerializeField] private LevelCatalog catalog;
         [SerializeField] private FabricCatalog fabrics;
+        [Tooltip("Dùng khi bấm Play thẳng từ Gameplay trong Editor (phạm vi App chưa có)")]
+        [SerializeField] private GraphNode.Services.Audio.AudioLibrary audioLibrary;
         [SerializeField] private GameplayBalanceConfig balance;
         [SerializeField] private InputConfig input;
         [SerializeField] private PuzzleController controller;
@@ -34,7 +36,7 @@ namespace GraphNode.App.Scopes
 
         private void Awake()
         {
-            _app = AppScope.EnsureCreated();
+            _app = AppScope.EnsureCreated(audioLibrary);
             Request = _app.Flow.CurrentRequest;
             _startTime = Time.realtimeSinceStartup;
             if (Request == null)
@@ -59,7 +61,7 @@ namespace GraphNode.App.Scopes
             if (fabrics == null || !fabrics.TryGet(fabricId, out fabric))
                 Log.Warn($"[Gameplay] fabric '{fabricId}' is not in the fabric catalog");
             State = new PuzzleState(level, balance.ToPuzzleConfig());
-            controller.Begin(State, input, balance.RunnerSpeed, balance.WinSequence, OnWon, fabric, info.SlotIndex);
+            controller.Begin(State, input, balance.RunnerSpeed, balance.WinSequence, OnWon, _app.Audio, fabric, info.SlotIndex);
             Log.Info($"[Gameplay] level {Request.LevelId}");
         }
 
