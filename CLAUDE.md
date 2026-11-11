@@ -12,8 +12,9 @@ Game mobile Unity dạng giải đố: kéo node của một đồ thị cho vi�
 
 ## Giao diện
 
-- Giao diện (bố cục màn hình, UI, art, màu sắc, prefab giao diện) do người dùng tự làm. Claude chỉ làm giao diện khi được yêu cầu rõ.
-- Muốn đề xuất hay sửa giao diện thì hỏi trước, nêu thay đổi cụ thể và chờ người dùng đồng ý rồi mới làm.
+- Claude được tự dựng và sửa giao diện (bố cục, prefab, Canvas, thiết lập nhập sprite UI) để đạt chuẩn production, không cần hỏi trước từng thay đổi. Báo lại đã đổi gì trong phần tổng kết.
+- Giao diện production nằm trong prefab và Canvas; không dựng bố cục bằng `new GameObject` trong code chạy.
+- Màn chơi bản demo bám bản web (vị trí, màu, nét) làm mốc đối chiếu.
 - Bố cục chuẩn của màn Home là wireframe dọc `Assets/Docs/GraphNode-Puzzle-Wireframe-Home.html`. Code cho Home bám vị trí các vùng trong đó, không tự đặt bố cục khác.
 
 ## Nền tảng
@@ -61,7 +62,7 @@ Game mobile Unity dạng giải đố: kéo node của một đồ thị cho vi�
 - Sau khi tạo hoặc sửa script, đọc console để xem lỗi biên dịch trước khi dùng kiểu mới. Chờ domain reload xong rồi mới thao tác tiếp.
 - Khi có nhiều Unity đang mở thì chọn đúng instance trước khi gọi tool.
 - Không sửa tay file `.unity`, `.prefab`, `.asset` (YAML). Dùng tool của Unity hoặc Editor. Không xóa hay tạo lại file `.meta`; commit `.meta` cùng asset.
-- Ngoại lệ: được sửa tay thiết lập import trong file `.meta` của texture UI (ví dụ viền cắt 9 phần `spriteBorder`) khi người dùng cho phép rõ cho việc đó. Chỉ đổi đúng trường cần đổi, giữ nguyên `guid`; sửa xong refresh Unity, đọc Console và kiểm tra lại giá trị.
+- Thiết lập nhập texture UI (PPU, viền cắt 9 phần) đặt qua AssetPostprocessor hoặc tool của Unity; nếu phải sửa `.meta` thì chỉ đổi đúng trường, giữ nguyên `guid`, rồi refresh và kiểm tra lại.
 - Tạo prefab và asset qua MCP rồi kiểm tra lại trạng thái, không giả định thành công.
 
 ## Build và phát hành
