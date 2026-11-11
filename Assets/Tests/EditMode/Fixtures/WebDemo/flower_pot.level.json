@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 2,
+  "id": "flower_pot",
+  "productId": "flowerpot",
+  "slotIndex": 2,
+  "difficulty": "hard",
+  "winThreshold": 0.96,
+  "startSeed": 0,
+  "keepStart": false,
+  "nodes": [
+    {
+      "id": 0,
+      "type": "s",
+      "locked": true,
+      "solutionPos": [
+        0.1,
+        0.2
+      ],
+      "startPos": [
+        0.1,
+        0.2
+      ]
+    },
+    {
+      "id": 1,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.9,
+        0.2
+      ],
+      "startPos": [
+        0.94,
+        0.489187
+      ]
+    },
+    {
+      "id": 2,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.91,
+        0.35
+      ],
+      "startPos": [
+        0.94,
+        0.069606
+      ]
+    },
+    {
+      "id": 3,
+      "type": "s",
+      "locked": true,
+      "solutionPos": [
+        0.82,
+        0.36
+      ],
+      "startPos": [
+        0.82,
+        0.36
+      ]
+    },
+    {
+      "id": 4,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.71,
+        0.85
+      ],
+      "startPos": [
+        0.646441,
+        0.616462
+      ]
+    },
+    {
+      "id": 5,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.29,
+        0.85
+      ],
+      "startPos": [
+        0.06,
+        0.851111
+      ]
+    },
+    {
+      "id": 6,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.18,
+        0.36
+      ],
+      "startPos": [
+        0.306676,
+        0.654324
+      ]
+    },
+    {
+      "id": 7,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.09,
+        0.35
+      ],
+      "startPos": [
+        0.06,
+        0.643235
+      ]
+    }
+  ],
+  "ring": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "innerEdges": [],
+  "bendFree": [
+    4
+  ],
+  "startBend": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "fabricId": "flower_pot"
+}

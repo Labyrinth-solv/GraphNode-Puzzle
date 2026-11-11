@@ -1,0 +1,171 @@
+{
+  "schemaVersion": 2,
+  "id": "cardigan",
+  "productId": "cardigan",
+  "slotIndex": 0,
+  "difficulty": "medium",
+  "winThreshold": 0.95,
+  "startSeed": 0,
+  "keepStart": false,
+  "nodes": [
+    {
+      "id": 0,
+      "type": "s",
+      "locked": true,
+      "solutionPos": [
+        0.26,
+        0.16
+      ],
+      "startPos": [
+        0.26,
+        0.16
+      ]
+    },
+    {
+      "id": 1,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.04,
+        0.6
+      ],
+      "startPos": [
+        0.06,
+        0.778376
+      ]
+    },
+    {
+      "id": 2,
+      "type": "s",
+      "locked": true,
+      "solutionPos": [
+        0.14,
+        0.67
+      ],
+      "startPos": [
+        0.14,
+        0.67
+      ]
+    },
+    {
+      "id": 3,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.24,
+        0.42
+      ],
+      "startPos": [
+        0.357302,
+        0.391182
+      ]
+    },
+    {
+      "id": 4,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.24,
+        0.86
+      ],
+      "startPos": [
+        0.275186,
+        0.94
+      ]
+    },
+    {
+      "id": 5,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.76,
+        0.86
+      ],
+      "startPos": [
+        0.919732,
+        0.94
+      ]
+    },
+    {
+      "id": 6,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.76,
+        0.42
+      ],
+      "startPos": [
+        0.637005,
+        0.469768
+      ]
+    },
+    {
+      "id": 7,
+      "type": "s",
+      "locked": true,
+      "solutionPos": [
+        0.86,
+        0.67
+      ],
+      "startPos": [
+        0.86,
+        0.67
+      ]
+    },
+    {
+      "id": 8,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.96,
+        0.6
+      ],
+      "startPos": [
+        0.94,
+        0.499549
+      ]
+    },
+    {
+      "id": 9,
+      "type": "s",
+      "locked": true,
+      "solutionPos": [
+        0.74,
+        0.16
+      ],
+      "startPos": [
+        0.74,
+        0.16
+      ]
+    }
+  ],
+  "ring": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "innerEdges": [],
+  "bendFree": [
+    4
+  ],
+  "startBend": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "fabricId": "cardigan"
+}

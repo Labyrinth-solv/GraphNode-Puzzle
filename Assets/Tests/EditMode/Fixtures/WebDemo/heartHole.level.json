@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 2,
+  "id": "heartHole",
+  "productId": "heart",
+  "slotIndex": 1,
+  "difficulty": "easy",
+  "winThreshold": 0.94,
+  "startSeed": 0,
+  "keepStart": false,
+  "nodes": [
+    {
+      "id": 0,
+      "type": "s",
+      "locked": true,
+      "solutionPos": [
+        0.5,
+        0.3
+      ],
+      "startPos": [
+        0.426362,
+        0.3
+      ]
+    },
+    {
+      "id": 1,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.27,
+        0.12
+      ],
+      "startPos": [
+        0.27,
+        0.12
+      ]
+    },
+    {
+      "id": 2,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.08,
+        0.42
+      ],
+      "startPos": [
+        0.067057,
+        0.345076
+      ]
+    },
+    {
+      "id": 3,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.5,
+        0.9
+      ],
+      "startPos": [
+        0.426362,
+        0.94
+      ]
+    },
+    {
+      "id": 4,
+      "type": "s",
+      "locked": true,
+      "solutionPos": [
+        0.5,
+        0.79
+      ],
+      "startPos": [
+        0.426362,
+        0.79
+      ]
+    },
+    {
+      "id": 5,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.269,
+        0.526
+      ],
+      "startPos": [
+        0.313222,
+        0.57512
+      ]
+    },
+    {
+      "id": 6,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.373,
+        0.361
+      ],
+      "startPos": [
+        0.373,
+        0.361
+      ]
+    },
+    {
+      "id": 7,
+      "type": "s",
+      "locked": true,
+      "solutionPos": [
+        0.5,
+        0.46
+      ],
+      "startPos": [
+        0.426362,
+        0.46
+      ]
+    }
+  ],
+  "ring": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "innerEdges": [],
+  "bendFree": [
+    1
+  ],
+  "startBend": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    -0.031026,
+    0,
+    0
+  ],
+  "fabricId": "heartHole",
+  "fold": {
+    "axis": "x",
+    "solX": 0.5,
+    "startX": 0.42636173994513227,
+    "chains": [
+      [
+        0,
+        3
+      ],
+      [
+        4,
+        7
+      ]
+    ]
+  }
+}

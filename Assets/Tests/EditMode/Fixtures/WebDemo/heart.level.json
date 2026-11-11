@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 2,
+  "id": "heart",
+  "productId": "heart",
+  "slotIndex": 0,
+  "difficulty": "easy",
+  "winThreshold": 0.94,
+  "startSeed": 0,
+  "keepStart": false,
+  "nodes": [
+    {
+      "id": 0,
+      "type": "s",
+      "locked": true,
+      "solutionPos": [
+        0.5,
+        0.3
+      ],
+      "startPos": [
+        0.424421,
+        0.3
+      ]
+    },
+    {
+      "id": 1,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.27,
+        0.12
+      ],
+      "startPos": [
+        0.29786,
+        0.06
+      ]
+    },
+    {
+      "id": 2,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.08,
+        0.42
+      ],
+      "startPos": [
+        0.06,
+        0.359083
+      ]
+    },
+    {
+      "id": 3,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.5,
+        0.9
+      ],
+      "startPos": [
+        0.424421,
+        0.94
+      ]
+    }
+  ],
+  "ring": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "innerEdges": [],
+  "bendFree": [
+    1
+  ],
+  "startBend": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "fabricId": "heart",
+  "fold": {
+    "axis": "x",
+    "solX": 0.5,
+    "startX": 0.4244206291716546,
+    "chains": [
+      [
+        0,
+        3
+      ]
+    ]
+  }
+}

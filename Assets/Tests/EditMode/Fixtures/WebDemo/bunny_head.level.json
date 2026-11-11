@@ -1,0 +1,172 @@
+{
+  "schemaVersion": 2,
+  "id": "bunny_head",
+  "productId": "bunny",
+  "slotIndex": 1,
+  "difficulty": "medium",
+  "winThreshold": 0.95,
+  "startSeed": 0,
+  "keepStart": false,
+  "nodes": [
+    {
+      "id": 0,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.27,
+        0.29
+      ],
+      "startPos": [
+        0.364951,
+        0.189826
+      ]
+    },
+    {
+      "id": 1,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.5,
+        0.2
+      ],
+      "startPos": [
+        0.5,
+        0.2
+      ]
+    },
+    {
+      "id": 2,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.73,
+        0.29
+      ],
+      "startPos": [
+        0.624326,
+        0.169297
+      ]
+    },
+    {
+      "id": 3,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.82,
+        0.48
+      ],
+      "startPos": [
+        0.82,
+        0.48
+      ]
+    },
+    {
+      "id": 4,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.92,
+        0.65
+      ],
+      "startPos": [
+        0.94,
+        0.444731
+      ]
+    },
+    {
+      "id": 5,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.78,
+        0.83
+      ],
+      "startPos": [
+        0.659927,
+        0.764312
+      ]
+    },
+    {
+      "id": 6,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.5,
+        0.86
+      ],
+      "startPos": [
+        0.5,
+        0.86
+      ]
+    },
+    {
+      "id": 7,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.22,
+        0.83
+      ],
+      "startPos": [
+        0.264541,
+        0.94
+      ]
+    },
+    {
+      "id": 8,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.08,
+        0.65
+      ],
+      "startPos": [
+        0.168239,
+        0.789922
+      ]
+    },
+    {
+      "id": 9,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.18,
+        0.48
+      ],
+      "startPos": [
+        0.18,
+        0.48
+      ]
+    }
+  ],
+  "ring": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "innerEdges": [],
+  "bendFree": [
+    4,
+    7
+  ],
+  "startBend": [
+    -0.019485,
+    -0.019485,
+    -0.009483,
+    -0.012073,
+    0,
+    -0.013982,
+    -0.013982,
+    0,
+    -0.012073,
+    -0.009483
+  ],
+  "fabricId": "bunny_head"
+}

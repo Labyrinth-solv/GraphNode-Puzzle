@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 2,
+  "id": "flower_leaves",
+  "productId": "flowerpot",
+  "slotIndex": 1,
+  "difficulty": "hard",
+  "winThreshold": 0.96,
+  "startSeed": 0,
+  "keepStart": true,
+  "nodes": [
+    {
+      "id": 0,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.29,
+        0.34
+      ],
+      "startPos": [
+        0.39,
+        0.06
+      ]
+    },
+    {
+      "id": 1,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.69,
+        0.66
+      ],
+      "startPos": [
+        0.75,
+        0.43
+      ]
+    },
+    {
+      "id": 2,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.69,
+        0.34
+      ],
+      "startPos": [
+        0.62,
+        0.63
+      ]
+    },
+    {
+      "id": 3,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.29,
+        0.66
+      ],
+      "startPos": [
+        0.13,
+        0.79
+      ]
+    }
+  ],
+  "ring": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "innerEdges": [],
+  "bendFree": [
+    1,
+    3
+  ],
+  "startBend": [
+    0.0002,
+    0,
+    0.0002,
+    0
+  ],
+  "fabricId": "flower_leaves",
+  "solBendOverride": {
+    "1": 0.16,
+    "3": -0.16
+  }
+}

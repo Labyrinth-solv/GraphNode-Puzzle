@@ -1,0 +1,183 @@
+{
+  "schemaVersion": 2,
+  "id": "flower_bloom",
+  "productId": "flowerpot",
+  "slotIndex": 0,
+  "difficulty": "hard",
+  "winThreshold": 0.96,
+  "startSeed": 0,
+  "keepStart": false,
+  "nodes": [
+    {
+      "id": 0,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.5,
+        0.22
+      ],
+      "startPos": [
+        0.348038,
+        0.22
+      ]
+    },
+    {
+      "id": 1,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.37,
+        0.09
+      ],
+      "startPos": [
+        0.109436,
+        0.06
+      ]
+    },
+    {
+      "id": 2,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.21,
+        0.18
+      ],
+      "startPos": [
+        0.261234,
+        0.06
+      ]
+    },
+    {
+      "id": 3,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.26,
+        0.36
+      ],
+      "startPos": [
+        0.26,
+        0.36
+      ]
+    },
+    {
+      "id": 4,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.08,
+        0.41
+      ],
+      "startPos": [
+        0.06,
+        0.679009
+      ]
+    },
+    {
+      "id": 5,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.08,
+        0.59
+      ],
+      "startPos": [
+        0.328038,
+        0.629097
+      ]
+    },
+    {
+      "id": 6,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.26,
+        0.64
+      ],
+      "startPos": [
+        0.06,
+        0.889958
+      ]
+    },
+    {
+      "id": 7,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.21,
+        0.82
+      ],
+      "startPos": [
+        0.190911,
+        0.94
+      ]
+    },
+    {
+      "id": 8,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.37,
+        0.91
+      ],
+      "startPos": [
+        0.205746,
+        0.731527
+      ]
+    },
+    {
+      "id": 9,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.5,
+        0.78
+      ],
+      "startPos": [
+        0.348038,
+        0.78
+      ]
+    }
+  ],
+  "ring": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "innerEdges": [],
+  "bendFree": [
+    1,
+    4
+  ],
+  "startBend": [
+    0.035797,
+    0,
+    -0.000535,
+    -0.000836,
+    0,
+    -0.000836,
+    -0.000535,
+    0.022402,
+    0.035797,
+    0
+  ],
+  "fabricId": "flower_bloom",
+  "fold": {
+    "axis": "x",
+    "solX": 0.5,
+    "startX": 0.3480382719635964,
+    "chains": [
+      [
+        0,
+        9
+      ]
+    ]
+  }
+}

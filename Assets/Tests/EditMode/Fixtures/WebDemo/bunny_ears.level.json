@@ -1,0 +1,187 @@
+{
+  "schemaVersion": 2,
+  "id": "bunny_ears",
+  "productId": "bunny",
+  "slotIndex": 0,
+  "difficulty": "medium",
+  "winThreshold": 0.95,
+  "startSeed": 0,
+  "keepStart": false,
+  "nodes": [
+    {
+      "id": 0,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.24,
+        0.78
+      ],
+      "startPos": [
+        0.24,
+        0.78
+      ]
+    },
+    {
+      "id": 1,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.09,
+        0.42
+      ],
+      "startPos": [
+        0.172887,
+        0.51651
+      ]
+    },
+    {
+      "id": 2,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.13,
+        0.14
+      ],
+      "startPos": [
+        0.219399,
+        0.297402
+      ]
+    },
+    {
+      "id": 3,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.29,
+        0.12
+      ],
+      "startPos": [
+        0.24005,
+        0.06
+      ]
+    },
+    {
+      "id": 4,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.39,
+        0.42
+      ],
+      "startPos": [
+        0.39,
+        0.42
+      ]
+    },
+    {
+      "id": 5,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.5,
+        0.7
+      ],
+      "startPos": [
+        0.5,
+        0.7
+      ]
+    },
+    {
+      "id": 6,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.61,
+        0.42
+      ],
+      "startPos": [
+        0.61,
+        0.42
+      ]
+    },
+    {
+      "id": 7,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.71,
+        0.12
+      ],
+      "startPos": [
+        0.554648,
+        0.154559
+      ]
+    },
+    {
+      "id": 8,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.87,
+        0.14
+      ],
+      "startPos": [
+        0.767517,
+        0.206122
+      ]
+    },
+    {
+      "id": 9,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.91,
+        0.42
+      ],
+      "startPos": [
+        0.94,
+        0.276851
+      ]
+    },
+    {
+      "id": 10,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.76,
+        0.78
+      ],
+      "startPos": [
+        0.76,
+        0.78
+      ]
+    }
+  ],
+  "ring": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "innerEdges": [],
+  "bendFree": [
+    2,
+    7
+  ],
+  "startBend": [
+    -0.039038,
+    -0.022185,
+    0,
+    -0.008894,
+    0.013837,
+    0.013837,
+    -0.008894,
+    0,
+    -0.022185,
+    -0.039038,
+    -0.045
+  ],
+  "fabricId": "bunny_ears"
+}

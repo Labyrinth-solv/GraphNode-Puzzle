@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 2,
+  "id": "collar",
+  "productId": "cardigan",
+  "slotIndex": 2,
+  "difficulty": "medium",
+  "winThreshold": 0.95,
+  "startSeed": 0,
+  "keepStart": false,
+  "nodes": [
+    {
+      "id": 0,
+      "type": "s",
+      "locked": true,
+      "solutionPos": [
+        0.2,
+        0.1
+      ],
+      "startPos": [
+        0.2,
+        0.1
+      ]
+    },
+    {
+      "id": 1,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.36,
+        0.1
+      ],
+      "startPos": [
+        0.348805,
+        0.304216
+      ]
+    },
+    {
+      "id": 2,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.5,
+        0.46
+      ],
+      "startPos": [
+        0.434002,
+        0.657534
+      ]
+    },
+    {
+      "id": 3,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.64,
+        0.1
+      ],
+      "startPos": [
+        0.4701,
+        0.1922
+      ]
+    },
+    {
+      "id": 4,
+      "type": "s",
+      "locked": true,
+      "solutionPos": [
+        0.8,
+        0.1
+      ],
+      "startPos": [
+        0.8,
+        0.1
+      ]
+    },
+    {
+      "id": 5,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.5,
+        0.72
+      ],
+      "startPos": [
+        0.609857,
+        0.56764
+      ]
+    }
+  ],
+  "ring": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "innerEdges": [],
+  "bendFree": [],
+  "startBend": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "fabricId": "collar"
+}

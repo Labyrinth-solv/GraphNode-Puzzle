@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 2,
+  "id": "shirt",
+  "productId": "cardigan",
+  "slotIndex": 1,
+  "difficulty": "medium",
+  "winThreshold": 0.95,
+  "startSeed": 0,
+  "keepStart": false,
+  "nodes": [
+    {
+      "id": 0,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.34,
+        0.06
+      ],
+      "startPos": [
+        0.181159,
+        0.06
+      ]
+    },
+    {
+      "id": 1,
+      "type": "s",
+      "locked": true,
+      "solutionPos": [
+        0.5,
+        0.2
+      ],
+      "startPos": [
+        0.5,
+        0.2
+      ]
+    },
+    {
+      "id": 2,
+      "type": "s",
+      "locked": false,
+      "solutionPos": [
+        0.66,
+        0.06
+      ],
+      "startPos": [
+        0.671147,
+        0.188909
+      ]
+    },
+    {
+      "id": 3,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.66,
+        0.84
+      ],
+      "startPos": [
+        0.642183,
+        0.94
+      ]
+    },
+    {
+      "id": 4,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.34,
+        0.84
+      ],
+      "startPos": [
+        0.521299,
+        0.885308
+      ]
+    }
+  ],
+  "ring": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "innerEdges": [],
+  "bendFree": [
+    3
+  ],
+  "startBend": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "fabricId": "shirt"
+}

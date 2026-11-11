@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 2,
+  "id": "bunny_bow",
+  "productId": "bunny",
+  "slotIndex": 2,
+  "difficulty": "medium",
+  "winThreshold": 0.95,
+  "startSeed": 0,
+  "keepStart": false,
+  "nodes": [
+    {
+      "id": 0,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.14,
+        0.22
+      ],
+      "startPos": [
+        0.06,
+        0.365431
+      ]
+    },
+    {
+      "id": 1,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.5,
+        0.41
+      ],
+      "startPos": [
+        0.5,
+        0.41
+      ]
+    },
+    {
+      "id": 2,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.86,
+        0.22
+      ],
+      "startPos": [
+        0.738374,
+        0.074619
+      ]
+    },
+    {
+      "id": 3,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.86,
+        0.78
+      ],
+      "startPos": [
+        0.94,
+        0.656743
+      ]
+    },
+    {
+      "id": 4,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.5,
+        0.59
+      ],
+      "startPos": [
+        0.5,
+        0.59
+      ]
+    },
+    {
+      "id": 5,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.14,
+        0.78
+      ],
+      "startPos": [
+        0.275343,
+        0.69669
+      ]
+    }
+  ],
+  "ring": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "innerEdges": [],
+  "bendFree": [
+    2,
+    5
+  ],
+  "startBend": [
+    -0.009949,
+    -0.009949,
+    0,
+    -0.009949,
+    -0.009949,
+    0
+  ],
+  "fabricId": "bunny_bow"
+}
