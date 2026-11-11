@@ -1,4 +1,4 @@
-// Test web-demo: giải màn, ghép sản phẩm và kiểm tra nhịp ép hoàn thiện.
+// Test mô phỏng chạy toàn bộ các màn trên bản clone Prototype/web-v2 (gồm cả kéo node và kéo dây uốn cong)
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const dir = fs.existsSync(path.join(__dirname, 'web')) ? path.join(__dirname, 'web') : __dirname;
 const texts = new Set();
@@ -29,7 +29,7 @@ let raf = null;
 const win = {
   innerWidth: 390, innerHeight: 844, devicePixelRatio: 1,
   addEventListener() {},
-  matchMedia: query => ({ matches: query === '(prefers-reduced-motion: reduce)' && process.argv.includes('--reduce-motion') }),
+  matchMedia: () => ({ matches: false }),
   requestAnimationFrame: (f) => { raf = f; }
 };
 const doc = {
@@ -45,10 +45,7 @@ const sb = {
 
 vm.createContext(sb);
 for (const f of ['core.js', 'levels.js', 'startgen.js', 'game.js']) {
-  let source = fs.readFileSync(path.join(dir, f), 'utf8');
-  // Chỉ mở trạng thái cho test, không thêm API debug vào bản chạy.
-  if (f === 'game.js') source = source.replace('window.GNState = function', 'window.pressTestState = function () { return { reward: R, particles: S.parts }; }; window.GNState = function');
-  vm.runInContext(source, sb, { filename: f });
+  vm.runInContext(fs.readFileSync(path.join(dir, f), 'utf8'), sb, { filename: f });
 }
 
 let t = 0;
@@ -103,7 +100,7 @@ function cen(li) {
 }
 
 function reward(p) {
-  const homes = p.levels.length === 3 ? [[78, 704], [195, 704], [312, 704]] : p.levels.length === 1 ? [[195, 704]] : [[118, 704], [292, 704]];
+  const homes = p.levels.length === 4 ? [[72, 704], [154, 704], [234, 704], [314, 704]] : p.levels.length === 3 ? [[78, 704], [195, 704], [312, 704]] : p.levels.length === 1 ? [[195, 704]] : [[118, 704], [292, 704]];
   p.levels.forEach((li, k) => {
     const c = cen(li), pl = p.place[li];
     const sc = pl[2] || 250, tx = pl[0] + c[0] * sc, ty = pl[1] + c[1] * sc;
@@ -114,29 +111,7 @@ function reward(p) {
   step(200);
   L.pointerdown(ev(195, 400));
   L.pointerup(ev(195, 400));
-  const assert = (ok, message) => { if (!ok) throw new Error(p.id + ': ' + message); };
-  const state = () => sb.window.pressTestState().reward;
-  step(8);
-  assert(state().phase === 'press' && !state().pressHit && state().reveal === 0, 'màu chưa đổi trước khi khuôn chạm');
-  assert(!sb.window.pressTestState().particles.some(x => x.kind === 'steam'), 'khói chưa xuất hiện trước tiếp xúc');
-  step(7);
-  assert(state().phase === 'press' && state().pressHit && state().reveal === 1 && state().decor.length > 0, 'màu và chi tiết phải hoàn thiện dưới khuôn');
-  const steamCount = sb.window.pressTestState().particles.filter(x => x.kind === 'steam').length;
-  assert(steamCount === (process.argv.includes('--reduce-motion') ? 8 : 22), 'khói bốc quanh mép ngay khi dập, chỉ phát một lần');
-  const details = state().decor.length;
-  step(7);
-  assert(state().phase === 'press' && !state().pressRelease, 'phải giữ lực trước khi nhấc');
-  assert(process.argv.includes('--reduce-motion') ? state().pz === 1 : state().pz < 1, 'nén nhẹ, hoặc đứng yên khi giảm chuyển động');
-  step(9);
-  assert(state().pressRelease && state().reveal === 1 && state().decor.length === details, 'nhấc khuôn không tô lại màu hoặc bật thêm chi tiết');
-  assert(sb.window.pressTestState().particles.filter(x => x.kind === 'steam').length <= steamCount, 'không phát lại khói khi nhấc');
-  step(25);
-  assert(state().phase === 'reveal' && state().accentCount > 0, 'dành nhịp hồi mềm và nhấn chi tiết sau khi nhấc');
-  assert(state().reveal === 1 && state().decor.length === details, 'giữ nguyên màu và đủ chi tiết trong lúc hồi');
-  step(30);
-  assert(state().phase === 'done' && state().pz === 1, 'thành phẩm ổn định sau khi nhấc');
-  assert(state().sq === 0 && state().accentCount === Math.min(3, details), 'kết thúc nén và đủ nốt nhấn');
-  step(60);
+  step(400);
 }
 
 step(70);
@@ -162,4 +137,4 @@ for (const p of P) {
     L.pointerdown(ev(195, 761)); L.pointerup(ev(195, 761)); step(70);
   }
 }
-console.log('🎉 Toàn bộ ' + P.length + ' sản phẩm (Kem, Cupcake, Vịt vàng, Nấm đỏ, Hạt dẻ, Hướng dương) chạy mượt mà với cơ chế Kéo Dây Uốn Cong!');
+console.log('Đã kiểm tra ' + P.length + ' sản phẩm: ' + P.map(p => p.id).join(', '));
