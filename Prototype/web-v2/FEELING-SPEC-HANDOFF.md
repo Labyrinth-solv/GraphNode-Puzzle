@@ -125,6 +125,8 @@ function pentaF(step, oct) {
 
 ## 4. Màn Thưởng: Khâu Từng Mũi & Khoảnh Khắc "Chốt" Rút Chỉ (`Cinch & Flatten`)
 
+> **Đã duyệt thay đổi (2026-11-09, chưa làm):** bỏ viền mực của mảnh, thay đường may giữa các mảnh bằng hoạt ảnh khâu đắp viền chăn quanh mép từng mảnh. Xem CHANGELOG mục 16.6.
+
 Ở màn lắp ghép thành phẩm (`Reward Scene`), sau khi người chơi đặt các mảnh vải vào khung, giai đoạn khâu (`R.phase === 'stitch'`) được chia làm **2 pha nối tiếp**:
 
 1. **Pha Khâu từng mũi (`R.t <= stitchDur`):**
@@ -176,6 +178,8 @@ function pentaF(step, oct) {
 ## 6. Cơ Chế Uốn Cong Tự Do (`bendFree`), Hào Quang Bảy Màu & Chớp Sáng Chiến Thắng
 
 ### 6.1. Uốn cong viền tự do (`bendFree`) & Nhịp bồi dây viền (`chainedEdgeSnaps`)
+
+> **Cập nhật (2026-11-09):** nam châm dây, hiệu ứng khớp dây và gợi ý uốn giờ dùng đích độ uốn theo chốt hai đầu dây đang nằm, gợi ý hiện cho mọi cạnh lệch (không chỉ `bendFree`), và nắn cạnh thẳng về đúng viền cũng có hiệu ứng khớp dây. Xem CHANGELOG mục 16.1, 16.2.
 1. **Pinch Anywhere + Smart Hit-Box**:
    - Cho phép người chơi chạm vào bất kỳ điểm nào dọc theo thân dây để kéo uốn cong. (Số cũ $u \in [0.12, 0.88]$ và $bd < 0.044$ đã thay bằng bộ lọc chạm 3 lớp ở mục 7.5: $u \in [0.25, 0.75]$, ưu tiên chốt trong $0.068$.)
    - Bán kính bắt chạm thân dây uốn cong `bestEdge.d` được mở rộng lên $0.085$ (vùng tìm kiếm $0.088$) giúp thao tác bằng ngón tay cái trên điện thoại cực kỳ nhạy bén.
@@ -203,6 +207,8 @@ function pentaF(step, oct) {
 Đặc tả toàn diện giải pháp công thái học màn hình dọc di động (Portrait Ergonomics) đã được phê duyệt:
 
 ### 7.1. Micro-Breathing Focus Lens ($1.04\text{x}$) & Khóa Cứng Pan = 0
+
+> **Đã bỏ (2026-11-09):** người chơi thử thấy chóng mặt nên bỏ phóng 1,04 lần; khung vải đứng yên khi kéo. Nội dung dưới đây là lịch sử. Xem CHANGELOG mục 16.4.
 - **Khóa cứng Camera Pan ($\text{Pan} = 0$)**: Camera đứng yên $100\%$ tại tâm khung vải (`FCX = 195, FCY = 437`), không trôi dạt theo ngón tay, triệt tiêu $100\%$ nguy cơ gây choáng hay say chuyển động (Cybersickness).
 - **Mức zoom vi mô $1.04\text{x}$**: Khung vải chỉ nở nhẹ đúng $7\text{px}$ mỗi cạnh, hoạt động như ống kính máy ảnh khẽ nín thở siết nét (Focus Breath) một nhịp nhẹ nhàng.
 - **Tốc độ lerp thở $3.5$**: Chuyển tiếp mượt mà qua hàm lerp `cam.scale += (targetScale - cam.scale) * Math.min(1, dt * 3.5)`. Khi buông tay, camera tự động thở nhẹ về $1.0\text{x}$.
@@ -300,3 +306,11 @@ function pentaF(step, oct) {
     $$\text{Ready}(k) = \text{isPinAnchored}(ra) \land \text{isPinAnchored}(rb) \land (|h - h_{sol}| \ge 0.012)$$
   - Ngay khi 2 đầu mút của cạnh cong đã được neo vững (dù là chốt kéo vừa cắm hay ghim khóa), nút bọ thêu cúc len lập tức xuất hiện, nhấp nháy thở nhẹ với quầng hào quang màu kem bơ, trao toàn quyền kiểm soát cho người chơi uốn dây bất cứ khi nào họ muốn.
 
+
+## 8. Vải Hướng D: Màu Thật & Vân Theo Chất Liệu (Đã chốt 2026-11-09)
+
+- Mỗi mảnh một màu lấy từ vật thật (nền, tông sáng, tông tối), không hoa văn trang trí; chỉ giữ chi tiết vật có thật (ô bánh quế).
+- Vân theo chất liệu, cùng tông: len đan (mũi chữ V rộng 1,7%, cao 1,4% bề rộng vải), nỉ (sợi lông ngắn 0,4–1,2%), len gân (gân 2,2%). Kích thước vân cố định theo khung vải.
+- Ánh sáng chung sáng trên tối dưới, mép trong hơi tối. Nền khung vải giữ như cũ.
+- Bảng màu đầy đủ ở đặc tả `Assets/Docs/GraphNode-Puzzle-Dac-ta.md`, mục "Mảnh vải: màu thật và vân len". Chi tiết code ở CHANGELOG mục 16.3.
+- Màn 6 "Dâu tây" thử phong cách tranh tô màu để so (CHANGELOG mục 16.5), chưa chốt.

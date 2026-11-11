@@ -2,12 +2,14 @@
    Dữ liệu màn: tier = độ khó (easy, medium, hard), free = node kéo được; startgen.js sinh vị trí đầu theo tier
    và khóa các node còn lại ở đúng lời giải (trường start, locked, startX bên dưới chỉ là giá trị dự phòng).
    Dữ liệu màn: mỗi sản phẩm gồm 2–3 mảnh. Toạ độ chuẩn hóa 0–1 theo khung vải, trục dọc hướng xuống. */
+// fabric: vải hướng D (màu thật, vân theo chất liệu: knit len đan, felt nỉ, rib len gân), chốt 2026-11-09; pattern giữ làm dự phòng.
 (function (root) {
   var LEVELS = [
     {
       // Màn 1 - Mảnh 1 (index 0): Viên kem
       id: 'scoop', name: 'Viên kem', winThreshold: 0.94, tier: 'easy', free: [0, 3, 5],
       pattern: { kind: 'sprinkles', base: '#A9C4D6', deep: '#86A9C0', accent: '#FFFFFF' },
+      fabric: { mat: 'felt', base: '#FF7B9B', light: '#FFAEC0', dark: '#E05878' },
       types: ['c', 'c', 'c', 'c', 'c', 'c', 'c'],
       ring: [0, 1, 2, 3, 4, 5, 6], inner: [], locked: [2],
       sol:   [[0.12, 0.60], [0.20, 0.30], [0.50, 0.14], [0.80, 0.30], [0.88, 0.60], [0.64, 0.73], [0.38, 0.65]],
@@ -17,6 +19,7 @@
       // Màn 1 - Mảnh 2 (index 1): Ốc quế
       id: 'cone', name: 'Ốc quế', winThreshold: 0.94, tier: 'easy', free: [0, 1],
       pattern: { kind: 'waffle', base: '#E4BC80', deep: '#D6A35C', accent: '#B98446' },
+      fabric: { mat: 'felt', base: '#E2A855', light: '#F5C880', dark: '#C48A35', detail: 'waffle' },
       types: ['s', 's', 's'],
       ring: [0, 1, 2], inner: [], locked: [2],
       sol:   [[0.20, 0.16], [0.80, 0.16], [0.50, 0.90]],
@@ -26,6 +29,7 @@
       // Màn 2 - Mảnh 1 (index 2): Thân áo khoác
       id: 'cardigan', name: 'Thân áo khoác', winThreshold: 0.95, tier: 'medium', free: [1, 3, 4, 5, 6, 8],
       pattern: { kind: 'dots', base: '#B5D6A6', deep: '#93BF85', accent: '#F6E7B0' },
+      fabric: { mat: 'knit', base: '#48C774', light: '#7FE8A2', dark: '#2DA856' },
       types: ['s', 's', 's', 's', 'c', 'c', 's', 's', 's', 's'],
       ring: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], inner: [], locked: [0, 2, 7, 9],
       sol:   [[0.26, 0.16], [0.04, 0.60], [0.14, 0.67], [0.24, 0.42], [0.24, 0.86], [0.76, 0.86], [0.76, 0.42], [0.86, 0.67], [0.96, 0.60], [0.74, 0.16]],
@@ -35,6 +39,7 @@
       // Màn 2 - Mảnh 2 (index 3): Áo lót trong (Đã tối ưu 5 node, gấu cong chữ U 116px)
       id: 'shirt', name: 'Áo lót trong', winThreshold: 0.95, tier: 'medium', free: [0, 2, 3, 4],
       pattern: { kind: 'knit', base: '#F4E2B8', deep: '#EBCF90', accent: '#C9A35E' },
+      fabric: { mat: 'knit', base: '#FFF8EB', light: '#FFFFFF', dark: '#EEDDC0' },
       types: ['s', 's', 's', 'c', 'c'],
       ring: [0, 1, 2, 3, 4], inner: [], locked: [1],
       sol:   [[0.34, 0.06], [0.50, 0.20], [0.66, 0.06], [0.66, 0.84], [0.34, 0.84]],
@@ -44,6 +49,7 @@
       // Màn 2 - Mảnh 3 (index 4): Cổ áo
       id: 'collar', name: 'Cổ áo', winThreshold: 0.95, tier: 'medium', free: [1, 2, 3, 5],
       pattern: { kind: 'rib', base: '#6F9C98', deep: '#557F7B', accent: '#94BCB7' },
+      fabric: { mat: 'rib', base: '#3CB867', light: '#6DD990', dark: '#24954B' },
       types: ['s', 's', 's', 's', 's', 's'],
       ring: [0, 1, 2, 3, 4, 5], inner: [], locked: [0, 4],
       sol:   [[0.20, 0.10], [0.36, 0.10], [0.50, 0.46], [0.64, 0.10], [0.80, 0.10], [0.50, 0.72]],
@@ -53,6 +59,7 @@
       // Màn 3 - Mảnh 1 (index 5): Trái tim gấp đôi
       id: 'heart', name: 'Trái tim gấp đôi', winThreshold: 0.94, tier: 'easy', free: [1, 2, 3],
       pattern: { kind: 'dots', base: '#F2D7C9', deep: '#E6BFAE', accent: '#E3A6A1' },
+      fabric: { mat: 'felt', base: '#FF5E7E', light: '#FFA3B8', dark: '#D9385C' },
       types: ['s', 'c', 'c', 's'],
       ring: [0, 1, 2, 3], inner: [], locked: [],
       fold: { solX: 0.50, startX: 0.42, chains: [[0, 3]] },
@@ -63,6 +70,7 @@
       // Màn 3 - Mảnh 2 (index 6): Trái tim khoét lỗ
       id: 'heartHole', name: 'Trái tim khoét lỗ', winThreshold: 0.94, tier: 'easy', free: [2, 3, 5],
       pattern: { kind: 'gingham', base: '#E3A6A1', deep: '#D48E89', accent: '#FFFFFF' },
+      fabric: { mat: 'felt', base: '#FFB8C6', light: '#FFDCE4', dark: '#E898A8' },
       types: ['s', 'c', 'c', 's', 's', 'c', 'c', 's'],
       ring: [0, 1, 2, 3, 4, 5, 6, 7], inner: [], locked: [0, 1, 4, 6, 7],
       fold: { solX: 0.50, startX: 0.40, chains: [[0, 3], [4, 7]] },
@@ -73,6 +81,7 @@
       // Màn 4 - Mảnh 1 (index 7): Đôi tai thỏ
       id: 'bunny_ears', name: 'Đôi tai thỏ', winThreshold: 0.95, tier: 'medium', free: [1, 2, 3, 7, 8, 9], bendFree: [2, 7],
       pattern: { kind: 'knit', base: '#FFF5EB', deep: '#FCEADE', accent: '#F3D5C8' },
+      fabric: { mat: 'felt', base: '#FFFDFC', light: '#FFFFFF', dark: '#E8DFD5' },
       types: ['c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c'],
       ring: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], inner: [], locked: [0, 4, 5, 6, 10],
       sol: [
@@ -90,6 +99,7 @@
       // Màn 4 - Mảnh 2 (index 8): Mặt thỏ
       id: 'bunny_head', name: 'Mặt thỏ', winThreshold: 0.95, tier: 'medium', free: [0, 2, 4, 5, 7, 8], bendFree: [4, 7],
       pattern: { kind: 'dots', base: '#FFF8F0', deep: '#FDF0E4', accent: '#F9DFD0' },
+      fabric: { mat: 'felt', base: '#FFFDFC', light: '#FFFFFF', dark: '#E8DFD5' },
       types: ['c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c'],
       ring: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], inner: [], locked: [1, 3, 6, 9],
       sol: [
@@ -105,6 +115,7 @@
       // Màn 4 - Mảnh 3 (index 9): Chiếc nơ
       id: 'bunny_bow', name: 'Chiếc nơ', winThreshold: 0.95, tier: 'medium', free: [0, 2, 3, 5], bendFree: [2, 5],
       pattern: { kind: 'gingham', base: '#E89B96', deep: '#D97B75', accent: '#FFF8F2' },
+      fabric: { mat: 'felt', base: '#FF5A72', light: '#FF8E9F', dark: '#D9324C' },
       types: ['c', 'c', 'c', 'c', 'c', 'c'],
       ring: [0, 1, 2, 3, 4, 5], inner: [], locked: [1, 4],
       sol: [
@@ -120,6 +131,7 @@
       // Màn 5 - Mảnh 1 (index 10): Bông hoa gấp đôi
       id: 'flower_bloom', name: 'Bông hoa gấp đôi', winThreshold: 0.96, tier: 'hard', free: [1, 2, 4, 5, 6, 7, 8], bendFree: [1, 4],
       pattern: { kind: 'dots', base: '#F8869E', deep: '#E96884', accent: '#FFD4DF' },
+      fabric: { mat: 'felt', base: '#FF6E82', light: '#FFA0B0', dark: '#D84B60' },
       types: ['c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c'],
       ring: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], inner: [], locked: [0, 3, 9],
       fold: { solX: 0.50, startX: 0.35, chains: [[0, 9]] },
@@ -149,6 +161,7 @@
       id: 'flower_leaves', name: 'Đôi lá đối xứng', winThreshold: 0.96, tier: 'hard', free: [0, 1, 2, 3], bendFree: [1, 3], keepStart: true,
       solBendOverride: { 1: 0.16, 3: -0.16 },
       pattern: { kind: 'stripes', base: '#60B872', deep: '#469958', accent: '#A8E0B4' },
+      fabric: { mat: 'felt', base: '#58C774', light: '#88E59E', dark: '#38A854' },
       types: ['c', 'c', 'c', 'c'],
       ring: [0, 1, 2, 3], inner: [], locked: [],
       sol: [
@@ -168,6 +181,7 @@
       // Màn 5 - Mảnh 3 (index 12): Chậu hoa đất nung (8 node: 6 node vành miệng + 2 node đáy chậu)
       id: 'flower_pot', name: 'Chậu hoa', winThreshold: 0.96, tier: 'hard', free: [1, 2, 4, 5, 6, 7], bendFree: [4],
       pattern: { kind: 'rib', base: '#F28A62', deep: '#DF7148', accent: '#FAD0BC' },
+      fabric: { mat: 'felt', base: '#E87D48', light: '#FFA272', dark: '#C25D28' },
       types: ['s', 's', 's', 's', 'c', 'c', 's', 's'],
       ring: [0, 1, 2, 3, 4, 5, 6, 7], inner: [], locked: [0, 3],
       sol: [
@@ -180,6 +194,28 @@
         [0.84, 0.72], [0.22, 0.90],
         [0.14, 0.52], [0.08, 0.46]
       ]
+    },
+    {
+      // Màn 6 (index 13): Dâu tây, một mảnh, thử phong cách tranh tô màu (viền đen dày, mảng màu phẳng chuyển sắc nhẹ,
+      // vệt bóng sáng). Hình tự thiết kế, không lấy art của game khác. Chỉ có ở web-demo, chưa chốt.
+      id: 'strawberry', name: 'Dâu tây', winThreshold: 0.94, tier: 'easy', free: [1, 2, 3],
+      pattern: { kind: 'dots', base: '#F2404F', deep: '#C42335', accent: '#FFD54A' },
+      fabric: { mat: 'flat', base: '#F2404F', light: '#FF8088', dark: '#C42335', line: '#2A2326' },
+      types: ['c', 'c', 'c', 'c', 'c'],
+      ring: [0, 1, 2, 3, 4], inner: [], locked: [0, 4],
+      sol:   [[0.28, 0.24], [0.72, 0.24], [0.86, 0.48], [0.50, 0.90], [0.14, 0.48]],
+      start: [[0.28, 0.24], [0.62, 0.40], [0.74, 0.70], [0.40, 0.76], [0.14, 0.48]]
+    },
+    {
+      // Màn 7 (index 14): Củ cà rốt, một mảnh, chuyển thể từ art Color Page (thân củ cam tươi, 2 tai lá xanh, viền đen)
+      id: 'carrot', name: 'Củ cà rốt', winThreshold: 0.94, tier: 'easy', free: [1, 3], bendFree: [2, 3],
+      solBendOverride: { 2: -0.16, 3: -0.16 },
+      pattern: { kind: 'stripes', base: '#F87838', deep: '#D85810', accent: '#FFA868' },
+      fabric: { mat: 'flat', base: '#F87838', light: '#FFA868', dark: '#D85810', line: '#261E1A' },
+      types: ['c', 'c', 'c', 'c'],
+      ring: [0, 1, 2, 3], inner: [], locked: [0, 2],
+      sol:   [[0.30, 0.24], [0.50, 0.27], [0.70, 0.24], [0.50, 0.90]],
+      start: [[0.30, 0.24], [0.50, 0.38], [0.70, 0.24], [0.50, 0.76]]
     }
   ];
   // Sản phẩm: các mảnh theo thứ tự chơi; order = thứ tự vẽ ở màn thưởng (sau cùng nằm trên);
@@ -195,7 +231,11 @@
     { id: 'bunny', label: 'Màn 4', levels: [7, 8, 9], order: [7, 8, 9], seams: [[8, 0, 2], [9, 0, 2]],
       place: { 7: [92.5, 244, 205], 8: [70.0, 294, 250], 9: [142.5, 456, 105] } },
     { id: 'flowerpot', label: 'Màn 5', levels: [10, 11, 12], order: [11, 12, 10], seams: [[11, 0, 0], [12, 0, 2], [10, 0, 0]],
-      place: { 10: [98, 224, 194], 11: [99, 326, 192], 12: [115, 404, 160] } }
+      place: { 10: [98, 224, 194], 11: [99, 326, 192], 12: [115, 404, 160] } },
+    { id: 'strawberry', label: 'Màn 6', standalone: true, levels: [13], order: [13], seams: [[13, 0, 0]],
+      place: { 13: [70, 262, 250] } },
+    { id: 'carrot', label: 'Màn 7', standalone: true, levels: [14], order: [14], seams: [[14, 0, 0]],
+      place: { 14: [70, 262, 250] } }
   ];
   if (typeof module !== 'undefined' && module.exports) module.exports = { LEVELS: LEVELS, PRODUCTS: PRODUCTS };
   else { root.LEVELS = LEVELS; root.PRODUCTS = PRODUCTS; }

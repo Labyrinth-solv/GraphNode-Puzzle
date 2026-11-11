@@ -1,6 +1,6 @@
-// Test lời giải thay thế trên Prototype/web-v2 (đặt node vào chốt theo thứ tự xoay/soi gương)
+// Test lời giải thay thế trên Prototype/web-demo (đặt node vào chốt theo thứ tự xoay/soi gương)
 const fs = require('fs'), path = require('path'), vm = require('vm');
-const dir = __dirname;
+const dir = fs.existsSync(path.join(__dirname, 'web')) ? path.join(__dirname, 'web') : __dirname;
 const texts = new Set();
 const ctxProxy = new Proxy({}, {
   get: (t, k) => {
