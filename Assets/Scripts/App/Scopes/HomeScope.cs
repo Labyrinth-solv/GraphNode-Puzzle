@@ -13,7 +13,7 @@ namespace GraphNode.App.Scopes
         [Tooltip("Bản thử M2: tự vào màn này khi tới Home (để trống thì không tự vào). Bỏ khi Home có giao diện.")]
         [SerializeField] private string devAutoStartLevel = "";
         [Tooltip("Dùng khi bấm Play thẳng từ Home trong Editor (phạm vi App chưa có)")]
-        [SerializeField] private GraphNode.Services.Audio.AudioLibrary audioLibrary;
+        [SerializeField] private Bootstrap.AppAssets appAssets;
 
         /// <summary>Test luồng scene tắt việc tự vào màn để tự điều khiển.</summary>
         public static bool SuppressDevAutoStart { get; set; }
@@ -22,7 +22,7 @@ namespace GraphNode.App.Scopes
 
         private void Awake()
         {
-            _app = AppScope.EnsureCreated(audioLibrary);
+            _app = AppScope.EnsureCreated(appAssets);
         }
 
         private void Start()

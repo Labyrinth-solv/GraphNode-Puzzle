@@ -19,12 +19,16 @@ namespace GraphNode.App.Scopes
         [SerializeField] private LevelCatalog catalog;
         [SerializeField] private FabricCatalog fabrics;
         [Tooltip("Dùng khi bấm Play thẳng từ Gameplay trong Editor (phạm vi App chưa có)")]
-        [SerializeField] private GraphNode.Services.Audio.AudioLibrary audioLibrary;
+        [SerializeField] private Bootstrap.AppAssets appAssets;
         [SerializeField] private GameplayBalanceConfig balance;
         [SerializeField] private InputConfig input;
         [SerializeField] private PuzzleController controller;
         [Tooltip("Level dùng khi mở thẳng scene Gameplay trong Editor (không có LevelRequest)")]
         [SerializeField] private string editorFallbackLevel = "scoop";
+        [Tooltip("Số gợi ý khi LevelRequest không mang booster (chưa có Meta). Số tạm cho bản thử.")]
+        [SerializeField] private int devHints = 3;
+        [Tooltip("Số ô trong hàng Bộ vải ghép khi chưa có ProductDefinition. Số tạm: viên kem thuộc sản phẩm 2 mảnh.")]
+        [SerializeField] private int devPieceSlots = 2;
         [Tooltip("Chưa có Home: chuỗi thắng xong thì chờ ngần này rồi chơi lại màn này")]
         [SerializeField] private float replayDelaySeconds = 0.5f;
 
@@ -36,7 +40,7 @@ namespace GraphNode.App.Scopes
 
         private void Awake()
         {
-            _app = AppScope.EnsureCreated(audioLibrary);
+            _app = AppScope.EnsureCreated(appAssets);
             Request = _app.Flow.CurrentRequest;
             _startTime = Time.realtimeSinceStartup;
             if (Request == null)
@@ -61,7 +65,9 @@ namespace GraphNode.App.Scopes
             if (fabrics == null || !fabrics.TryGet(fabricId, out fabric))
                 Log.Warn($"[Gameplay] fabric '{fabricId}' is not in the fabric catalog");
             State = new PuzzleState(level, balance.ToPuzzleConfig());
-            controller.Begin(State, input, balance.RunnerSpeed, balance.WinSequence, OnWon, _app.Audio, fabric, info.SlotIndex);
+            int hints = Request.Boosters.TryGetValue(HintBooster, out int owned) ? owned : devHints;
+            controller.Begin(State, input, balance.RunnerSpeed, balance.WinSequence, OnWon, _app.Audio, _app.Localizer,
+                fabric, info.SlotIndex, devPieceSlots, hints);
             Log.Info($"[Gameplay] level {Request.LevelId}");
         }
 
@@ -86,9 +92,10 @@ namespace GraphNode.App.Scopes
         {
             if (Request == null) return;
             var stats = new LevelStats(Time.realtimeSinceStartup - _startTime, 0, 0, 0, 0);
-            _app.Bus.Publish(new LevelResult(Request.LevelId, Request.FabricId, outcome, NoBoosters, stats));
+            var used = new Dictionary<string, int> { [HintBooster] = controller != null ? controller.HintsUsed : 0 };
+            _app.Bus.Publish(new LevelResult(Request.LevelId, Request.FabricId, outcome, used, stats));
         }
 
-        private static readonly IReadOnlyDictionary<string, int> NoBoosters = new Dictionary<string, int>();
+        private const string HintBooster = "hint";
     }
 }

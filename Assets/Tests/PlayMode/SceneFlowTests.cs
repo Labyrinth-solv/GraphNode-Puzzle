@@ -53,12 +53,7 @@ namespace GraphNode.Tests.PlayMode
             }
         }
 
-        [TearDown]
-        public void DestroyAppScope()
-        {
-            HomeScope.SuppressDevAutoStart = false;
-            var host = Object.FindObjectOfType<AppScopeHost>();
-            if (host != null) Object.Destroy(host.gameObject);
-        }
+        [UnityTearDown]
+        public IEnumerator TearDown() => PlayModeCleanup.Run();
     }
 }

@@ -17,10 +17,31 @@ namespace GraphNode.Gameplay.View
 
         public Mesh Mesh { get; }
 
+        // bảng tra 256 mức để đổi màu mỗi khung không tốn pow
+        private static byte[] _srgbToLinear;
+        private static byte[] SrgbToLinear
+        {
+            get
+            {
+                if (_srgbToLinear != null) return _srgbToLinear;
+                var t = new byte[256];
+                for (int i = 0; i < 256; i++) t[i] = (byte)Mathf.RoundToInt(Mathf.GammaToLinearSpace(i / 255f) * 255f);
+                return _srgbToLinear = t;
+            }
+        }
+
         public StrokeMesh(string name)
         {
             Mesh = new Mesh { name = name };
             Mesh.MarkDynamic();
+        }
+
+        /// <summary>Gắn mesh động vào MeshFilter đã dựng sẵn trong prefab (renderer, material, thứ tự vẽ đặt trong Editor).</summary>
+        public static StrokeMesh Attach(MeshFilter filter)
+        {
+            var stroke = new StrokeMesh(filter.name);
+            filter.sharedMesh = stroke.Mesh;
+            return stroke;
         }
 
         public void Clear()
@@ -90,6 +111,30 @@ namespace GraphNode.Gameplay.View
             }
         }
 
+        /// <summary>Nét đứt dọc một đường mở (không nối điểm cuối về điểm đầu).</summary>
+        public void AddDashedOpen(List<Vector3> points, Color32 color, float width, float dash, float gap)
+        {
+            int n = points.Count;
+            float half = width * 0.5f, pos = 0f, period = dash + gap;
+            for (int i = 0; i + 1 < n; i++)
+            {
+                Vector3 a = points[i], b = points[i + 1];
+                float segLen = Vector3.Distance(a, b);
+                if (segLen < 1e-5f) continue;
+                Vector3 dir = (b - a) / segLen;
+                Vector3 nrm = new Vector3(-dir.y, dir.x, 0f) * half;
+                float t = 0f;
+                while (t < segLen)
+                {
+                    float phase = pos % period;
+                    float run = phase < dash ? Mathf.Min(dash - phase, segLen - t) : Mathf.Min(period - phase, segLen - t);
+                    if (phase < dash) AddQuad(a + dir * t, a + dir * (t + run), nrm, color);
+                    t += run;
+                    pos += run;
+                }
+            }
+        }
+
         private void AddQuad(Vector3 p0, Vector3 p1, Vector3 nrm, Color32 color)
         {
             int i = _vertices.Count;
@@ -113,6 +158,17 @@ namespace GraphNode.Gameplay.View
 
         public void Apply()
         {
+            // dự án ở Linear color space: SpriteRenderer tự đổi màu sRGB sang tuyến tính, còn màu đỉnh mesh thì không,
+            // nên phải đổi ở đây, nếu không mọi nét chỉ và viền mẫu nhạt hẳn so với bản web
+            if (QualitySettings.activeColorSpace == ColorSpace.Linear)
+            {
+                var lut = SrgbToLinear;
+                for (int i = 0; i < _colors.Count; i++)
+                {
+                    var c = _colors[i];
+                    _colors[i] = new Color32(lut[c.r], lut[c.g], lut[c.b], c.a);
+                }
+            }
             Mesh.Clear();
             Mesh.SetVertices(_vertices);
             Mesh.SetColors(_colors);

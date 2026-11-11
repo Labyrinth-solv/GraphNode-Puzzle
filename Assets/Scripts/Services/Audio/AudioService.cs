@@ -62,6 +62,8 @@ namespace GraphNode.Services.Audio
         private void Play(AudioClip clip, float volume)
         {
             var v = _voices[_next];
+            // nguồn âm bị hủy cùng phạm vi App (thoát game, test dọn dẹp) mà một scene còn gọi trong khung cuối: bỏ qua
+            if (v == null) return;
             _next = (_next + 1) % _voices.Length;
             v.Stop();
             v.clip = clip;

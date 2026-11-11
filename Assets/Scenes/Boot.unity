@@ -279,7 +279,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dea3302e9e8ca624493cd213e4731faf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  audioLibrary: {fileID: 11400000, guid: 6345e738d18e31c4c9f2a72a199ce807, type: 2}
+  appAssets: {fileID: 11400000, guid: e4f64f23042422b479cee6b0bfe5df68, type: 2}
 --- !u!4 &956722952
 Transform:
   m_ObjectHideFlags: 0

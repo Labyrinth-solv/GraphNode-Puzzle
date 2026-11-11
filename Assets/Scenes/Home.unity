@@ -152,7 +152,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   devAutoStartLevel: scoop
-  audioLibrary: {fileID: 11400000, guid: 6345e738d18e31c4c9f2a72a199ce807, type: 2}
+  appAssets: {fileID: 11400000, guid: e4f64f23042422b479cee6b0bfe5df68, type: 2}
 --- !u!4 &1129590888
 Transform:
   m_ObjectHideFlags: 0

@@ -4,29 +4,37 @@ using UnityEngine;
 namespace GraphNode.Gameplay.View
 {
     /// <summary>
-    /// Miếng vải vừa cắt trong chuỗi thắng (theo bản web chính): lỗ hổng để lại trên khung vải, miếng vải nhấc lên lắc nhẹ,
-    /// màu loang từ dưới lên theo phong cách tranh tô màu (chuyển sắc tròn sáng trên trái, nền, tối dưới phải, viền mực),
-    /// rồi bay vào ô trong hàng Bộ vải ghép. Mesh và texture dựng một lần lúc bắt đầu nhấc.
+    /// Miếng vải vừa cắt trong chuỗi thắng (theo bản web chính): lỗ để lại trên khung vải, miếng vải nhấc lên lắc nhẹ, màu
+    /// loang từ dưới lên theo phong cách tranh tô màu, rồi bay vào ô trong hàng Bộ vải ghép. Đối tượng và renderer nằm
+    /// trong prefab Piece và lớp Hole của PuzzleBoard; lớp này chỉ đổ hình và màu vào.
     /// </summary>
     public sealed class PieceView
     {
         private const int TexSize = 128;
         private const float OutlineWidth = 4.2f;
+        /// <summary>Lúc bay về ô, mảnh vẽ đè lên HUD Canvas.</summary>
+        private const int AboveHudOrder = 40;
 
+        private readonly PieceRig _rig;
         private readonly Transform _piece;
-        private readonly MeshRenderer _shadow, _colorRenderer;
+        private readonly MeshRenderer _shadow;
+        private readonly MeshRenderer[] _renderers;
+        private readonly int[] _baseOrders;
         private readonly Texture2D _texture;
         private readonly Color32[] _gradient;
         private readonly Color32[] _pixels;
         private readonly Vector3 _center;
         private readonly float _maxDim;
         private readonly List<Object> _owned = new List<Object>();
+        private bool _aboveHud;
 
         /// <param name="outline">Viền lời giải (toạ độ scene, khép kín, không lặp điểm đầu).</param>
         /// <param name="triangles">Tam giác hóa sẵn của viền.</param>
-        public PieceView(Transform parent, Material material, List<Vector3> outline, List<int> triangles,
-            Color baseColor, Color light, Color dark, Color line, Color hole, Color thread, int order)
+        public PieceView(PieceRig rig, MeshFilter hole, List<Vector3> outline, List<int> triangles,
+            Color baseColor, Color light, Color dark, Color line, Color holeColor, Color thread)
         {
+            _rig = rig;
+            _piece = rig.transform;
             float minX = float.MaxValue, minY = float.MaxValue, maxX = float.MinValue, maxY = float.MinValue;
             foreach (var p in outline)
             {
@@ -39,14 +47,13 @@ namespace GraphNode.Gameplay.View
 
             // lỗ trên khung vải: màu lỗ và viền chỉ nét đứt, nằm yên chỗ cũ
             var holeMesh = new StrokeMesh("Hole");
-            holeMesh.AddTriangles(outline, triangles, hole);
+            holeMesh.AddTriangles(outline, triangles, holeColor);
             holeMesh.AddDashedLoop(outline, thread, 1.6f, 5f, 4f);
             holeMesh.Apply();
-            Track(holeMesh.Mesh);
-            Make("Hole", parent, holeMesh.Mesh, material, order).transform.position = Vector3.zero;
+            Own(holeMesh.Mesh);
+            hole.sharedMesh = holeMesh.Mesh;
+            hole.GetComponent<MeshRenderer>().enabled = true;
 
-            _piece = new GameObject("Piece").transform;
-            _piece.SetParent(parent, false);
             _piece.position = _center;
             var local = new List<Vector3>(outline.Count);
             foreach (var p in outline) local.Add(p - _center);
@@ -54,15 +61,13 @@ namespace GraphNode.Gameplay.View
             var shadowMesh = new StrokeMesh("PieceShadow");
             shadowMesh.AddTriangles(local, triangles, new Color(0.29f, 0.23f, 0.21f, 0.18f));
             shadowMesh.Apply();
-            Track(shadowMesh.Mesh);
-            _shadow = Make("Shadow", _piece, shadowMesh.Mesh, material, order + 1);
-            _shadow.transform.localPosition = new Vector3(0f, -7f, 0f);
+            rig.Shadow.sharedMesh = Own(shadowMesh.Mesh);
+            _shadow = rig.Shadow.GetComponent<MeshRenderer>();
 
             var cream = new StrokeMesh("PieceCream");
             cream.AddTriangles(local, triangles, new Color32(0xFF, 0xF7, 0xE8, 0xFF));
             cream.Apply();
-            Track(cream.Mesh);
-            Make("Cream", _piece, cream.Mesh, material, order + 2);
+            rig.Cream.sharedMesh = Own(cream.Mesh);
 
             // lớp màu: texture chuyển sắc trải theo khung bao của mảnh; lộ dần từ dưới lên bằng kênh alpha
             var colorMesh = new Mesh { name = "PieceColor" };
@@ -74,15 +79,14 @@ namespace GraphNode.Gameplay.View
             colorMesh.SetUVs(0, uv);
             colorMesh.SetColors(white);
             colorMesh.SetTriangles(triangles, 0);
-            Track(colorMesh);
-            _colorRenderer = Make("Color", _piece, colorMesh, material, order + 3);
+            rig.Color.sharedMesh = Own(colorMesh);
             _texture = new Texture2D(TexSize, TexSize, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear };
-            Track(_texture);
+            Own(_texture);
             _gradient = BuildGradient(w, h, light, baseColor, dark);
             _pixels = new Color32[_gradient.Length];
             var block = new MaterialPropertyBlock();
             block.SetTexture("_MainTex", _texture);
-            _colorRenderer.SetPropertyBlock(block);
+            rig.Color.GetComponent<MeshRenderer>().SetPropertyBlock(block);
             SetFill(0f);
 
             var outlineMesh = new StrokeMesh("PieceOutline");
@@ -90,8 +94,12 @@ namespace GraphNode.Gameplay.View
             for (int i = 0; i < local.Count; i++) colors.Add(line);
             outlineMesh.AddPolyline(local, colors, OutlineWidth, true);
             outlineMesh.Apply();
-            Track(outlineMesh.Mesh);
-            Make("Outline", _piece, outlineMesh.Mesh, material, order + 4);
+            rig.Outline.sharedMesh = Own(outlineMesh.Mesh);
+
+            _renderers = rig.GetComponentsInChildren<MeshRenderer>(true);
+            _baseOrders = new int[_renderers.Length];
+            for (int i = 0; i < _renderers.Length; i++) _baseOrders[i] = _renderers[i].sortingOrder;
+            rig.gameObject.SetActive(true);
         }
 
         /// <summary>Nhấc: lên 12 pt, to 1,04 lần, lắc nhẹ quanh tâm (độ nhấc lift 0–1, góc lắc theo radian).</summary>
@@ -123,9 +131,14 @@ namespace GraphNode.Gameplay.View
             _texture.Apply(false);
         }
 
-        /// <summary>Bay vào ô: từ chỗ nhấc tới tâm ô, theo cung vồng 70 pt, nhỏ dần cho vừa ô cỡ fitSize pt.</summary>
+        /// <summary>Bay vào ô: từ chỗ nhấc tới tâm ô, theo cung vồng 70 pt, nhỏ dần cho vừa ô cỡ fitSize; vẽ đè lên HUD.</summary>
         public void SetFly(float u, Vector3 slotCenter, float fitSize)
         {
+            if (!_aboveHud)
+            {
+                _aboveHud = true;
+                for (int i = 0; i < _renderers.Length; i++) _renderers[i].sortingOrder = _baseOrders[i] + AboveHudOrder;
+            }
             var from = _center + new Vector3(0f, 12f, 0f);
             _piece.position = Vector3.Lerp(from, slotCenter, u) + new Vector3(0f, 70f * Mathf.Sin(Mathf.PI * u), 0f);
             _piece.localScale = Vector3.one * Mathf.Lerp(1.04f, fitSize / _maxDim, u);
@@ -155,17 +168,10 @@ namespace GraphNode.Gameplay.View
             return px;
         }
 
-        private MeshRenderer Make(string name, Transform parent, Mesh mesh, Material material, int order)
+        private T Own<T>(T o) where T : Object
         {
-            var go = new GameObject(name);
-            go.transform.SetParent(parent, false);
-            go.AddComponent<MeshFilter>().sharedMesh = mesh;
-            var mr = go.AddComponent<MeshRenderer>();
-            mr.sharedMaterial = material;
-            mr.sortingOrder = order;
-            return mr;
+            _owned.Add(o);
+            return o;
         }
-
-        private void Track(Object o) => _owned.Add(o);
     }
 }

@@ -6,7 +6,10 @@
         "GraphNode.Core",
         "GraphNode.Data",
         "GraphNode.Foundation",
-        "GraphNode.Services"
+        "GraphNode.Services",
+        "GraphNode.Gameplay",
+        "GraphNode.UI",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [
         "Editor"

@@ -64,12 +64,7 @@ namespace GraphNode.Tests.PlayMode
             Assert.Greater(took, 1.5f, $"sequence took {took:0.00}s");
         });
 
-        [TearDown]
-        public void TearDown()
-        {
-            HomeScope.SuppressDevAutoStart = false;
-            var host = Object.FindObjectOfType<AppScopeHost>();
-            if (host != null) Object.Destroy(host.gameObject);
-        }
+        [UnityTearDown]
+        public IEnumerator TearDown() => PlayModeCleanup.Run();
     }
 }

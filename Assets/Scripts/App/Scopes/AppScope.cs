@@ -3,7 +3,9 @@ using GraphNode.App.Flow;
 using GraphNode.Foundation.Messaging;
 using GraphNode.Foundation.Services;
 using GraphNode.Services;
+using GraphNode.App.Bootstrap;
 using GraphNode.Services.Audio;
+using GraphNode.Services.Localization;
 using UnityEngine;
 
 namespace GraphNode.App.Scopes
@@ -35,15 +37,16 @@ namespace GraphNode.App.Scopes
 
         private readonly AppScopeHost _host;
 
-        private AppScope(AppScopeHost host, AudioLibrary audioLibrary)
+        private AppScope(AppScopeHost host, AppAssets assets)
         {
             _host = host;
             Bus = new MessageBus();
+            var audioLibrary = assets != null ? assets.AudioLibrary : null;
             Audio = audioLibrary != null ? new AudioService(audioLibrary, host.transform) : new NullAudioService();
             Haptics = new NullHaptics();
             Save = new MemorySaveService();
             Analytics = new NullAnalytics();
-            Localizer = new KeyLocalizer();
+            Localizer = assets != null && assets.Strings != null ? new TableLocalizer(assets.Strings) : new KeyLocalizer();
             Clock = new UnityClock();
             Transition = new SceneTransition();
             Flow = new GameFlow(Transition);
@@ -53,15 +56,19 @@ namespace GraphNode.App.Scopes
         /// Dựng phạm vi App nếu chưa có. Boot gọi đầu tiên; Home và Gameplay cũng gọi để bấm Play thẳng từ scene đó
         /// trong Editor vẫn chạy được.
         /// </summary>
-        /// <param name="audioLibrary">Clip âm thanh (scene đầu tiên dựng phạm vi đưa vào); null thì âm thanh im.</param>
-        public static AppScope EnsureCreated(AudioLibrary audioLibrary = null)
+        /// <param name="assets">Clip âm thanh và bảng chuỗi (scene đầu tiên dựng phạm vi đưa vào); null thì âm thanh im và chữ
+        /// hiện khóa.</param>
+        public static AppScope EnsureCreated(AppAssets assets = null)
         {
-            if (Current != null) return Current;
+            // phạm vi cũ đã bị hủy (host là null theo Unity) thì dựng lại, không trả về dịch vụ đã chết
+            if (Current != null && Current._host != null) return Current;
             Application.targetFrameRate = TargetFrameRate;
             var go = new GameObject("[AppScope]");
             Object.DontDestroyOnLoad(go);
             var host = go.AddComponent<AppScopeHost>();
-            Current = new AppScope(host, audioLibrary);
+            // một AudioListener duy nhất sống suốt phiên, để scene nào cũng nghe được mà không trùng listener
+            go.AddComponent<AudioListener>();
+            Current = new AppScope(host, assets);
             return Current;
         }
 

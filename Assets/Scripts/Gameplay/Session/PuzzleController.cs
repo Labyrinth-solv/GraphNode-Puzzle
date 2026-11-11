@@ -8,6 +8,7 @@ using GraphNode.Core.Session;
 using GraphNode.Data.Configs;
 using GraphNode.Data.Definitions;
 using GraphNode.Foundation.Services;
+using GraphNode.Gameplay.Hud;
 using GraphNode.Gameplay.Input;
 using GraphNode.Gameplay.View;
 using UnityEngine;
@@ -24,6 +25,9 @@ namespace GraphNode.Gameplay.Session
         [SerializeField] private PointerInput pointer;
         [SerializeField] private CameraFit cameraFit;
         [SerializeField] private PuzzleView view;
+        [SerializeField] private HudView hud;
+        [Tooltip("Gợi ý hiện trên vải trong khoảng này (giây)")]
+        [SerializeField] private float hintSeconds = 3f;
 
         private enum Grab { None, Node, Edge, Needle }
 
@@ -42,21 +46,33 @@ namespace GraphNode.Gameplay.Session
         private PresentationContext _presentation;
         private IAudioService _audio;
         private int _lastMagnetPin = -1;
+        private float _lastActionTime = -99f, _lastNodeReleaseTime = -99f;
+        /// <summary>Dây kề node vừa cắm lệch đích dưới mức này thì tính là vừa khép khớp viền (web: 2,5%).</summary>
+        private const float ChainedSnapBend = 0.025f;
 
         // tên clip và âm lượng theo bản web (âm lượng tuyệt đối như WebAudio)
         private const string NotePop = "note_pop", PinSnap = "pin_snap", PinSnapLast = "pin_snap_last", PinHover = "pin_hover";
         private const string CurveSnap = "curve_snap", Drop = "drop", LockedTap = "locked_tap", WinChord = "win_chord";
         private const int PentatonicSteps = 5;
 
+        private int _slotIndex;
+        private int _hints;
+
         public PuzzleState State => _state;
+
+        /// <summary>Số gợi ý người chơi đã dùng trong màn (báo trong LevelResult).</summary>
+        public int HintsUsed { get; private set; }
 
         /// <param name="runnerSpeed">Tốc độ điểm sáng, bề rộng vải mỗi giây (cấu hình cân bằng).</param>
         /// <param name="onWon">Gọi khi chuỗi thắng chạy xong.</param>
+        /// <param name="hints">Số booster gợi ý người chơi đang có (từ LevelRequest).</param>
         public void Begin(PuzzleState state, InputConfig input, float runnerSpeed, WinSequenceParams win, Action onWon,
-            IAudioService audio = null, FabricDefinition fabric = null, int slotIndex = 0)
+            IAudioService audio, ILocalizer localizer, FabricDefinition fabric, int slotIndex, int pieceSlots, int hints)
         {
             _audio = audio;
-            if (fabric != null) view.SetPiece(fabric.Base, fabric.Light, fabric.Dark, fabric.Line, slotIndex);
+            _slotIndex = slotIndex;
+            _hints = hints;
+            if (fabric != null) view.SetPiece(fabric.Base, fabric.Light, fabric.Dark, fabric.Line);
             _state = state ?? throw new ArgumentNullException(nameof(state));
             _input = input;
             _win = win;
@@ -66,6 +82,32 @@ namespace GraphNode.Gameplay.Session
             _runner = new RunnerSimulator(state.Topology, state.Shape);
             _runnerRule = new ConstantSpeedRule(runnerSpeed);
             view.Bind(state);
+            if (hud != null)
+            {
+                // hình mẫu nhỏ trên HUD: cùng viền lời giải, đổi sang Vector2
+                var shape = new System.Collections.Generic.List<Vector2>(view.Outline.Count);
+                foreach (var p in view.Outline) shape.Add(p);
+                hud.Bind(localizer, shape, view.OutlineTriangles, fabric != null ? fabric.Base : Color.white, pieceSlots);
+                hud.SetHints(_hints);
+                hud.HintPressed += OnHint;
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (hud != null) hud.HintPressed -= OnHint;
+        }
+
+        private void OnHint()
+        {
+            if (_hints <= 0 || _state.Won || _presentation != null) return;
+            var hint = _state.PickHint();
+            if (hint.Kind == Core.Rules.HintKind.None) return;
+            _hints--;
+            HintsUsed++;
+            hud.SetHints(_hints);
+            view.ShowHint(hint, hintSeconds);
+            _audio?.PlaySfx(WinChord, 0.6f);
         }
 
         private void Update()
@@ -76,9 +118,14 @@ namespace GraphNode.Gameplay.Session
             {
                 // chạm trong chuỗi thắng thì tua nhanh cố định, không tăng thêm
                 if (phase == PointerPhase.Began) _presentation.Speed = _win.FastForward;
-                view.Render(Time.deltaTime, -1);
+                hud?.SetMatch(1f, _state.Level.WinThreshold, Time.deltaTime);
+                view.Render(Time.deltaTime, -1, 1f);
                 return;
             }
+            // chạm trúng HUD (nút Gợi ý…) thì để uGUI xử lý, không bắt node hay dây bên dưới
+            if (phase == PointerPhase.Began && UnityEngine.EventSystems.EventSystem.current != null &&
+                UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+                phase = PointerPhase.None;
             switch (phase)
             {
                 case PointerPhase.Began: OnBegan(); break;
@@ -87,6 +134,7 @@ namespace GraphNode.Gameplay.Session
                 case PointerPhase.Cancelled: OnEnded(true); break;
             }
             if (_presentation != null) return;
+            if (phase != PointerPhase.None) _lastActionTime = Time.time;
             _state.Refresh();
             float dt = Time.deltaTime;
             // điểm sáng chạy đều cả khi đang kéo; dừng khi đã thắng (chuỗi thắng ở M3)
@@ -102,8 +150,16 @@ namespace GraphNode.Gameplay.Session
                     _audio?.PlayNote(NotePop, _state.Topology.RingIndexOf(_passed[i]), vol);
                 }
             }
-            view.Render(dt, _grab == Grab.Node ? _state.DraggingNode : -1);
+            hud?.SetMatch(_state.Score, _state.Level.WinThreshold, dt);
+            view.Render(dt, _grab == Grab.Node ? _state.DraggingNode : -1, hud != null ? hud.BarDisplay : 0f);
             view.RenderRunner(dt, _runner.Edge, _runner.T);
+            view.RenderFeedback(dt, new FeedbackInput
+            {
+                DraggingNode = _grab == Grab.Node,
+                DraggingEdge = _grab == Grab.Edge ? _state.DraggingEdge : -1,
+                SinceAction = Time.time - _lastActionTime,
+                SinceNodeRelease = Time.time - _lastNodeReleaseTime
+            });
         }
 
         private Float2 TouchFabric(Vector2 screen) => FabricLayout.WorldToFabric(_camera.ScreenToWorldPoint(new Vector3(screen.x, screen.y, 0f)));
@@ -168,6 +224,8 @@ namespace GraphNode.Gameplay.Session
         private void OnEnded(bool cancelled)
         {
             ReleaseResult result = default;
+            // cạnh đang kéo phải đọc trước khi thả, vì thả xong lõi xóa nó
+            int edge = _state.DraggingEdge;
             switch (_grab)
             {
                 case Grab.Node: result = _state.EndNodeDrag(cancelled, _moved); break;
@@ -177,13 +235,36 @@ namespace GraphNode.Gameplay.Session
             var grab = _grab;
             _grab = Grab.None;
             _lastMagnetPin = -1;
+            if (grab == Grab.Node) _lastNodeReleaseTime = Time.time;
             if (result.Relabeled) view.Permute(_state.LastPermutation);
             PlayReleaseSound(grab, result);
+            if (grab == Grab.Edge && result.ContourSnap && edge >= 0) view.Zip(edge);
+            if (grab == Grab.Node && result.Snapped) ZipChainedEdges(result.Pin);
             if (result.Won)
             {
                 _audio?.PlaySfx(WinChord);
                 PlayWinAsync().Forget();
             }
+        }
+
+        /// <summary>
+        /// Node vừa cắm vào chốt làm một dây kề nó khớp đúng viền (dây đã đúng độ uốn từ trước): vệt chỉ vàng lóe trên dây đó
+        /// và tiếng gảy, trễ 50 ms sau tiếng chốt như bản web.
+        /// </summary>
+        private void ZipChainedEdges(int pin)
+        {
+            var topo = _state.Topology;
+            int n = topo.RingLength, node = _state.Pins.PinToNode[pin], zipped = 0;
+            if (node < 0) return;
+            for (int k = 0; k < n; k++)
+            {
+                if (topo.RingNode(k) != node && topo.RingNode((k + 1) % n) != node) continue;
+                if (!_state.Pins.TryGetEdgeTarget(k, _state.Positions, _state.FoldLine, out float h)) continue;
+                if (Mathf.Abs(_state.Bends[k] - h) >= ChainedSnapBend) continue;
+                view.Zip(k, 0.05f);
+                zipped++;
+            }
+            if (zipped > 0) _audio?.PlaySfx(CurveSnap);
         }
 
         private void PlayReleaseSound(Grab grab, ReleaseResult result)
@@ -207,7 +288,7 @@ namespace GraphNode.Gameplay.Session
         internal async UniTask PlayWinSequenceAsync()
         {
             if (_presentation != null) return;
-            _presentation = new PresentationContext(view, _win, _audio);
+            _presentation = new PresentationContext(view, _win, _audio, hud, _slotIndex);
             await WinSequence.Default().PlayAsync(_presentation, this.GetCancellationTokenOnDestroy());
             _onWon?.Invoke();
         }

@@ -20,11 +20,17 @@ namespace GraphNode.Gameplay.Presentation
         /// <summary>Có thể null (test, tắt tiếng).</summary>
         public IAudioService Audio { get; }
 
-        public PresentationContext(PuzzleView view, WinSequenceParams parameters, IAudioService audio = null)
+        /// <summary>HUD để lấy vị trí ô mảnh khi bay về; có thể null.</summary>
+        public Hud.HudView Hud { get; }
+        public int SlotIndex { get; }
+
+        public PresentationContext(PuzzleView view, WinSequenceParams parameters, IAudioService audio = null, Hud.HudView hud = null, int slotIndex = 0)
         {
             View = view;
             Params = parameters;
             Audio = audio;
+            Hud = hud;
+            SlotIndex = slotIndex;
         }
 
         /// <summary>Thời gian khung hình đã nhân hệ số tua.</summary>
@@ -129,13 +135,15 @@ namespace GraphNode.Gameplay.Presentation
     {
         public async UniTask PlayAsync(PresentationContext c, CancellationToken ct)
         {
+            // không có HUD hay không có ô (test, sản phẩm một mảnh chưa có ô) thì bỏ bước bay
+            if (c.Hud == null || !c.Hud.TryGetSlot(c.SlotIndex, out var slot, out float size)) return;
             float d = c.Params.FlySeconds;
             for (float t = 0f; t < d; t += c.Delta)
             {
-                c.View.SetFly(Easing.InOut(t / d));
+                c.View.SetFly(Easing.InOut(t / d), slot, size);
                 await UniTask.Yield(PlayerLoopTiming.Update, ct);
             }
-            c.View.SetFly(1f);
+            c.View.SetFly(1f, slot, size);
         }
     }
 

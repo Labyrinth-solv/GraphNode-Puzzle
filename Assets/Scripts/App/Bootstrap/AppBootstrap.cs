@@ -9,13 +9,13 @@ namespace GraphNode.App.Bootstrap
     /// <summary>Điểm vào của scene Boot: dựng phạm vi App, nạp save rồi sang Home.</summary>
     public sealed class AppBootstrap : MonoBehaviour
     {
-        [SerializeField] private GraphNode.Services.Audio.AudioLibrary audioLibrary;
+        [SerializeField] private AppAssets appAssets;
 
         private void Start() => RunAsync().Forget();
 
         private async UniTaskVoid RunAsync()
         {
-            var app = AppScope.EnsureCreated(audioLibrary);
+            var app = AppScope.EnsureCreated(appAssets);
             // token của phạm vi App: Boot bị hủy khi đổi scene nhưng việc khởi động phải chạy tới hết
             var ct = app.LifetimeToken;
             await app.Save.LoadAsync(ct);
