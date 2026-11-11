@@ -118,17 +118,24 @@ function reward(p) {
   const state = () => sb.window.pressTestState().reward;
   step(8);
   assert(state().phase === 'press' && !state().pressHit && state().reveal === 0, 'màu chưa đổi trước khi khuôn chạm');
+  assert(!sb.window.pressTestState().particles.some(x => x.kind === 'steam'), 'khói chưa xuất hiện trước tiếp xúc');
   step(7);
   assert(state().phase === 'press' && state().pressHit && state().reveal === 1 && state().decor.length > 0, 'màu và chi tiết phải hoàn thiện dưới khuôn');
+  const steamCount = sb.window.pressTestState().particles.filter(x => x.kind === 'steam').length;
+  assert(steamCount === (process.argv.includes('--reduce-motion') ? 8 : 22), 'khói bốc quanh mép ngay khi dập, chỉ phát một lần');
   const details = state().decor.length;
   step(7);
   assert(state().phase === 'press' && !state().pressRelease, 'phải giữ lực trước khi nhấc');
   assert(process.argv.includes('--reduce-motion') ? state().pz === 1 : state().pz < 1, 'nén nhẹ, hoặc đứng yên khi giảm chuyển động');
   step(9);
   assert(state().pressRelease && state().reveal === 1 && state().decor.length === details, 'nhấc khuôn không tô lại màu hoặc bật thêm chi tiết');
-  assert(!sb.window.pressTestState().particles.some(x => x.kind === 'steam'), 'không phun hơi nước');
+  assert(sb.window.pressTestState().particles.filter(x => x.kind === 'steam').length <= steamCount, 'không phát lại khói khi nhấc');
   step(25);
+  assert(state().phase === 'reveal' && state().accentCount > 0, 'dành nhịp hồi mềm và nhấn chi tiết sau khi nhấc');
+  assert(state().reveal === 1 && state().decor.length === details, 'giữ nguyên màu và đủ chi tiết trong lúc hồi');
+  step(30);
   assert(state().phase === 'done' && state().pz === 1, 'thành phẩm ổn định sau khi nhấc');
+  assert(state().sq === 0 && state().accentCount === Math.min(3, details), 'kết thúc nén và đủ nốt nhấn');
   step(60);
 }
 
