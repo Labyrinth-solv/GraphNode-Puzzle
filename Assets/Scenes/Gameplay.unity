@@ -178,6 +178,12 @@ MonoBehaviour:
   nodeLocked: {fileID: 21300000, guid: 74601476632f2c64393514f431b3ed75, type: 3}
   pinEmpty: {fileID: 21300000, guid: 544373f4cbbf9744a8ab9f713386ac78, type: 3}
   pinFilled: {fileID: 21300000, guid: b673eee5fd76d954281e0768adc46ab1, type: 3}
+  slotEmpty: {fileID: 21300000, guid: 07cadf06c16b20449b4e21c83a8dd82c, type: 3}
+  pieceSlots: 2
+  scissorsUp: {fileID: 21300000, guid: b274ec732d9b7f14bb5c222bf92fa7fc, type: 3}
+  scissorsDown: {fileID: 21300000, guid: a686685714019c24bbd7e50d1f687da8, type: 3}
+  scissorsRivet: {fileID: 21300000, guid: 7c96a27095416ed45b0d1d3fa740253f, type: 3}
+  dot: {fileID: 21300000, guid: fc359d39d1991074a87b7e7f8c4be1db, type: 3}
   strokeMaterial: {fileID: 2100000, guid: 04cd41d13f4370642865410357c1d2b8, type: 2}
   thread: {r: 0.7607843, g: 0.6117647, b: 0.5647059, a: 1}
   ink: {r: 0.2901961, g: 0.23137255, b: 0.20784314, a: 1}
@@ -187,6 +193,10 @@ MonoBehaviour:
   barFar: {r: 0.93333334, g: 0.72156864, b: 0.6901961, a: 1}
   barMid: {r: 0.84705883, g: 0.5411765, b: 0.45490196, a: 1}
   barNear: {r: 0.3647059, g: 0.70980394, b: 0.50980395, a: 1}
+  mustard: {r: 0.9137255, g: 0.76862746, b: 0.41568628, a: 1}
+  settleTime: 0.12
+  pulseTime: 0.45
+  snipRate: 3.2
 --- !u!114 &42649024
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -24,6 +24,13 @@ namespace GraphNode.Gameplay.View
         [SerializeField] private Sprite nodeLocked;
         [SerializeField] private Sprite pinEmpty;
         [SerializeField] private Sprite pinFilled;
+        [SerializeField] private Sprite slotEmpty;
+        [Tooltip("Số mảnh của sản phẩm (ô trong hàng Bộ vải ghép). Tạm đặt tay cho tới khi có ProductDefinition; viên kem thuộc sản phẩm 2 mảnh.")]
+        [SerializeField] private int pieceSlots = 2;
+        [SerializeField] private Sprite scissorsUp;
+        [SerializeField] private Sprite scissorsDown;
+        [SerializeField] private Sprite scissorsRivet;
+        [SerializeField] private Sprite dot;
         [Tooltip("Vật liệu cho mesh nét và vùng tô: shader sprite không ánh sáng, dùng màu đỉnh")]
         [SerializeField] private Material strokeMaterial;
 
@@ -37,11 +44,22 @@ namespace GraphNode.Gameplay.View
         [SerializeField] private Color barFar = new Color32(0xEE, 0xB8, 0xB0, 0xFF);
         [SerializeField] private Color barMid = new Color32(0xD8, 0x8A, 0x74, 0xFF);
         [SerializeField] private Color barNear = new Color32(0x5D, 0xB5, 0x82, 0xFF);
+        [SerializeField] private Color mustard = new Color32(0xE9, 0xC4, 0x6A, 0xFF);
+
+        [Header("Chuyển động (số tạm theo bản web)")]
+        [Tooltip("Node thả vào chốt trượt tới chốt trong khoảng này (giây)")]
+        [SerializeField] private float settleTime = 0.12f;
+        [Tooltip("Node điểm sáng vừa qua nảy to 1,3 lần rồi về trong khoảng này (giây)")]
+        [SerializeField] private float pulseTime = 0.45f;
+        [Tooltip("Kéo mở khép mấy nhịp mỗi giây khi đang chơi")]
+        [SerializeField] private float snipRate = 3.2f;
 
         // thứ tự vẽ (sau vẽ đè trước)
         private const int OrderFabric = 0, OrderFill = 1, OrderGhost = 2, OrderPins = 3, OrderThread = 4, OrderNodes = 5, OrderHud = 10;
         private const int EdgeSteps = 24;
-        private const float BarWidth = 170f, BarHeight = 22f, BarX = 186f, BarY = 112f;
+        // thẻ bên phải (người dùng đổi 2026-11-11): hàng mảnh đã ghép ở trên (ô 46 pt từ y = 112), thanh khớp ngay dưới
+        private const float BarWidth = 170f, BarHeight = 22f, BarX = 186f, BarY = 190f;
+        private const float SlotX = 186f, SlotY = 112f, SlotSize = 46f, SlotStep = 58f;
         // dải màu chỉ nhuộm ombre của bản web
         private static readonly Color32[] Yarn =
         {
@@ -62,6 +80,20 @@ namespace GraphNode.Gameplay.View
         private readonly Float2[] _edgeBuffer = new Float2[EdgeSteps + 1];
         private float _barValue;
         private float _clock;
+        // vị trí node đang hiển thị (trượt dần về vị trí logic khi vừa đặt vào chốt) và độ nảy khi điểm sáng đi qua
+        private Vector3[] _shown;
+        private Vector3[] _shownScratch;
+        private float[] _pulse;
+        // đường chạy của điểm sáng: cả vòng (kể cả mép gấp), điểm bắt đầu của từng cạnh, chiều dài cộng dồn
+        private readonly List<Vector3> _runPoints = new List<Vector3>(512);
+        private readonly List<float> _runCum = new List<float>(512);
+        private readonly List<int> _runEdgeStart = new List<int>(32);
+        private float _runTotal;
+        private Transform _runner, _bladeUp, _bladeDown;
+        private SpriteRenderer[] _trail;
+        private float _snipPhase;
+        private const int TrailDots = 7;
+        private const float RunnerSize = 17f;
 
         public void Bind(PuzzleState state)
         {
@@ -80,11 +112,13 @@ namespace GraphNode.Gameplay.View
             _barMarker1 = Sprite("BarMarker1", barMarker, Vector3.zero, OrderHud + 3);
             _barMarker2 = Sprite("BarMarker2", barMarker, Vector3.zero, OrderHud + 3);
             Sprite("BarFrame", barFrame, FabricLayout.LayoutToWorld(BarX + 85f, BarY + 11f), OrderHud + 4);
+            for (int i = 0; i < pieceSlots; i++)
+                Sprite("Slot" + i, slotEmpty, FabricLayout.LayoutToWorld(SlotX + i * SlotStep + SlotSize / 2f, SlotY + SlotSize / 2f), OrderHud + 1);
 
             // hình mẫu (viền lời giải): tô nhạt màu chỉ và nét đứt trên vải; bản nhỏ trong thẻ "Hình mẫu"
             var sol = _state.Level.Solution;
             var outline = new List<Vector3>(256);
-            RingPath(sol, _state.SolutionBends, outline, null);
+            RingPath(sol, _state.SolutionBends, outline, null, null, false);
             var tris = new List<int>();
             PolygonTriangulator.Triangulate(outline, tris);
             _ghost = MeshObject("Ghost", OrderGhost);
@@ -102,7 +136,99 @@ namespace GraphNode.Gameplay.View
             _pins = new SpriteRenderer[n];
             for (int j = 0; j < n; j++) _pins[j] = Sprite("Pin" + j, pinEmpty, FabricLayout.FabricToWorld(sol[j]), OrderPins);
             _nodes = new SpriteRenderer[n];
-            for (int i = 0; i < n; i++) _nodes[i] = Sprite("Node" + i, _state.Level.Locked[i] ? nodeLocked : nodeFree, Vector3.zero, OrderNodes);
+            _shown = new Vector3[n];
+            _shownScratch = new Vector3[n];
+            _pulse = new float[n];
+            for (int i = 0; i < n; i++)
+            {
+                _nodes[i] = Sprite("Node" + i, _state.Level.Locked[i] ? nodeLocked : nodeFree, Vector3.zero, OrderNodes);
+                _shown[i] = FabricLayout.FabricToWorld(_state.Positions[i]);
+            }
+
+            // điểm sáng: vệt chấm vàng phía sau và cây kéo hai nửa xoay quanh đinh tán
+            _trail = new SpriteRenderer[TrailDots];
+            for (int j = 0; j < TrailDots; j++) _trail[j] = Sprite("Trail" + j, dot, Vector3.zero, OrderNodes + 1);
+            _runner = new GameObject("Runner").transform;
+            _runner.SetParent(transform, false);
+            _bladeDown = Sprite("BladeDown", scissorsDown, Vector3.zero, OrderNodes + 2).transform;
+            _bladeUp = Sprite("BladeUp", scissorsUp, Vector3.zero, OrderNodes + 2).transform;
+            var rivet = Sprite("Rivet", scissorsRivet, Vector3.zero, OrderNodes + 3).transform;
+            _bladeDown.SetParent(_runner, false);
+            _bladeUp.SetParent(_runner, false);
+            rivet.SetParent(_runner, false);
+        }
+
+        /// <summary>Node điểm sáng vừa đi qua: nảy to rồi về.</summary>
+        public void Pulse(int node) => _pulse[node] = 1f;
+
+        /// <summary>Lõi vừa đánh số lại theo chốt: đổi chỗ vị trí đang hiển thị theo cùng hoán vị để hình không nhảy.</summary>
+        public void Permute(System.ReadOnlySpan<int> permutation)
+        {
+            for (int i = 0; i < _shown.Length; i++) _shownScratch[permutation[i]] = _shown[i];
+            System.Array.Copy(_shownScratch, _shown, _shown.Length);
+        }
+
+        /// <summary>Vẽ cây kéo tại cạnh vòng runnerEdge, vị trí tỉ lệ runnerT theo chiều dài cạnh.</summary>
+        public void RenderRunner(float dt, int runnerEdge, float runnerT)
+        {
+            RingPath(_state.Positions, _state.Bends, _runPoints, _runCum, _runEdgeStart, true);
+            if (_runPoints.Count < 2) return;
+            _runTotal = _runCum[_runCum.Count - 1] + Vector3.Distance(_runPoints[_runPoints.Count - 1], _runPoints[0]);
+            int n = _state.Topology.RingLength;
+            float a = _runCum[_runEdgeStart[runnerEdge]];
+            float b = runnerEdge + 1 < n ? _runCum[_runEdgeStart[runnerEdge + 1]] : _runTotal;
+            float d = a + runnerT * (b - a);
+            _snipPhase += snipRate * dt;
+
+            var head = RunPointAt(d);
+            var dir = (RunPointAt(d + 0.01f * FabricLayout.FabricSize) - head).normalized;
+            if (dir == Vector3.zero) dir = Vector3.right;
+            float ang = Mathf.Atan2(dir.y, dir.x);
+            float bob = Mathf.Sin(_snipPhase * Mathf.PI * 2f) * 1.2f;
+            var side = new Vector3(-dir.y, dir.x, 0f);
+            // lưỡi kéo kẹp đúng vào đường cắt: đinh tán lùi lại phía sau điểm đang cắt
+            _runner.position = head + side * bob - dir * RunnerSize * 0.45f;
+            _runner.rotation = Quaternion.Euler(0f, 0f, ang * Mathf.Rad2Deg);
+            float th = (0.02f + SnipOpen(_snipPhase) * 0.55f) * Mathf.Rad2Deg;
+            _bladeDown.localRotation = Quaternion.Euler(0f, 0f, th);
+            _bladeUp.localRotation = Quaternion.Euler(0f, 0f, -th);
+
+            for (int j = 0; j < TrailDots; j++)
+            {
+                int k = TrailDots - j; // 7…1, chấm xa nhỏ và nhạt hơn
+                _trail[j].transform.position = RunPointAt(d - k * 0.014f * FabricLayout.FabricSize);
+                _trail[j].transform.localScale = Vector3.one * (1f - k / 9f);
+                _trail[j].color = WithAlpha(mustard, (1f - k / 8f) * 0.8f);
+            }
+        }
+
+        // khép nhanh, mở chậm: mỗi nhịp là một nhát cắt
+        private static float SnipOpen(float phase)
+        {
+            float f = phase - Mathf.Floor(phase);
+            return f < 0.35f ? 1f - EaseInOut(f / 0.35f) : EaseInOut((f - 0.35f) / 0.65f);
+        }
+
+        private static float EaseInOut(float t) => t < 0.5f ? 2f * t * t : 1f - Mathf.Pow(-2f * t + 2f, 2f) / 2f;
+
+        private Vector3 RunPointAt(float d)
+        {
+            float total = _runTotal;
+            d = (d % total + total) % total;
+            int lo = 0, hi = _runCum.Count - 1;
+            if (d >= _runCum[hi])
+            {
+                // đoạn khép vòng: điểm cuối về điểm đầu
+                float seg = Mathf.Max(1e-5f, total - _runCum[hi]);
+                return Vector3.Lerp(_runPoints[hi], _runPoints[0], (d - _runCum[hi]) / seg);
+            }
+            while (lo < hi - 1)
+            {
+                int mid = (lo + hi) >> 1;
+                if (_runCum[mid] <= d) lo = mid; else hi = mid;
+            }
+            float len = Mathf.Max(1e-5f, _runCum[hi] - _runCum[lo]);
+            return Vector3.Lerp(_runPoints[lo], _runPoints[hi], (d - _runCum[lo]) / len);
         }
 
         private void BuildDynamic()
@@ -126,10 +252,15 @@ namespace GraphNode.Gameplay.View
             UpdateFill();
             UpdateThread();
             var pos = _state.Positions;
+            // node đang kéo bám ngón tay; node khác trượt mượt về vị trí logic (vừa đặt vào chốt…)
+            float follow = settleTime > 0f ? 1f - Mathf.Exp(-dt * 3f / settleTime) : 1f;
             for (int i = 0; i < _nodes.Length; i++)
             {
-                _nodes[i].transform.position = FabricLayout.FabricToWorld(pos[i]);
-                _nodes[i].transform.localScale = Vector3.one * (i == draggingNode ? 1.15f : 1f);
+                var target = FabricLayout.FabricToWorld(pos[i]);
+                _shown[i] = i == draggingNode ? target : Vector3.Lerp(_shown[i], target, follow);
+                _pulse[i] = Mathf.Max(0f, _pulse[i] - dt / pulseTime);
+                _nodes[i].transform.position = _shown[i];
+                _nodes[i].transform.localScale = Vector3.one * ((i == draggingNode ? 1.15f : 1f) * (1f + 0.3f * _pulse[i]));
             }
             for (int j = 0; j < _pins.Length; j++) _pins[j].sprite = _state.Pins.PinToNode[j] >= 0 ? pinFilled : pinEmpty;
             UpdateBar(dt);
@@ -158,7 +289,7 @@ namespace GraphNode.Gameplay.View
         private void UpdateThread()
         {
             _thread.Clear();
-            RingPath(_state.Positions, _state.Bends, _points, _cumulative);
+            RingPath(_state.Positions, _state.Bends, _points, _cumulative, null, false);
             float total = _cumulative.Count > 0 ? Mathf.Max(1e-4f, _cumulative[_cumulative.Count - 1]) : 1f;
             float thr = _state.Level.WinThreshold;
             float m = Mathf.Clamp01((_barValue - 0.35f) / 0.65f);
@@ -186,17 +317,24 @@ namespace GraphNode.Gameplay.View
 
         private static float BarValue(float v, float thr) => Mathf.Clamp01((v - 0.5f) / (thr - 0.5f));
 
-        /// <summary>Đường vòng theo các cạnh đang vẽ (bỏ mép gấp), toạ độ scene; kèm chiều dài cộng dồn nếu cần.</summary>
-        private void RingPath(Float2[] pos, System.ReadOnlySpan<float> bends, List<Vector3> outPoints, List<float> cumulative)
+        /// <summary>
+        /// Đường vòng theo các cạnh, toạ độ scene; kèm chiều dài cộng dồn và chỉ số điểm đầu của từng cạnh nếu cần.
+        /// includeFoldEdges = false thì bỏ mép gấp (sợi chỉ, hình mẫu); điểm sáng chạy cả vòng nên lấy đủ.
+        /// </summary>
+        private void RingPath(Float2[] pos, System.ReadOnlySpan<float> bends, List<Vector3> outPoints, List<float> cumulative,
+            List<int> edgeStart, bool includeFoldEdges)
         {
             outPoints.Clear();
             cumulative?.Clear();
+            edgeStart?.Clear();
             var topo = _state.Topology;
             int n = topo.RingLength;
             float acc = 0f;
             for (int k = 0; k < n; k++)
             {
-                if (!topo.InFoldChain(k)) continue;
+                // cạnh sau dùng chung điểm đầu với điểm cuối của cạnh trước
+                edgeStart?.Add(outPoints.Count > 0 ? outPoints.Count - 1 : 0);
+                if (!includeFoldEdges && !topo.InFoldChain(k)) continue;
                 int count = _state.Shape.Sample(pos, bends, topo.RingNode(k), topo.RingNode((k + 1) % n), EdgeSteps, false, _edgeBuffer);
                 for (int s = 0; s < count; s++)
                 {

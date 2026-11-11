@@ -53,7 +53,7 @@ namespace GraphNode.App.Scopes
                 return;
             }
             State = new PuzzleState(level, balance.ToPuzzleConfig());
-            controller.Begin(State, input, OnWon);
+            controller.Begin(State, input, balance.RunnerSpeed, OnWon);
             Log.Info($"[Gameplay] level {Request.LevelId}");
         }
 

@@ -75,8 +75,15 @@ function hudInfo() {
   rr(g, 20, 80, 140, 148, 18); g.fillStyle = C.card; g.fill(); g.lineWidth = 2.2; g.strokeStyle = C.ink; g.stroke();
   text(g, 'Hình mẫu', 90, 101, 13, 700, C.inkSoft, 'center');
   rr(g, 172, 80, 198, 148, 18); g.fillStyle = C.card; g.fill();
-  text(g, 'Độ khớp', 186, 101, 13, 700, C.inkSoft, 'left');
+  // bản Unity (người dùng đổi 2026-11-11): hàng mảnh đã ghép ở trên, thanh khớp ngay dưới
+  text(g, 'Bộ vải ghép', 186, 101, 13, 700, C.inkSoft, 'left');
+  text(g, 'Độ khớp', 186, 176, 13, 700, C.inkSoft, 'left');
   out.hud_info = c;
+  // ô mảnh trong bộ vải ghép (slotRect của web: 46 pt, bo 10, giấy, viền chỉ nét đứt)
+  const [s, h] = mk(48, 48);
+  rr(h, 1, 1, 46, 46, 10); h.fillStyle = C.paper; h.fill();
+  h.setLineDash([4, 3]); h.lineWidth = 1.8; h.strokeStyle = C.thread; h.stroke(); h.setLineDash([]);
+  out.slot_empty = s;
 }
 // 5. Thanh khớp: nền, khung viền (vẽ đè lên phần đổ), và miếng đổ trắng bo 8 để tô màu và kéo dài (9 phần).
 (function () {
@@ -84,6 +91,22 @@ function hudInfo() {
   [c, g] = mk(174, 26); rr(g, 2, 2, 170, 22, 11); g.lineWidth = 2.2; g.strokeStyle = C.ink; g.stroke(); out.bar_frame = c;
   [c, g] = mk(18, 16); rr(g, 0, 0, 18, 16, 8); g.fillStyle = '#FFFFFF'; g.fill(); out.bar_fill = c;
   [c, g] = mk(2, 12); g.fillStyle = rgba(C.ink, 0.3); g.fillRect(0, 0, 2, 12); out.bar_marker = c;
+})();
+// 6. Kéo chạy viền (drawScissors, cỡ 17 pt lúc chơi): hai nửa vẽ riêng, gốc ảnh đúng ở đinh tán để Unity xoay mở khép;
+// đinh tán và chấm vệt đuôi (trắng, Unity tô vàng mù tạt).
+(function () {
+  const size = 17, SC = '#2B211D', W = 34, H = 18;
+  for (const sg of [1, -1]) {
+    const [c, g] = mk(W, H); g.translate(W / 2, H / 2); g.lineJoin = 'round'; g.lineCap = 'round';
+    g.beginPath(); g.ellipse(-size * 0.5, sg * size * 0.2, size * 0.18, size * 0.14, sg * 0.4, 0, 7); g.lineWidth = size * 0.11; g.strokeStyle = SC; g.stroke();
+    g.beginPath(); g.moveTo(-size * 0.34, sg * size * 0.13); g.lineTo(-size * 0.03, 0); g.lineWidth = size * 0.12; g.stroke();
+    g.beginPath(); g.moveTo(-size * 0.06, 0); g.lineTo(size * 0.9, 0); g.quadraticCurveTo(size * 0.38, sg * size * 0.24, -size * 0.06, sg * size * 0.17); g.closePath(); g.fillStyle = SC; g.fill();
+    g.beginPath(); g.moveTo(size * 0.06, sg * size * 0.05); g.lineTo(size * 0.6, sg * size * 0.03); g.lineWidth = 1; g.strokeStyle = 'rgba(255,255,255,0.55)'; g.stroke();
+    // ảnh giữ đúng hình nhìn thấy: sg = 1 nằm dưới trục (half_down), sg = −1 nằm trên trục (half_up)
+    out[sg === 1 ? 'scissors_half_down' : 'scissors_half_up'] = c;
+  }
+  let [c, g] = mk(4, 4); g.beginPath(); g.arc(2, 2, size * 0.09, 0, 7); g.fillStyle = '#B9B2AE'; g.fill(); out.scissors_rivet = c;
+  [c, g] = mk(8, 8); g.beginPath(); g.arc(4, 4, 3.2, 0, 7); g.fillStyle = '#FFFFFF'; g.fill(); out.dot = c;
 })();
 (async function () {
   await document.fonts.load('700 13px "Baloo 2"');

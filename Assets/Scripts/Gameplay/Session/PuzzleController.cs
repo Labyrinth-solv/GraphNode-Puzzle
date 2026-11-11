@@ -1,6 +1,7 @@
 using System;
 using GraphNode.Core.Geometry;
 using GraphNode.Core.Input;
+using GraphNode.Core.Runner;
 using GraphNode.Core.Session;
 using GraphNode.Data.Configs;
 using GraphNode.Gameplay.Input;
@@ -30,16 +31,22 @@ namespace GraphNode.Gameplay.Session
         private Grab _grab;
         private Float2 _grabOffset;
         private bool _moved;
+        private RunnerSimulator _runner;
+        private ConstantSpeedRule _runnerRule;
+        private readonly int[] _passed = new int[16];
 
         public PuzzleState State => _state;
 
-        public void Begin(PuzzleState state, InputConfig input, Action onWon)
+        /// <param name="runnerSpeed">Tốc độ điểm sáng, bề rộng vải mỗi giây (cấu hình cân bằng).</param>
+        public void Begin(PuzzleState state, InputConfig input, float runnerSpeed, Action onWon)
         {
             _state = state ?? throw new ArgumentNullException(nameof(state));
             _input = input;
             _onWon = onWon;
             _camera = cameraFit.GetComponent<Camera>();
             _arbiter = new TouchArbiter(state.Level, state.Topology, state.Shape, input.ToTouchParams(FabricLayout.FabricSize));
+            _runner = new RunnerSimulator(state.Topology, state.Shape);
+            _runnerRule = new ConstantSpeedRule(runnerSpeed);
             view.Bind(state);
         }
 
@@ -54,7 +61,15 @@ namespace GraphNode.Gameplay.Session
                 case PointerPhase.Cancelled: OnEnded(true); break;
             }
             _state.Refresh();
-            view.Render(Time.deltaTime, _grab == Grab.Node ? _state.DraggingNode : -1);
+            float dt = Time.deltaTime;
+            // điểm sáng chạy đều cả khi đang kéo; dừng khi đã thắng (chuỗi thắng ở M3)
+            if (!_state.Won)
+            {
+                int count = _runner.Step(dt, _runnerRule, _grab != Grab.None, _state.Positions, _state.Bends, _passed);
+                for (int i = 0; i < count; i++) view.Pulse(_passed[i]);
+            }
+            view.Render(dt, _grab == Grab.Node ? _state.DraggingNode : -1);
+            view.RenderRunner(dt, _runner.Edge, _runner.T);
         }
 
         private Float2 TouchFabric(Vector2 screen) => FabricLayout.WorldToFabric(_camera.ScreenToWorldPoint(new Vector3(screen.x, screen.y, 0f)));
@@ -118,6 +133,7 @@ namespace GraphNode.Gameplay.Session
                 case Grab.Needle: result = _state.EndNeedleDrag(cancelled, _moved); break;
             }
             _grab = Grab.None;
+            if (result.Relabeled) view.Permute(_state.LastPermutation);
             if (result.Won) _onWon?.Invoke();
         }
     }
