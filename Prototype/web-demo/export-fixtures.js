@@ -6,6 +6,8 @@ const dir = path.join(__dirname, 'web');
 const GN = require(dir + '/core.js');
 const LEVELS = require(dir + '/levels.js').LEVELS;
 const PRODUCTS = require(dir + '/levels.js').PRODUCTS;
+// ghi lại level nào có bendFree do người thiết kế đặt, trước khi startgen tự chọn cho các level còn lại
+const designerBendFree = new Set(LEVELS.filter(l => l.bendFree).map(l => l.id));
 require(dir + '/startgen.js'); // chuẩn bị level và sinh vị trí đầu (start, startBend, bendFree, startIou)
 const out = process.argv[2] || path.join(__dirname, '..', '..', 'Assets', 'Tests', 'EditMode', 'Fixtures', 'WebDemo');
 fs.mkdirSync(out, { recursive: true });
@@ -52,6 +54,8 @@ for (const l of LEVELS) {
   }
   expected.levels[l.id] = {
     solBend: r6a(l.solBend.slice(0, n)), wasCurved: l.wasCurved.slice(0, n),
+    bendFreeByDesigner: designerBendFree.has(l.id), startScore: r6(l.startIou),
+    startLine: l.fold ? l.fold.startX : 0,
     maskAreaSol: count(solM), maskAreaStart: count(startM),
     bendPenaltyStart: r6(GN.bendPenalty(l, l.startBend)),
     scoreSelf: r6(GN.iou(solM, solM) - GN.bendPenalty(l, l.solBend)),

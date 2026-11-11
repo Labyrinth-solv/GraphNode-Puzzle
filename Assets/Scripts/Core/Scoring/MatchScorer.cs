@@ -40,10 +40,17 @@ namespace GraphNode.Core.Scoring
         private readonly BendPenaltyParams _params;
 
         public MatchScorer(LevelModel level, RingTopology topo, SolutionBends solution, BendPenaltyParams parameters)
+            : this(level.BendFree, topo, solution, parameters)
+        {
+        }
+
+        /// <param name="bendFree">Cạnh phải tự uốn; rỗng thì tính trên mọi cạnh cong rõ (trình sinh vị trí đầu dùng khi
+        /// tự chọn bendFree).</param>
+        public MatchScorer(int[] bendFree, RingTopology topo, SolutionBends solution, BendPenaltyParams parameters)
         {
             _solutionBends = solution.Bends;
             _params = parameters;
-            if (level.BendFree.Length > 0) _penaltyEdges = level.BendFree;
+            if (bendFree != null && bendFree.Length > 0) _penaltyEdges = bendFree;
             else
             {
                 int count = 0;
