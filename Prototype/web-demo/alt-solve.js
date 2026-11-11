@@ -1,6 +1,6 @@
 // Test lời giải thay thế trên Prototype/web-demo (đặt node vào chốt theo thứ tự xoay/soi gương)
 const fs = require('fs'), path = require('path'), vm = require('vm');
-const dir = path.join(__dirname, 'web');
+const dir = fs.existsSync(path.join(__dirname, 'web')) ? path.join(__dirname, 'web') : __dirname;
 const texts = new Set();
 const ctxProxy = new Proxy({}, {
   get: (t, k) => {
@@ -145,6 +145,6 @@ function playAlt(id, refl, r) {
   console.log((ok ? '✅ ' : '❌ ') + id + ' ' + (refl ? 'đảo' : 'xoay') + r + ': đánh số lại ' + (relabeled ? 'có' : 'không') + ', pha ' + st.phase + ', khớp ' + (st.iouV * 100).toFixed(1) + '%');
   return ok;
 }
-const cases = [['flower_leaves', 0, 1], ['flower_leaves', 0, 3], ['flower_leaves', 1, 0], ['flower_leaves', 0, 0], ['shirt', 1, 2], ['bunny_bow', 1, 2], ['cone', 1, 1]];
+const cases = [['cone', 1, 1], ['cone', 0, 0], ['cupcake_base', 1, 2], ['cupcake_base', 0, 0], ['cupcake_frosting', 0, 0], ['duck_head', 0, 0], ['duck_waves', 0, 0], ['mushroom_grass', 0, 0]];
 let fail = 0; for (const c of cases) if (!playAlt(...c)) fail++;
 if (fail) { console.log(fail + ' trường hợp không thắng'); process.exit(1); }

@@ -1,0 +1,78 @@
+<title>Cắt Vải Theo Mẫu 2</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap">
+<style>
+  /* Một màn hình game dọc, một bảng màu ấm cố định cho mọi theme. */
+  :root { --bg: #F6EFE3; --ink: #4A3B35; --paper: #FFFDF8; --chip: #F1E1CF; --line: #C29C90; color-scheme: light; }
+  html, body { height: 100%; }
+  body { background: var(--bg); overflow: hidden; overscroll-behavior: none; font-family: "Baloo 2", system-ui, sans-serif; color: var(--ink); }
+  #stage { position: fixed; inset: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); display: flex; align-items: center; justify-content: center; background: var(--bg); }
+  #game { display: block; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; background: var(--bg); }
+  /* công cụ thử: hai nút nhỏ sát đáy màn hình mở bảng sửa ngưỡng và bảng màu vùng tô */
+  #devBar { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 4px); display: flex; gap: 8px; }
+  #devBar button { font: 700 12px/1 "Baloo 2", system-ui, sans-serif; color: var(--ink); background: rgba(241,225,207,0.85); border: 1.5px solid rgba(74,59,53,0.4); border-radius: 12px; padding: 5px 12px; min-height: 26px; cursor: pointer; white-space: nowrap; }
+  #devBar button:focus-visible, .thr-card button:focus-visible, .thr-card input:focus-visible { outline: 3px solid #E9C46A; outline-offset: 2px; }
+  .dev-panel { position: fixed; inset: 0; background: rgba(74,59,53,0.3); display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .dev-panel[hidden] { display: none; }
+  .thr-card { width: min(340px, 100%); max-height: 90vh; overflow: auto; background: var(--paper); border: 2px solid var(--ink); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .thr-card h2 { margin: 0; font-size: 18px; font-weight: 800; }
+  #thrList { display: flex; flex-direction: column; gap: 6px; }
+  .thr-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 15px; font-weight: 600; padding: 4px 0; border-bottom: 1px dashed var(--line); }
+  .thr-in { display: flex; align-items: center; gap: 4px; }
+  .thr-in input { width: 64px; min-height: 36px; font: 700 16px "Baloo 2", system-ui, sans-serif; text-align: right; color: var(--ink); background: #fff; border: 1.5px solid var(--ink); border-radius: 10px; padding: 0 8px; font-variant-numeric: tabular-nums; }
+  .thr-actions { display: flex; gap: 10px; justify-content: flex-end; }
+  .thr-actions button { min-height: 44px; padding: 0 18px; font: 800 15px "Baloo 2", system-ui, sans-serif; border-radius: 12px; border: 2px solid var(--ink); cursor: pointer; }
+  .btn-save { background: var(--ink); color: #fff; }
+  .btn-close { background: var(--chip); color: var(--ink); }
+  .dev-note { min-height: 18px; font-size: 13px; margin: 0; }
+  /* bảng màu vùng tô */
+  .mask-label { font-size: 14px; font-weight: 700; margin: 0; }
+  #maskSwatches { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .swatch { aspect-ratio: 1; min-height: 44px; border-radius: 12px; border: 2px solid rgba(74,59,53,0.35); cursor: pointer; padding: 0; }
+  .swatch[aria-pressed="true"] { border: 3px solid var(--ink); box-shadow: 0 0 0 2px var(--paper) inset; }
+  .mask-custom { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px; font-weight: 600; }
+  .mask-custom input[type=color] { width: 56px; height: 36px; border: 1.5px solid var(--ink); border-radius: 10px; background: #fff; padding: 2px; cursor: pointer; }
+  .mask-range { display: flex; align-items: center; gap: 10px; }
+  .mask-range input { flex: 1; min-height: 36px; accent-color: var(--ink); }
+  #maskPct { min-width: 44px; text-align: right; font-weight: 800; font-variant-numeric: tabular-nums; }
+  #maskPreview { height: 64px; border-radius: 12px; border: 1.5px solid rgba(74,59,53,0.35); background: #F3DED6; position: relative; overflow: hidden; }
+  #maskPreview i { position: absolute; left: 18%; top: 18%; width: 64%; height: 64%; border-radius: 40% 40% 46% 46%; border: 2px dashed #C29C90; }
+  #maskPreview b { position: absolute; left: 18%; top: 18%; width: 64%; height: 64%; border-radius: 40% 40% 46% 46%; }
+</style>
+<div id="stage"><canvas id="game" role="img" aria-label="Màn chơi cắt vải: kéo các điểm để viền cắt khớp hình mảnh vải"></canvas></div>
+<div id="devBar">
+  <button id="thrBtn" type="button">Ngưỡng thắng</button>
+  <button id="maskBtn" type="button">Màu vùng tô</button></div>
+<div id="thrPanel" class="dev-panel" hidden>
+  <div class="thr-card" role="dialog" aria-modal="true" aria-labelledby="thrTitle">
+    <h2 id="thrTitle">Ngưỡng thắng từng hình</h2>
+    <div id="thrList"></div>
+    <p id="thrNote" class="dev-note" aria-live="polite"></p>
+    <div class="thr-actions">
+      <button id="thrReset" class="btn-close" type="button" style="margin-right: auto;">Mặc định Tier</button>
+      <button id="thrClose" class="btn-close" type="button">Đóng</button>
+      <button id="thrSave" class="btn-save" type="button">Lưu</button>
+    </div>
+  </div>
+</div>
+<div id="maskPanel" class="dev-panel" hidden>
+  <div class="thr-card" role="dialog" aria-modal="true" aria-labelledby="maskTitle">
+    <h2 id="maskTitle">Màu vùng tô</h2>
+    <p class="mask-label" id="maskSwLabel">Bảng màu cozy</p>
+    <div id="maskSwatches" role="group" aria-labelledby="maskSwLabel"></div>
+    <label class="mask-custom" for="maskCustom">Màu tự chọn <input id="maskCustom" type="color" value="#E996A0"></label>
+    <p class="mask-label"><label for="maskAlpha">Độ đậm khi kéo</label></p>
+    <div class="mask-range"><input id="maskAlpha" type="range" min="15" max="85" step="1" value="20"><span id="maskPct">20%</span></div>
+    <div id="maskPreview" aria-hidden="true"><b></b><i></i></div>
+    <p id="maskNote" class="dev-note" aria-live="polite"></p>
+    <div class="thr-actions">
+      <button id="maskClose" class="btn-close" type="button">Đóng</button>
+      <button id="maskSave" class="btn-save" type="button">Lưu</button>
+    </div>
+  </div>
+</div>
+<script src="core.js"></script>
+<script src="levels.js"></script>
+<script src="startgen.js"></script>
+<script src="game.js"></script>
+<script src="thresholds.js"></script>
+<script src="mask.js"></script>

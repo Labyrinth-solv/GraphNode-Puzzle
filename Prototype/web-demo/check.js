@@ -1,6 +1,6 @@
 // Kiểm tra hàng loạt dữ liệu màn: ngưỡng, độ khớp ban đầu, độ khớp khi cắm đủ chốt mà chưa uốn dây, độ nhạy, quy chuẩn khoảng cách
 // Chạy: node check.js [thư mục chứa core.js, levels.js, startgen.js]
-const dir = process.argv[2] || require('path').join(__dirname, 'web');
+const dir = process.argv[2] || (require('fs').existsSync(require('path').join(__dirname, 'web')) ? require('path').join(__dirname, 'web') : __dirname);
 const GN = require(dir + '/core.js');
 const LEVELS = require(dir + '/levels.js').LEVELS;
 require(dir + '/startgen.js');
