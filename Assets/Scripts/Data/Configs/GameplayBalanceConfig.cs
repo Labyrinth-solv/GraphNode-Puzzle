@@ -53,7 +53,25 @@ namespace GraphNode.Data.Configs
         [SerializeField] private float cutMinMultiplier = 1.6f;
         [SerializeField] private float cutMaxMultiplier = 2.5f;
 
+        [Header("Chuỗi thắng")]
+        [Tooltip("Snap: mọi node đi cùng tốc độ này (bề rộng vải mỗi giây), xa quá thì cả nhóm nhanh lên")]
+        [SerializeField] private float snapSpeed = 0.4f;
+        [SerializeField] private float snapMinSeconds = 0.2f;
+        [SerializeField] private float snapMaxSeconds = 0.5f;
+        [Tooltip("Snap kéo dài ít nhất ngần này để thấy chớp sáng thắng")]
+        [SerializeField] private float snapHoldSeconds = 0.48f;
+        [Tooltip("Node mờ còn bao nhiêu và thu nhỏ còn bao nhiêu khi vào cảnh cắt")]
+        [SerializeField, Range(0f, 1f)] private float cutNodeAlpha = 0.35f;
+        [SerializeField, Range(0f, 1f)] private float cutNodeSize = 0.75f;
+        [Tooltip("Chạm trong chuỗi thắng thì tua nhanh cố định lần này")]
+        [SerializeField] private float fastForward = 1.5f;
+        [Tooltip("Dừng sau cảnh cắt trước khi sang bước sau")]
+        [SerializeField] private float afterCutSeconds = 0.6f;
+
         public float RunnerSpeed => runnerSpeed;
+
+        public WinSequenceParams WinSequence => new WinSequenceParams(snapSpeed, snapMinSeconds, snapMaxSeconds, snapHoldSeconds,
+            cutNodeAlpha, cutNodeSize, fastForward, afterCutSeconds, CutTiming);
 
         public CutTimingParams CutTiming => new CutTimingParams(runnerSpeed, cutTargetSeconds, cutMinMultiplier, cutMaxMultiplier);
 

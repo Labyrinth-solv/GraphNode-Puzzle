@@ -1,5 +1,7 @@
 using System;
+using Cysharp.Threading.Tasks;
 using GraphNode.Core.Geometry;
+using GraphNode.Gameplay.Presentation;
 using GraphNode.Core.Input;
 using GraphNode.Core.Runner;
 using GraphNode.Core.Session;
@@ -34,14 +36,18 @@ namespace GraphNode.Gameplay.Session
         private RunnerSimulator _runner;
         private ConstantSpeedRule _runnerRule;
         private readonly int[] _passed = new int[16];
+        private WinSequenceParams _win;
+        private PresentationContext _presentation;
 
         public PuzzleState State => _state;
 
         /// <param name="runnerSpeed">Tốc độ điểm sáng, bề rộng vải mỗi giây (cấu hình cân bằng).</param>
-        public void Begin(PuzzleState state, InputConfig input, float runnerSpeed, Action onWon)
+        /// <param name="onWon">Gọi khi chuỗi thắng chạy xong.</param>
+        public void Begin(PuzzleState state, InputConfig input, float runnerSpeed, WinSequenceParams win, Action onWon)
         {
             _state = state ?? throw new ArgumentNullException(nameof(state));
             _input = input;
+            _win = win;
             _onWon = onWon;
             _camera = cameraFit.GetComponent<Camera>();
             _arbiter = new TouchArbiter(state.Level, state.Topology, state.Shape, input.ToTouchParams(FabricLayout.FabricSize));
@@ -53,13 +59,22 @@ namespace GraphNode.Gameplay.Session
         private void Update()
         {
             if (_state == null) return;
-            switch (pointer.Poll())
+            var phase = pointer.Poll();
+            if (_presentation != null)
+            {
+                // chạm trong chuỗi thắng thì tua nhanh cố định, không tăng thêm
+                if (phase == PointerPhase.Began) _presentation.Speed = _win.FastForward;
+                view.Render(Time.deltaTime, -1);
+                return;
+            }
+            switch (phase)
             {
                 case PointerPhase.Began: OnBegan(); break;
                 case PointerPhase.Moved: OnMoved(); break;
                 case PointerPhase.Ended: OnEnded(false); break;
                 case PointerPhase.Cancelled: OnEnded(true); break;
             }
+            if (_presentation != null) return;
             _state.Refresh();
             float dt = Time.deltaTime;
             // điểm sáng chạy đều cả khi đang kéo; dừng khi đã thắng (chuỗi thắng ở M3)
@@ -134,7 +149,18 @@ namespace GraphNode.Gameplay.Session
             }
             _grab = Grab.None;
             if (result.Relabeled) view.Permute(_state.LastPermutation);
-            if (result.Won) _onWon?.Invoke();
+            if (result.Won) PlayWinAsync().Forget();
+        }
+
+        private async UniTaskVoid PlayWinAsync() => await PlayWinSequenceAsync();
+
+        /// <summary>Chạy chuỗi thắng rồi báo cho lớp nối. Test PlayMode gọi thẳng sau khi giải màn qua PuzzleState.</summary>
+        internal async UniTask PlayWinSequenceAsync()
+        {
+            if (_presentation != null) return;
+            _presentation = new PresentationContext(view, _win);
+            await WinSequence.Default().PlayAsync(_presentation, this.GetCancellationTokenOnDestroy());
+            _onWon?.Invoke();
         }
     }
 }

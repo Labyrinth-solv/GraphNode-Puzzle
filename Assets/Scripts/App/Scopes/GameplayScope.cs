@@ -22,8 +22,8 @@ namespace GraphNode.App.Scopes
         [SerializeField] private PuzzleController controller;
         [Tooltip("Level dùng khi mở thẳng scene Gameplay trong Editor (không có LevelRequest)")]
         [SerializeField] private string editorFallbackLevel = "scoop";
-        [Tooltip("Bản thử M2 chưa có chuỗi thắng và Home: thắng thì chờ rồi chơi lại màn này")]
-        [SerializeField] private float replayDelaySeconds = 1.5f;
+        [Tooltip("Chưa có Home: chuỗi thắng xong thì chờ ngần này rồi chơi lại màn này")]
+        [SerializeField] private float replayDelaySeconds = 0.5f;
 
         private AppScope _app;
         private float _startTime;
@@ -53,7 +53,7 @@ namespace GraphNode.App.Scopes
                 return;
             }
             State = new PuzzleState(level, balance.ToPuzzleConfig());
-            controller.Begin(State, input, balance.RunnerSpeed, OnWon);
+            controller.Begin(State, input, balance.RunnerSpeed, balance.WinSequence, OnWon);
             Log.Info($"[Gameplay] level {Request.LevelId}");
         }
 

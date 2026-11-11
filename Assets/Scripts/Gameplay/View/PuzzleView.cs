@@ -92,6 +92,22 @@ namespace GraphNode.Gameplay.View
         private Transform _runner, _bladeUp, _bladeDown;
         private SpriteRenderer[] _trail;
         private float _snipPhase;
+
+        // chuỗi thắng: vị trí và độ uốn trình diễn (snap dần về lời giải), độ mờ và cỡ node, cảnh cắt dọc viền mẫu
+        private bool _presenting, _cutting;
+        private Float2[] _pFrom, _pTo, _pPos;
+        private float[] _bFrom, _bTo, _pBends;
+        private float _nodeAlpha = 1f, _nodeSize = 1f;
+        private readonly List<Vector3> _solPoints = new List<Vector3>(512);
+        private readonly List<float> _solCum = new List<float>(512);
+        private float _solTotal;
+        private float[] _cutNodeD;
+        private bool[] _cutHit;
+        private StrokeMesh _cutLine, _veil;
+        private MeshRenderer _threadRenderer, _cutLineRenderer, _veilRenderer;
+        private readonly List<Vector3> _cutPoints = new List<Vector3>(512);
+        private readonly List<Color32> _cutColors = new List<Color32>(512);
+        private const float CutRunnerSize = 20f;
         private const int TrailDots = 7;
         private const float RunnerSize = 17f;
 
@@ -121,6 +137,23 @@ namespace GraphNode.Gameplay.View
             RingPath(sol, _state.SolutionBends, outline, null, null, false);
             var tris = new List<int>();
             PolygonTriangulator.Triangulate(outline, tris);
+            // đường cắt của chuỗi thắng là viền lời giải, khép kín
+            _solPoints.Clear();
+            _solPoints.AddRange(outline);
+            _solCum.Clear();
+            float acc = 0f;
+            for (int i = 0; i < _solPoints.Count; i++)
+            {
+                if (i > 0) acc += Vector3.Distance(_solPoints[i - 1], _solPoints[i]);
+                _solCum.Add(acc);
+            }
+            _solTotal = acc + Vector3.Distance(_solPoints[_solPoints.Count - 1], _solPoints[0]);
+            _veil = MeshObject("CutVeil", OrderThread, out _veilRenderer);
+            _veil.AddTriangles(outline, tris, new Color32(255, 252, 246, 128));
+            _veil.Apply();
+            _veilRenderer.enabled = false;
+            _cutLine = MeshObject("CutLine", OrderThread + 1, out _cutLineRenderer);
+
             _ghost = MeshObject("Ghost", OrderGhost);
             _ghost.AddTriangles(outline, tris, WithAlpha(thread, 0.13f));
             _ghost.AddDashedLoop(outline, WithAlpha(thread, 0.9f), 2f, 7f, 6f);
@@ -241,7 +274,136 @@ namespace GraphNode.Gameplay.View
             var sprite = UnityEngine.Sprite.Create(_maskTexture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size / worldSize);
             _fill = Sprite("Fill", sprite, FabricLayout.FabricToWorld(new Float2(0.5f, 0.5f)), OrderFill);
             _fill.color = WithAlpha(maskColor, maskAlpha);
-            _thread = MeshObject("Thread", OrderThread);
+            _thread = MeshObject("Thread", OrderThread, out _threadRenderer);
+        }
+
+        // ---------- chuỗi thắng ----------
+
+        /// <summary>Bắt đầu trình diễn: vị trí và độ uốn snap từ trạng thái hiện tại về chốt và độ uốn lời giải.</summary>
+        public void BeginPresentation()
+        {
+            int n = _state.Level.NodeCount, ring = _state.Topology.RingLength;
+            _pFrom = (Float2[])_state.Positions.Clone();
+            _pTo = new Float2[n];
+            _pPos = (Float2[])_pFrom.Clone();
+            for (int i = 0; i < n; i++)
+            {
+                int pin = _state.Pins.NodeToPin[i];
+                _pTo[i] = pin >= 0 ? _state.Level.Solution[pin] : _pFrom[i];
+            }
+            _bFrom = (float[])_state.Bends.Clone();
+            _bTo = _state.SolutionBends.ToArray();
+            _pBends = (float[])_bFrom.Clone();
+            _presenting = true;
+        }
+
+        /// <summary>Quãng snap lớn nhất (vị trí, độ uốn ×2) để tính thời lượng snap như bản web.</summary>
+        public float SnapDistance()
+        {
+            float md = 0f;
+            for (int i = 0; i < _pFrom.Length; i++) md = Mathf.Max(md, Float2.Distance(_pFrom[i], _pTo[i]));
+            for (int k = 0; k < _bFrom.Length; k++) md = Mathf.Max(md, Mathf.Abs(_bTo[k] - _bFrom[k]) * 2f);
+            return md;
+        }
+
+        /// <summary>Snap: mọi node đi thẳng cùng tốc độ (quãng đã đi run, bề rộng vải); node mờ và nhỏ dần theo fade.</summary>
+        public void SetSnap(float run, float u, float nodeAlpha, float nodeSize)
+        {
+            for (int i = 0; i < _pPos.Length; i++)
+            {
+                float dk = Float2.Distance(_pFrom[i], _pTo[i]);
+                _pPos[i] = Float2.Lerp(_pFrom[i], _pTo[i], dk > 1e-6f ? Mathf.Min(1f, run / dk) : 1f);
+            }
+            for (int k = 0; k < _pBends.Length; k++) _pBends[k] = Mathf.Lerp(_bFrom[k], _bTo[k], u);
+            _nodeAlpha = nodeAlpha;
+            _nodeSize = nodeSize;
+        }
+
+        /// <summary>Vào cảnh cắt: bỏ vùng tô và sợi chỉ, phủ lớp kem mờ lên hình mẫu, tính chỗ đầu kéo chạm từng node.</summary>
+        public void BeginCut()
+        {
+            _cutting = true;
+            _fill.enabled = false;
+            _threadRenderer.enabled = false;
+            _veilRenderer.enabled = true;
+            for (int j = 0; j < _trail.Length; j++) _trail[j].enabled = false;
+            _runner.localScale = Vector3.one * (CutRunnerSize / RunnerSize);
+            int n = _pPos.Length;
+            _cutNodeD = new float[n];
+            _cutHit = new bool[n];
+            for (int i = 0; i < n; i++)
+            {
+                var p = FabricLayout.FabricToWorld(_pPos[i]);
+                float best = float.MaxValue, bd = 0f;
+                for (int k = 0; k < _solPoints.Count; k++)
+                {
+                    var a = _solPoints[k];
+                    var b = _solPoints[(k + 1) % _solPoints.Count];
+                    var ab = b - a;
+                    float l2 = ab.sqrMagnitude, t = l2 > 0 ? Mathf.Clamp01(Vector3.Dot(p - a, ab) / l2) : 0f;
+                    float dd = (a + ab * t - p).sqrMagnitude;
+                    if (dd < best) { best = dd; bd = _solCum[k] + t * Mathf.Sqrt(l2); }
+                }
+                // điểm đầu đường cắt cũng là điểm cuối: node ở đó tính là chạm đầu tiên
+                _cutNodeD[i] = bd > _solTotal - 0.05f ? 0f : bd;
+            }
+        }
+
+        /// <summary>Chu vi đường cắt theo bề rộng vải (để tính tốc độ cảnh cắt).</summary>
+        public float CutPerimeter => _solTotal / FabricLayout.FabricSize;
+
+        /// <summary>Cảnh cắt tới quãng L (theo bề rộng vải): nét cắt mực sau lưỡi kéo, node chạm thì sáng và nảy.</summary>
+        public void SetCut(float l, float dt)
+        {
+            float d = Mathf.Clamp(l * FabricLayout.FabricSize, 0f, _solTotal);
+            _cutPoints.Clear();
+            _cutColors.Clear();
+            for (int k = 0; k < _solPoints.Count && _solCum[k] <= d; k++)
+            {
+                _cutPoints.Add(_solPoints[k]);
+                _cutColors.Add(ink);
+            }
+            var head = SolPointAt(d);
+            _cutPoints.Add(head);
+            _cutColors.Add(ink);
+            _cutLine.Clear();
+            _cutLine.AddPolyline(_cutPoints, _cutColors, 3.2f, false);
+            _cutLine.Apply();
+
+            for (int i = 0; i < _cutHit.Length; i++)
+            {
+                if (_cutHit[i] || _cutNodeD[i] > d) continue;
+                _cutHit[i] = true;
+                _pulse[i] = 1f;
+            }
+
+            var dir = (SolPointAt(d + 0.01f * FabricLayout.FabricSize) - head).normalized;
+            if (dir == Vector3.zero) dir = Vector3.right;
+            // nhịp cắt theo quãng đi: mỗi 4,5% bề rộng vải một nhát
+            _snipPhase = d / (0.045f * FabricLayout.FabricSize);
+            _runner.position = head - dir * CutRunnerSize * 0.45f;
+            _runner.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg);
+            float th = (0.02f + SnipOpen(_snipPhase) * 0.55f) * Mathf.Rad2Deg;
+            _bladeDown.localRotation = Quaternion.Euler(0f, 0f, th);
+            _bladeUp.localRotation = Quaternion.Euler(0f, 0f, -th);
+        }
+
+        private Vector3 SolPointAt(float d)
+        {
+            d = Mathf.Clamp(d, 0f, _solTotal);
+            int last = _solCum.Count - 1;
+            if (d >= _solCum[last])
+            {
+                float seg = Mathf.Max(1e-5f, _solTotal - _solCum[last]);
+                return Vector3.Lerp(_solPoints[last], _solPoints[0], (d - _solCum[last]) / seg);
+            }
+            int lo = 0, hi = last;
+            while (lo < hi - 1)
+            {
+                int mid = (lo + hi) >> 1;
+                if (_solCum[mid] <= d) lo = mid; else hi = mid;
+            }
+            return Vector3.Lerp(_solPoints[lo], _solPoints[hi], (d - _solCum[lo]) / Mathf.Max(1e-5f, _solCum[hi] - _solCum[lo]));
         }
 
         /// <param name="draggingNode">Node đang kéo (vẽ to hơn một chút), hoặc −1.</param>
@@ -251,16 +413,19 @@ namespace GraphNode.Gameplay.View
             _clock += dt;
             UpdateFill();
             UpdateThread();
-            var pos = _state.Positions;
+            var pos = _presenting ? _pPos : _state.Positions;
             // node đang kéo bám ngón tay; node khác trượt mượt về vị trí logic (vừa đặt vào chốt…)
             float follow = settleTime > 0f ? 1f - Mathf.Exp(-dt * 3f / settleTime) : 1f;
             for (int i = 0; i < _nodes.Length; i++)
             {
                 var target = FabricLayout.FabricToWorld(pos[i]);
-                _shown[i] = i == draggingNode ? target : Vector3.Lerp(_shown[i], target, follow);
+                _shown[i] = i == draggingNode || _presenting ? target : Vector3.Lerp(_shown[i], target, follow);
                 _pulse[i] = Mathf.Max(0f, _pulse[i] - dt / pulseTime);
                 _nodes[i].transform.position = _shown[i];
-                _nodes[i].transform.localScale = Vector3.one * ((i == draggingNode ? 1.15f : 1f) * (1f + 0.3f * _pulse[i]));
+                _nodes[i].transform.localScale = Vector3.one * ((i == draggingNode ? 1.15f : 1f) * _nodeSize * (1f + 0.3f * _pulse[i]));
+                // cảnh cắt: node đầu kéo đã chạm sáng lại đủ màu
+                float a = _cutting && _cutHit[i] ? 1f : _nodeAlpha;
+                _nodes[i].color = new Color(1f, 1f, 1f, a);
             }
             for (int j = 0; j < _pins.Length; j++) _pins[j].sprite = _state.Pins.PinToNode[j] >= 0 ? pinFilled : pinEmpty;
             UpdateBar(dt);
@@ -288,14 +453,21 @@ namespace GraphNode.Gameplay.View
 
         private void UpdateThread()
         {
+            if (_cutting) return;
             _thread.Clear();
-            RingPath(_state.Positions, _state.Bends, _points, _cumulative, null, false);
+            if (_presenting) RingPath(_pPos, _pBends, _points, _cumulative, null, false);
+            else RingPath(_state.Positions, _state.Bends, _points, _cumulative, null, false);
             float total = _cumulative.Count > 0 ? Mathf.Max(1e-4f, _cumulative[_cumulative.Count - 1]) : 1f;
             float thr = _state.Level.WinThreshold;
             float m = Mathf.Clamp01((_barValue - 0.35f) / 0.65f);
             float taut = _state.Score >= thr ? 1f : m * m;
             _colors.Clear();
-            for (int i = 0; i < _points.Count; i++) _colors.Add(YarnColor(_cumulative[i] / total + _clock * 0.09f, taut));
+            for (int i = 0; i < _points.Count; i++)
+            {
+                var c = YarnColor(_cumulative[i] / total + _clock * 0.09f, taut);
+                c.a = (byte)(255 * _nodeAlpha); // snap: sợi chỉ mờ cùng node
+                _colors.Add(c);
+            }
             _thread.AddPolyline(_points, _colors, 2.8f + 0.7f * taut, true);
             _thread.Apply();
         }
@@ -392,15 +564,17 @@ namespace GraphNode.Gameplay.View
             return sr;
         }
 
-        private StrokeMesh MeshObject(string name, int order)
+        private StrokeMesh MeshObject(string name, int order) => MeshObject(name, order, out _);
+
+        private StrokeMesh MeshObject(string name, int order, out MeshRenderer renderer)
         {
             var go = new GameObject(name);
             go.transform.SetParent(transform, false);
             var stroke = new StrokeMesh(name);
             go.AddComponent<MeshFilter>().sharedMesh = stroke.Mesh;
-            var mr = go.AddComponent<MeshRenderer>();
-            mr.sharedMaterial = strokeMaterial;
-            mr.sortingOrder = order;
+            renderer = go.AddComponent<MeshRenderer>();
+            renderer.sharedMaterial = strokeMaterial;
+            renderer.sortingOrder = order;
             return stroke;
         }
 
@@ -410,6 +584,8 @@ namespace GraphNode.Gameplay.View
             if (_ghost != null) Destroy(_ghost.Mesh);
             if (_thread != null) Destroy(_thread.Mesh);
             if (_mini != null) Destroy(_mini.Mesh);
+            if (_cutLine != null) Destroy(_cutLine.Mesh);
+            if (_veil != null) Destroy(_veil.Mesh);
         }
     }
 }

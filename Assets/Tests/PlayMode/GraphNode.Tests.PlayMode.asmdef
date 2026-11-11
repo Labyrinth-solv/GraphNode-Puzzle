@@ -8,7 +8,8 @@
         "GraphNode.Gameplay",
         "GraphNode.Data",
         "GraphNode.Foundation",
-        "UniTask"
+        "UniTask",
+        "GraphNode.Core"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
