@@ -69,7 +69,7 @@ Dựa trên yêu cầu mang lại cảm giác thỏa mãn cao (tương tự kho�
 
 ### 2.1. Khởi tạo bản clone sạch `Prototype/web-v2/`
 - Sao chép toàn bộ mã nguồn từ `Prototype/web-demo/web/` sang `Prototype/web-v2/`:
-  - `core.js`: Thuật toán hình học phẳng, đường cong Catmull-Rom (`GN.ringPath`), raster hóa vùng tô (`GN.region` trên lưới `96×96`), tính độ khớp `IoU` (`GN.iou`).
+  - `core.js`: Thuật toán hình học phẳng, đường cong Catmull-Rom (`GN.ringPath`), raster hóa vùng tô (`GN.region` trên lưới `200×200`), tính độ khớp `IoU` (`GN.iou`).
   - `levels.js`: Dữ liệu các mảnh ghép (`LEVELS`) và cấu hình sản phẩm (`PRODUCTS`).
   - `startgen.js`: Thuật toán sinh vị trí khởi đầu tất định (deterministic FNV-1a + Mulberry32 PRNG) theo 3 cấp độ khó `easy`, `medium`, `hard`.
   - `game.js`: Vòng lặp game, xử lý kéo thả, hiệu ứng cắt kéo, lật mở vải gấp (`unfold`), và màn thưởng khâu lắp ghép sản phẩm (`Reward Scene`).
@@ -144,11 +144,13 @@ Theo yêu cầu của người dùng, cả 3 mảnh của **Màn 2 (`cardigan`)*
      return out;
    }
    ```
+   > **Đã cũ (2026-11-09):** từ khi có uốn cạnh (`solBend`, `S.bend`), mọi cạnh trong vòng đều uốn được và mọi node đều vẽ là ghim tròn. `types` chỉ còn quyết định hình lời giải: cạnh có node `'s'` có độ uốn lời giải bằng 0 (thẳng ở đáp án), không còn bị khóa thẳng khi chơi. Đoạn mô tả cũ giữ lại bên dưới để đối chiếu.
+
    Một cạnh nối giữa 2 node `a` và `b` **chỉ được nội suy cong Catmull-Rom khi CẢ HAI node `a` và `b` đều có `type === 'c'`**. Nếu một trong hai node là `'s'` (tam giác), cả đoạn nối đó sẽ là **đường thẳng**. Do đó:
    - Muốn tạo một đoạn cong: cần ít nhất **2 node `'c'` liên tiếp**.
    - Muốn tạo một đỉnh nhọn (như chóp tai cáo, chóp mũi, đỉnh ngôi sao): đặt 1 node `'s'` tại đỉnh nhọn đó và 2 node `'c'` ở hai bên chân đỉnh.
 2. **Quy tắc Gấp đôi vải & Khoét rỗng (`buildFold` trong `game.js` dòng 126–146):**
-   - Khai báo trên level: `fold: { solX: 0.5, startX: 0.38, chains: [[0, a], [a+1, b]] }`.
+   - Khai báo trên level: `fold: { solX: 0.5, startX: 0.38, chains: [[0, a], [a+1, b]] }`. Code có hỗ trợ gấp theo trục ngang (`axis: 'y'`) nhưng chưa màn nào dùng nên chưa được kiểm chứng.
    - Người chơi chỉ thao tác với các node ở nửa bên trái (`x <= solX`) và kéo thanh trượt cây kim (`SLIDER_Y = 656`) đưa mép gấp từ `startX` về `solX = 0.5`.
    - Các node đầu và cuối của mỗi chain (`0`, `a`, `a+1`, `b`) nằm trên mép gấp (`x = solX`), tự động trượt theo cây kim.
    - `chains[0] = [0, a]` tạo thành **đường viền ngoài** sau khi đối xứng gương qua `solX`.
@@ -189,7 +191,7 @@ Theo yêu cầu của người dùng, cả 3 mảnh của **Màn 2 (`cardigan`)*
 
 ## 6. 🧪 Phần Mở Rộng Đang Trong Quá Trình Xem Xét: Hệ Thống Chốt Trên Viền Mẫu & Cân Bằng Tỷ Lệ Khớp (Experimental Extension Under Review)
 
-> **Ghi chú tiến độ**: Tính năng này hiện đã được triển khai, kiểm thử hoàn tất và chạy thực nghiệm trên bản song song **`Prototype/web-v3`** (xác minh qua `node Prototype/web-v3/smoke.js` và `scratch/verify_pin_mechanic.js` đạt 100% qua 13 màn chơi). Được lưu trữ tại đây dưới dạng phần mở rộng đang trong quá trình đánh giá và xem xét trước khi hợp nhất chính thức vào `web-v2`.
+> **Ghi chú tiến độ**: Tính năng này hiện đã được triển khai, kiểm thử hoàn tất và chạy thực nghiệm trên bản song song **`Prototype/web-v3`** (xác minh qua `node Prototype/web-v3/smoke.js` và `scratch/verify_pin_mechanic.js` đạt 100% qua 13 màn chơi; script `scratch/` này không có trong repo). Được lưu trữ tại đây dưới dạng phần mở rộng đang trong quá trình đánh giá và xem xét trước khi hợp nhất chính thức vào `web-v2`.
 
 ### 6.1. Bối cảnh & Mục tiêu Thiết kế
 1. **Vấn đề giải quyết**:
@@ -272,20 +274,22 @@ Theo yêu cầu của người dùng, cả 3 mảnh của **Màn 2 (`cardigan`)*
 > - Khi người chơi đang nắm giữ bất kỳ node nào (`S.drag !== null`) hoặc node đang trượt vào chốt (`S.settle !== null`), toàn bộ gợi ý uốn đường cong **hoàn toàn ẩn đi** để người chơi tập trung 00\%$ vào việc đặt chốt.
 > - Sau khi buông tay (`pointerup`) và node đã cắm khít vào chốt cuối cùng, hệ thống giữ một **nhịp dừng xúc giác êm dịu 0.25s** để âm thanh chốt (`pop/thock`) và viền xanh sage kích hoạt trọn vẹn, sau đó vầng hào quang tơ tằm và cúc len mới nhẹ nhàng nở sáng (`fadeIn 0.4s`).
 
+> Bảng đo lại 2026-11-09 bằng `node Prototype/web-demo/check.js` (cột "% Khớp khi mới vào chốt" là cắm đủ chốt nhưng dây uốn chưa đụng tới). Các màn không khai báo `bendFree` (`scoop`, `cardigan`, `shirt`, `heart`, `heartHole`) do `startgen.js` tự chọn cạnh uốn.
+
 | STT | Màn chơi (`id`) | Phân loại (`tier`) | Tổng số Chốt | Cạnh cần uốn (`bendFree`) | % Khớp khi mới vào chốt (chưa uốn cong) | Ngưỡng thắng mới (`winThreshold`) | % Khớp khi hoàn tất | Đánh giá |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
-| 0 | `scoop` (Viên kem) | Easy | 7/7 | `[2]` | **75.5%** | **94.0%** | 100.0% | ✅ Bắt buộc uốn vòm kem mới thắng |
+| 0 | `scoop` (Viên kem) | Easy | 7/7 | `[2]` | **83.5%** | **94.0%** | 100.0% | ✅ Bắt buộc uốn vòm kem mới thắng |
 | 1 | `cone` (Ốc quế) | Easy | 3/3 | `[]` | **100.0%** | **94.0%** | 100.0% | ✅ Hình đa giác thẳng, vào chốt là thắng |
 | 2 | `cardigan` (Thân áo) | Medium | 10/10 | `[4]` | **77.7%** | **95.0%** | 100.0% | ✅ Bắt buộc uốn vạt áo mới thắng |
-| 3 | `shirt` (Áo lót trong) | Medium | 6/6 | `[3, 4]` | **77.1%** | **95.0%** | 100.0% | ✅ Bắt buộc uốn cổ trong mới thắng |
+| 3 | `shirt` (Áo lót trong) | Medium | 5/5 | `[3]` | **73.5%** | **95.0%** | 100.0% | ✅ Bắt buộc uốn gấu chữ U mới thắng |
 | 4 | `collar` (Cổ áo) | Medium | 6/6 | `[]` | **100.0%** | **95.0%** | 100.0% | ✅ Hình đa giác thẳng, vào chốt là thắng |
-| 5 | `heart` (Trái tim gấp) | Easy | 4/4 | `[1]` | **74.9%** | **94.0%** | 100.0% | ✅ Bắt buộc uốn bầu tim mới thắng |
-| 6 | `heartHole` (Tim khoét lỗ) | Easy | 8/8 | `[5]` | **76.0%** | **94.0%** | 100.0% | ✅ Bắt buộc uốn lỗ khoét mới thắng |
-| 7 | `bunny_ears` (Đôi tai thỏ) | Medium | 11/11 | `[2, 7]` | **68.7%** | **95.0%** | 100.0% | ✅ Bắt buộc uốn chóp tai mới thắng |
-| 8 | `bunny_head` (Mặt thỏ) | Medium | 10/10 | `[4, 7]` | **83.2%** | **95.0%** | 100.0% | ✅ Bắt buộc uốn đôi má mới thắng |
-| 9 | `bunny_bow` (Chiếc nơ) | Medium | 6/6 | `[2, 5]` | **64.6%** | **95.0%** | 100.0% | ✅ Bắt buộc uốn cánh nơ mới thắng |
-| 10 | `flower_bloom` (Bông hoa) | Hard | 10/10 | `[1, 4]` | **81.5%** | **96.0%** | 100.0% | ✅ Bắt buộc uốn cánh hoa mới thắng |
-| 11 | `flower_leaves` (Đôi lá số 8) | Hard | 6/6 | `[0, 2, 3, 5]` | **58.7%** | **96.0%** | 100.0% | ✅ Bắt buộc uốn 4 bầu lá mới thắng |
+| 5 | `heart` (Trái tim gấp) | Easy | 4/4 | `[1]` | **74.7%** | **94.0%** | 100.0% | ✅ Bắt buộc uốn bầu tim mới thắng |
+| 6 | `heartHole` (Tim khoét lỗ) | Easy | 8/8 | `[1]` | **72.2%** | **94.0%** | 100.0% | ✅ Bắt buộc uốn vòm vai ngoài mới thắng |
+| 7 | `bunny_ears` (Đôi tai thỏ) | Medium | 11/11 | `[2, 7]` | **81.6%** | **95.0%** | 100.0% | ✅ Bắt buộc uốn chóp tai mới thắng |
+| 8 | `bunny_head` (Mặt thỏ) | Medium | 10/10 | `[4, 7]` | **87.4%** | **95.0%** | 100.0% | ✅ Bắt buộc uốn đôi má mới thắng |
+| 9 | `bunny_bow` (Chiếc nơ) | Medium | 6/6 | `[2, 5]` | **70.7%** | **95.0%** | 100.0% | ✅ Bắt buộc uốn cánh nơ mới thắng |
+| 10 | `flower_bloom` (Bông hoa) | Hard | 10/10 | `[1, 4]` | **87.8%** | **96.0%** | 100.0% | ✅ Bắt buộc uốn cánh hoa mới thắng |
+| 11 | `flower_leaves` (Đôi lá số 8, 4 node từ mục 15) | Hard | 4/4 | `[1, 3]` | **32.8%** | **96.0%** | 100.0% | ✅ Bắt buộc uốn 4 bầu lá mới thắng |
 | 12 | `flower_pot` (Chậu hoa) | Hard | 8/8 | `[4]` | **77.4%** | **96.0%** | 100.0% | ✅ Bắt buộc uốn đáy chậu mới thắng |
 
 ---
@@ -384,7 +388,7 @@ Theo yêu cầu của người dùng, cả 3 mảnh của **Màn 2 (`cardigan`)*
 ### 6.7. Khắc Phục Lỗi Snap Đường Cong Lơ Lửng & Nâng Cấp Hào Quang Bảy Màu Cozy Lõi Trắng Sáng
 
 > **Cập nhật ngày 2026-11-07 theo phản hồi & đánh giá của người chơi**:
-> 1. **Khắc phục triệt để lỗi đường cong lơ lửng tự phát sáng snap**: Trước đây, khi kéo độ cong của một cạnh tới giá trị khớp mẫu `solBend`, hệ thống chỉ kiểm tra `magH !== null` mà không kiểm tra xem hai đầu mút của cạnh đó đã được cắm vào đúng chốt mục tiêu hay chưa. Điều này khiến cho một cạnh đang bay lơ lửng giữa không trung khi bị kéo cong đúng biên độ vẫn kích hoạt hiệu ứng snap và tia zip. Đã khắc phục triệt để bằng hàm `isEdgeAnchoredToPins(k)` đảm bảo cả hai đầu mút đã cắm chính xác vào chốt mục tiêu (`PIN_SNAP_R + 0.015`) trước khi kích hoạt `triggerCurveSnap`.
+> 1. **Khắc phục triệt để lỗi đường cong lơ lửng tự phát sáng snap**: Trước đây, khi kéo độ cong của một cạnh tới giá trị khớp mẫu `solBend`, hệ thống chỉ kiểm tra `magH !== null` mà không kiểm tra xem hai đầu mút của cạnh đó đã được cắm vào đúng chốt mục tiêu hay chưa. Điều này khiến cho một cạnh đang bay lơ lửng giữa không trung khi bị kéo cong đúng biên độ vẫn kích hoạt hiệu ứng snap và tia zip. Đã khắc phục triệt để bằng hàm `isEdgeAnchoredToPins(k)` đảm bảo cả hai đầu mút đã cắm chính xác vào chốt mục tiêu (nay dùng bán kính chung `PIN_ON_R = 0.046`, xem mục 14) trước khi kích hoạt `triggerCurveSnap`.
 > 2. **Nâng cấp hào quang đạt ngưỡng thắng (Full-Contour Glow)**:
 >    - **Dải hào quang bảy màu Cozy (Iridescent Cozy Rainbow Halo)**: Chuyển màu ombre đa sắc mềm mại 5 tông len tự nhiên qua `cozyThreadRGB` (Hồng đào ấm $\to$ Vàng bơ $\to$ Xanh xô thơm $\to$ Xanh lam khói $\to$ Tím cà oải hương). Hào quang rộng $10\text{px} - 16\text{px}$ trôi nhẹ nhàng theo thời gian.
 >    - **Lõi tơ tằm trắng muốt sáng rực (Brilliant Pure White Silk Core)**: Lớp chỉ trắng tinh khiết (`#FFFFFF`, độ mờ $0.98$, bề rộng $3.6\text{px} - 5.0\text{px}$) được xếp lớp vẽ đè lên trên cùng của sợi chỉ vải (`drawEdges` $\to$ `drawReadyContourGlow`), tạo độ tương phản cao và độ chói sáng mãnh liệt tương tự tia chớp seam zip lúc khóa đường cong vào viền mẫu.
@@ -583,7 +587,7 @@ Theo yêu cầu của người dùng, cả 3 mảnh của **Màn 2 (`cardigan`)*
   - Ngăn chặn hoàn toàn hiện tượng dây nối vồ lấy cảm ứng khi ngón tay vô tình bấm sượt qua rìa ngoài của chốt.
 
 #### 4. Kết Quả Kiểm Thử Tự Động & Tiêu Chí Nghiệm Thu
-- **Unit Test Trọng Tài Cảm Ứng (`scratch/test_tap_arbitration.js`)**:
+- **Unit Test Trọng Tài Cảm Ứng (`scratch/test_tap_arbitration.js`, không có trong repo; các kết quả dưới đây chưa kiểm chứng lại được)**:
   - Chạm lệch tâm chốt $18\text{px}$ hướng về phía dây nối: Chốt được chọn $100\%$, dây nối hoàn toàn không bị kích hoạt (`curSt.drag = Node 1`, `curSt.edgeDrag = null`).
   - Chạm đúng đoạn giữa dây ($u \approx 0.5$): Nhận diện uốn dây tức thì (`curSt.edgeDrag = Edge 2`, `curSt.drag = null`).
   - Chạm sát đầu mút dây ($u = 0.12$): Dây bị chặn không kích hoạt.
@@ -637,9 +641,9 @@ Theo yêu cầu của người dùng, cả 3 mảnh của **Màn 2 (`cardigan`)*
 > 4. **Màn Thưởng Ghép Hình**:
 >    - Mảnh 1 (Trái tim đặc) đặt lọt khít $100\%$ vào lỗ khoét mới: `place[5] = [118.0, 334.8, 154.0]` (tỉ lệ $280 \times 0.55 = 154$).
 
-### 13. [ĐANG XEM XÉT / UNDER REVIEW] Nâng Cấp Khớp Dây Chuyền (Chained Wire Snap) & Hiển Thị Nút Kéo Dây Cục Bộ (Per-Edge Readiness)
+### 13. [ĐÃ DUYỆT / APPROVED] Nâng Cấp Khớp Dây Chuyền (Chained Wire Snap) & Hiển Thị Nút Kéo Dây Cục Bộ (Per-Edge Readiness)
 
-> **Trạng thái**: ĐANG XEM XÉT (Đã áp dụng trên bản `Prototype/web-v2/`, chờ kiểm tra thực tế trên mobile trước khi đồng bộ sang `web-v3`).  
+> **Trạng thái**: ĐÃ DUYỆT theo báo cáo chuyển giao 2026-11-09 (đã áp dụng trên `Prototype/web-v2/` và `Prototype/web-demo/`).  
 > **Vấn đề phản ánh từ người dùng**:
 > 1. Khi kéo đường cong khớp viền mẫu thì có phát âm thanh và phát sáng rất đã tay, nhưng khi kéo 1 node đang nối với 1 ghim khóa thì sợi dây nối với ghim không phát sáng và không có âm thanh khớp dây.
 > 2. Sau khi kéo node nối với ghim khóa, người chơi nhìn vào sợi dây thì thấy trơn tuột, nút cúc kéo uốn cong bị biến mất ("kéo dây không có nữa").
@@ -660,5 +664,310 @@ Theo yêu cầu của người dùng, cả 3 mảnh của **Màn 2 (`cardigan`)*
 >    - Xóa bỏ rào cản bắt buộc cắm đủ hết toàn màn.
 >    - Ngay khi **cả 2 đầu mút của cạnh cong đã vào vị trí** (ví dụ: Ghim khóa 1 + Node kéo 2 vừa cắm) $\to$ Nút bọ thêu cúc len (`drawPinchBeads`) và vầng hào quang viền (`drawBreathingCrescentGaps`) lập tức thở nhẹ và sáng lên trên sợi dây đó, mời gọi người chơi kéo uốn dây ngay tức thì!
 > 3. **Nới lỏng dung sai neo `isEdgeAnchoredToPins`**:
->    - Tự động công nhận ghim khóa neo chuẩn, dung sai cho node kéo trùm toàn bộ bán kính nam châm $\le 0.10$ ($36\text{px}$), đảm bảo $100\%$ các lần uốn dây vào viền mẫu đều snap dính mượt mà và phát sáng đầy đủ.
+>    - Tự động công nhận ghim khóa neo chuẩn, dung sai cho node kéo trùm toàn bộ bán kính nam châm $\le 0.10$ ($36\text{px}$) (đã thay bằng bán kính chung `PIN_ON_R = 0.046` ở mục 14, vì dung sai rộng làm nút kéo dây sáng khi bộ đếm chốt còn báo chưa cắm), đảm bảo $100\%$ các lần uốn dây vào viền mẫu đều snap dính mượt mà và phát sáng đầy đủ.
 
+### 14. Sửa lỗi luật trước khi chốt vào tài liệu (2026-11-09, sửa ở `web-demo` rồi chép sang `web-v2`; `web-v3` không sửa)
+
+1. **Ngõ cụt khi đặt node vào chốt theo thứ tự khác lời giải.** Node nào vào chốt nào cũng được, nhưng độ uốn, phạt độ uốn, nam châm dây và snap đều so theo số thứ tự cạnh, nên chỉ đúng một cách gán thắng được. Đo trên bản cũ: `flower_leaves` đặt xoay vòng tối đa 86,9% (ngưỡng 96%), `shirt` đặt soi gương 83,0%, `bunny_bow` soi gương 72,7%, dù hình nhìn đúng và bộ đếm báo đủ chốt.
+   - **Sửa:** `canonicalizePins()` trong `game.js`. Khi mọi chốt đã lấp và cách đặt là một vòng xoay hay soi gương của vòng lời giải (ghim khóa đứng yên, node mép gấp vẫn ở mép gấp), đánh số lại node và cạnh theo chốt. Dây chưa uốn nhận độ uốn ban đầu của cạnh mới; dây đã uốn giữ hình (đổi dấu nếu ngược chiều). Gọi lúc thả node vào chốt và lúc thả cây kim.
+   - **Test:** `node alt-solve.js` (đặt node theo 7 cách xoay hoặc soi gương rồi uốn dây; bản cũ thua 5/7, bản sửa thắng 7/7).
+   - Còn lại: lúc đang cầm node cuối theo thứ tự khác, quầng sáng "thả tay là thắng" chưa hiện; thả tay thì thắng bình thường.
+2. **Bốn bán kính "đã cắm vào chốt" khác nhau** (0,046 bộ đếm và thắng; 0,050 gợi ý; 0,073 nút kéo dây và hiệu ứng khớp dây; 0,038 chốt đã có node khi kéo). **Sửa:** dùng chung `PIN_ON_R = PIN_SNAP_R + 0.008 = 0.046`.
+3. **Sinh vị trí đầu lệch quy định tier** (`startgen.js`):
+   - Khoảng độ khớp của tier giờ so với số đã trừ phạt độ uốn (số người chơi thấy trên thanh).
+   - Node kéo được không bắt đầu trong vùng hút của chốt nào (`PIN_CLEAR = 0.06`, số tạm).
+   - Khoảng cách tối thiểu lúc đầu màn giữa node kéo được và node khác nâng từ 0,07 lên 0,12 (số tạm).
+   - In cảnh báo khi không đạt. Hiện còn `heart` (47,5%) và `heartHole` (28,0%) thấp hơn khoảng 55–85% của tier dễ: chỉ riêng kim lệch 5% (mức tối thiểu của tier) cộng phạt dây thẳng 18 điểm đã đưa hai màn này xuống 53,9% và 36,0% khi mọi node đúng chốt. Cần chọn: nới khoảng độ khớp cho màn gấp, giảm độ lệch kim, hay ghi đè `gen` riêng từng màn.
+4. **Dọn code thừa:** bỏ `isMirror`, `applyMirror` (luôn trả về rỗng).
+
+### 15. Đôi lá đối xứng còn 4 node, mút lá do uốn cạnh (2026-11-09, sửa ở `web-demo` rồi chép sang `web-v2`)
+
+- Bỏ 2 node mút lá trái phải (`[0.08, 0.50]`, `[0.90, 0.50]`). Còn 4 node: `[0.29, 0.34]`, `[0.69, 0.66]`, `[0.69, 0.34]`, `[0.29, 0.66]` (vòng 0 → 1 vắt chéo, 1 → 2 cạnh dọc phải, 2 → 3 vắt chéo, 3 → 0 cạnh dọc trái). `free: [0, 1, 2, 3]`, `bendFree: [1, 3]`, vị trí đầu đặt tay giữ 4 node tương ứng của bản cũ.
+- Người chơi phải uốn hai cạnh dọc ra ngoài để tạo mút lá: cắm đủ chốt mà chưa uốn chỉ 32,8% (ngưỡng 96%).
+- Trường mới `solBendOverride: { 1: 0.16, 3: -0.16 }` trong `levels.js`, đọc ở `GN.prepare` (`core.js`): đặt tay độ uốn lời giải vì luật Catmull-Rom chỉ cho hai cạnh này phồng khoảng 0,05. Mút lá ở x 0,13 và 0,85 (bản cũ 0,08 và 0,90), trong giới hạn kéo dây ±0,18. Còn thắng khi độ uốn lệch tới ±0,018, nằm trong vùng hút dây 0,035.
+- Gân lá trang trí ở màn thưởng (`flowerLeafVeins`) dời đầu gân về `[0.16, 0.47]` và `[0.84, 0.47]` để nằm trong mút lá mới.
+- Kiểm tra: `node smoke.js` qua 5 sản phẩm; `node alt-solve.js` 7/7 (lá số 8 đặt xoay và soi gương đều thắng).
+
+
+### 16. Đồng bộ từ web-demo sau khi người dùng thử và duyệt (2026-11-09)
+
+Các thay đổi dưới đây làm và thử ở `Prototype/web-demo` trước, người dùng duyệt rồi mới chép sang `web-v2`. Hai bản giờ giống nhau ở mọi file logic (`core.js`, `levels.js`, `startgen.js`, `game.js`, `mask.js`, `thresholds.js`). `web-v3` không cập nhật.
+
+**16.1. Đích độ uốn theo chốt (sửa "dây snap mà không khít viền" và "đường chéo không có gợi ý")**
+- Vấn đề: nam châm dây hút về `solBend[k]` theo số thứ tự cạnh, không xét hai đầu dây đang ở đâu. Hai đầu chưa ở chốt thì dây vẫn bị hút mà lệch viền; cắm chốt khác thứ tự thì bị hút về sai độ uốn. Gợi ý uốn chỉ vẽ cho cạnh `bendFree`, nên đường chéo của đôi lá bị uốn lệch không có gợi ý.
+- Sửa: `pinOf(i)` cho biết node đang nằm ở chốt nào (bán kính chung `PIN_ON_R`); `edgeTarget(k)` trả về đích độ uốn = độ uốn của cạnh lời giải giữa hai chốt mà hai đầu dây đang nằm (đổi dấu nếu ngược chiều), hoặc `null` khi chưa đủ hai đầu trên hai chốt liền nhau. Nam châm dây (`applyEdgeDrag`), hiệu ứng khớp dây khi thả, khớp dây khi cắm chốt (`checkChainedEdgeSnaps`), gợi ý ba tầng (`hintEdges`), sóng nhắc khi đứng yên và gợi ý booster đều dùng đích này. Cạnh chưa có đích thì không hút, không gợi ý.
+- Gợi ý hiện cho mọi cạnh có đích mà độ uốn lệch từ 0,012 trở lên; cạnh `bendFree` đậm, cạnh khác 75%. Viền đích vẽ giữa chính hai đầu dây (`bendsAt`).
+
+**16.2. Hiệu ứng khớp dây cho cả cạnh thẳng**
+- Trước đây chỉ phát khi đích là cạnh cong (`|h| > 0.01`), nên nắn đường chéo về thẳng không có hiệu ứng.
+- Nay phát khi thả vào vùng hút của đích, kể cả đích thẳng, với điều kiện dây thật sự được sửa: lúc bắt đầu kéo đã lệch đích từ 0,012, hoặc trong lúc kéo bị kéo ra khỏi vùng hút (`maxErr >= MAG_R`). Kéo nhẹ dây đang đúng thì không có hiệu ứng.
+
+**16.3. Vải hướng D: màu thật, vân theo chất liệu**
+- Trường `fabric: { mat, base, light, dark, detail }` cho cả 13 mảnh trong `levels.js`; `pattern` cũ giữ làm dự phòng. Chất liệu: `knit` (len đan, áo khoác và áo lót), `rib` (len gân, cổ áo), `felt` (nỉ, các mảnh còn lại); ốc quế có `detail: 'waffle'`.
+- `paintFabric` vẽ màu nền, ô vân lặp (`fabricPattern`, vẽ sẵn ở 2x mỗi mảnh một lần), ô bánh quế, ánh sáng trên sáng dưới tối, mép trong hơi tối. Kích thước vân cố định theo khung vải (`FS`), không theo cỡ mảnh; ô vân bám theo mảnh khi bay.
+- Nền khung vải giữ như cũ. Bảng so sánh: https://claude.ai/artifact/7nasb5KU1QQtN8Cp3ugUYz
+
+**16.4. Bỏ phóng khung vải khi kéo**
+- Bỏ ống kính thở 1,04 lần (mục 9, trụ cột 2): người chơi thử thấy chóng mặt. Khung vải và camera đứng yên khi kéo. Nâng node 22 px và bóng đổ khi nhấc giữ nguyên.
+
+**16.5. Màn 6 "Dâu tây" thử phong cách tranh tô màu (chưa chốt)**
+- Một mảnh, mức dễ, `free: [1, 2, 3]`, khóa 2 vai, sản phẩm `strawberry` chơi riêng (`standalone`), mở từ danh sách màn hoặc nút "Tiếp tục" sau màn 5.
+- `fabric.mat: 'flat'`: mảng màu phẳng chuyển sắc, vệt bóng trắng, viền đen dày (`fabric.line`), không vân vải, không chỉ khâu. Trang trí màn thưởng (`berryCap`, `berrySeeds`, mắt, má) viền đen dày. Hình tự thiết kế theo phong cách chung của dòng game tô màu, không lấy art của game khác.
+
+**16.6. Đã duyệt, làm ở lượt sau: khâu đắp mảnh lên vải nền ở màn thưởng**
+- Bỏ viền mực của mảnh ở màn thưởng (và mọi nơi mảnh vải hiện ra), thay bằng bóng đổ mỏng và mép trong hơi tối.
+- Hoạt ảnh kim chạy dọc mép từng mảnh (mảnh dưới trước), mũi khâu viền chăn (blanket stitch), có công tắc thử mũi chạy và mũi quấn mép; mũi cách mép vào trong đều khoảng 2,5% bề rộng vải (dời đường viền vào trong, không thu nhỏ quanh tâm như đường chỉ nét đứt hiện tại); màu chỉ tương phản nhẹ theo từng mảnh; cả lượt 2–2,5 s, tua tối đa 1,5 lần, giữ nhịp rút chỉ cuối. Bỏ đường may vàng giữa các mảnh.
+- Lý do: đường chỉ nét đứt hiện tại thu nhỏ đường viền 88% quanh tâm nên lệch ra ngoài hoặc cắt ngang mảnh ở hình có phần mảnh, lõm (tay áo, cổ chữ V, tai thỏ, lỗ tim); viền mực đậm co giãn theo cỡ mảnh làm sản phẩm mất chất vải; ba lớp nét chồng ở cùng mép.
+
+**Kiểm tra:** `node smoke.js` qua 6 sản phẩm; `node bend-target.js` 6/6 (mới, chép từ web-demo); `node alt-solve.js` 7/7.
+
+### 17. [CHÍNH THỨC ĐÃ DUYỆT / OFFICIALLY APPROVED] Màn 7 Củ Cà Rốt (Carrot) Chuyển Thể Từ Kho Tranh Vẽ Color Page (2026-11-09)
+
+1. **Khởi tạo kho dữ liệu hình vẽ riêng biệt (`Assets/Docs/ColorPageData/`)**:
+   - Trích xuất và lưu trữ danh mục 556 hình vẽ cấp độ từ `D:\Work\Unity-project\APK Clone\Color Page\Assets`.
+   - Lưu trữ đa giác chuẩn hóa `extracted_shapes/` và ảnh gốc tham chiếu `reference_images/` cho 25 đối tượng tiêu biểu (cà rốt, vịt con, quả sồi, hoa hướng dương, nấm, bánh kem, cá, v.v.) để tái sử dụng lâu dài mà không cần quét lại APK.
+
+2. **Thiết kế Level 14 & Sản Phẩm 7 (`carrot` — Củ Cà Rốt)**:
+   - **Bảng màu nguyên bản**: Nền cam tươi `#F87838`, bóng `#D85810`, vệt sáng `#FFA868`, cuống lá xanh non `#90C018` / `#B0E048`, viền đen `#261E1A`.
+   - **Cấu trúc 4 node & công thái học**:
+     - 2 chốt ghim cố định ở vai: `[0.30, 0.24]` và `[0.70, 0.24]`.
+     - 1 node rãnh cuống ở đỉnh `[0.50, 0.27]` và 1 node chóp đáy `[0.50, 0.90]`.
+     - Khoảng cách an toàn $\min d = 73.2\text{px}$ (vượt xa mức tối thiểu $40\text{px}$).
+     - Bắt buộc uốn cong phình 2 cạnh sườn củ cà rốt ra ngoài (`solBendOverride: { 2: -0.16, 3: -0.16 }`) để đạt ngưỡng thắng $94\%$ (nếu chỉ cắm chốt thẳng, độ khớp chỉ đạt $29.2\%$).
+   - **Màn thưởng hoàn thiện**:
+     - Vẽ 2 tai lá xanh non vểnh hai bên ở rãnh cuống (`carrotLeaves`).
+     - Mắt cười xinh xắn và 3 nếp vân đặc trưng của củ cà rốt (`carrotRims`).
+3. **Kiểm thử tự động**:
+   - `node smoke.js`: **PASS 100% cả 7 sản phẩm** (Kem, Cardigan, Trái tim, Bé thỏ, Chậu hoa, Dâu tây, Củ cà rốt).
+   - `node check.js`: **PASS 15/15 màn** đạt chuẩn công thái học và độ khớp.
+
+
+### 18. [CHÍNH THỨC ĐÃ DUYỆT / OFFICIALLY APPROVED] Cải Tiến Viền May Mảnh Hoàn Thành — May Giấu Chỉ Liền Khối 3D (Seamless Pressed Seam / Ladder Stitch) (2026-11-10)
+
+1. **Bối cảnh & Vấn đề giải quyết**:
+   - Trước đây, đường may ráp nối các mảnh ở màn thưởng hoàn thành sử dụng màu chỉ vàng mù tạt cố định (`C.mustardDeep = #C9932E`) bọc viền trắng đục to (`4.6px`) và hai chấm tròn đen mô phỏng lỗ đâm kim ở mỗi đầu mũi chỉ.
+   - Khi hoàn thành, đường may vẫn nằm nổi trên mặt vải, tạo tương phản gắt với các mảnh vải khác màu (áo cardigan xanh xô thơm, nơ thỏ hồng, quả dâu đỏ, chậu hoa, củ cà rốt), cộng thêm viền mực đen của từng mảnh khiến sản phẩm trông bị rời rạc, thô và lộ vết chắp vá.
+
+2. **Giải pháp kỹ thuật đã triển khai (Phương Án 2: May Giấu Chỉ Liền Khối 3D)**:
+   - **Hàm tính màu chỉ động (`seamTone`)**: Tự động trích xuất màu sắc từ `fabric.dark` và `fabric.light` của chính mảnh vải đang may trong `product().seams`, đảm bảo màu chỉ tiệp hoàn toàn vào nền vải (Tone-on-tone) thay vì ép một màu vàng mù tạt duy nhất.
+   - **Loại bỏ hoàn toàn các chi tiết thô**:
+     - Xóa bỏ dải viền trắng đục dày cộm `4.6px` và hai chấm đen đâm kim làm bẩn vải.
+     - Thay bằng mũi chỉ thanh mảnh `1.6px`, vệt bóng sáng chỉ thêu `0.8px` và rãnh bóng đổ chìm `2.4px`.
+   - **Hiệu ứng kìm chỉ vào trong (Tuck-in transition)**:
+     - *Trong pha `stitch`*: Các mũi chỉ tiệp màu xuất hiện dần theo kim may và nốt nhạc ngũ cung để người chơi thưởng thức trọn vẹn hành động may vá.
+     - *Trong pha `cinch` (rút chỉ)*: Khi kim giật rút căng sợi chỉ, các mũi chỉ ngoài co ngắn lại (`kLen = 1 - tuck * 0.45`) và mờ dần lặn vào trong khe nếp gấp (`stitchAlpha` giảm từ 1 về 0).
+     - *Trong các pha hoàn thành (`tapReady`, `reveal`, `decor`, `done`)*: Sợi chỉ ngoài hoàn toàn lặn vào trong mép vải (giống kỹ thuật may giấu chỉ Ladder Stitch của thú bông thủ công), chuyển thành **Rãnh Mí May Ép Phẳng 3D (Seamless Pressed Seam Crease)**:
+       - Rãnh bóng tối chìm 3D giữa hai mép vải gấp (`lineWidth: 2.4px`, màu bóng tối mềm của chất liệu vải).
+       - Gờ nẹp phản quang nhẹ (`lineWidth: 1.0px`, màu sáng của vải).
+       - Vết kìm mí siêu nhỏ (`micro-tuck dimples`) chìm sâu trong khe tạo cảm giác vải khâu thủ công tinh xảo thực tế.
+   - **Khử viền cắt đoạn ở sản phẩm đa mảnh**:
+     - Với sản phẩm ghép nhiều mảnh (Cardigan, Bé thỏ, Que kem, Chậu hoa), loại bỏ đường viền nét đứt trắng thu nhỏ bên trong từng mảnh (`stitchA = 0` khi ráp hoàn chỉnh) để toàn bộ sản phẩm hòa quyện thành một khối may nhồi bông liền mạch, sạch sẽ và sang trọng.
+
+3. **Kiểm thử tự động & Đồng bộ**:
+   - `node smoke.js`: **PASS 100% cả 7 sản phẩm** (`icecream`, `cardigan`, `heart`, `bunny`, `flowerpot`, `strawberry`, `carrot`).
+   - `node alt-solve.js`, `bend-target.js`, `check.js`: **PASS 100%**.
+   - Đã đồng bộ mã nguồn sang máy local tại `D:\Work\Unity-project\GraphNode Puzzle\Prototype\web-v2\game.js`.
+
+### 19. [CHÍNH THỨC ĐÃ DUYỆT / OFFICIALLY APPROVED] Tích Hợp Quỹ Đạo May Viền Liên Tục Như Web-Demo Kết Hợp Phong Cách Giấu Chỉ Liền Khối 3D (2026-11-10)
+
+1. **Bối cảnh & Yêu cầu của người chơi**:
+   - Xem xét logic may theo viền của bản `Prototype/web-demo` (tuân thủ nguyên tắc: **tuyệt đối không sửa `web-demo`**).
+   - Dựa vào quỹ đạo và vị trí kim may lướt theo viền chuẩn xác của `web-demo`, tích hợp vào `Prototype/web-v2/` nhưng giữ trọn phong cách thẩm mỹ đã duyệt của Phương Án 2 (chỉ may tiệp màu Tone-on-tone, không viền trắng đục 5px/chấm đen, hiệu ứng rút chỉ kìm vào trong và rãnh mí may ép phẳng 3D liền khối).
+
+2. **So sánh cơ chế kỹ thuật & Tinh chỉnh**:
+   - **Vấn đề ở bản `web-v2` cũ**: Hàm `buildStitches` phân đoạn đường may thành từng dây cung thẳng rời rạc bước $13 - 21\text{px}$, tiến độ `stDone` nhảy theo chỉ mục rời rạc làm kim giật qua từng điểm giữa, đường may bị gãy khúc không ôm sát viền cong tự nhiên.
+   - **Ưu điểm của `web-demo`**: Tính toán trực tiếp theo hàm tham số tiến độ liên tục $p \in [0, 1]$ qua `seamPart(p)`, `seamPointOf(seam, q)` và `seamPoint(p)`, kim may lướt liên tục bám sát từng tọa độ cong của `solPath`, góc xoay tiếp tuyến theo hướng cong viền mượt mà.
+   - **Sự hòa quyện hoàn hảo trong `web-v2` mới**:
+     - *Bỏ hoàn toàn chia đoạn thẳng `buildStitches`*: Kim may di chuyển liên tục $C^1$ dọc theo các đường cong `R.seams` lấy từ `solPath` hoặc vòng gấp `outline.loops`.
+     - *Dáng kim may sống động*: Kim nghiêng một góc tự nhiên `rotate(ang - 0.45)` mô phỏng bàn tay thợ may đâm kim vào mép vải; kèm sợi chỉ căng kéo từ chóp đường may vào mắt kim trong pha rút chỉ (`cinch`).
+     - *Đường chỉ thêu đứt đoạn uốn lượn mềm mại (`stitchAlpha > 0.01`)*: Dùng `ctx.setLineDash([6, 4])` vẽ bám sát đường cong thực tế với 3 lớp (bóng chìm `2.4px`, chỉ tiệp màu `1.6px`, sợi tơ phản quang `0.8px`).
+     - *Rút chỉ kìm vào trong (`cinch`)*: Nhăn nhúm vi mô co giãn vải vuông góc đường may (`R.pucker > 0.02`), chỉ ngoài lặn dần vào trong khe nếp gấp (`stitchAlpha \to 0`).
+     - *Màn thưởng liền khối 3D (`tapReady`, `reveal`, `decor`, `done`)*: Chuyển hoàn toàn thành rãnh mí may ép phẳng 3D (`creaseAlpha = 1`), rãnh bóng chìm mềm `2.4px`, gờ nẹp phản quang `1.0px` và vết kìm mí siêu nhỏ `1.1px`, đem lại cảm giác các mảnh vải được may giấu chỉ liền lạc thành một sản phẩm nhồi bông thủ công hoàn hảo.
+
+3. **Kiểm thử tự động & Đồng bộ**:
+   - `node smoke.js`: **PASS 100% cả 7 sản phẩm** (`icecream`, `cardigan`, `heart`, `bunny`, `flowerpot`, `strawberry`, `carrot`).
+   - `node alt-solve.js`, `bend-target.js`, `check.js`: **PASS 100%**.
+   - Đã đồng bộ toàn bộ mã nguồn sang máy local tại `D:\Work\Unity-project\GraphNode Puzzle\Prototype\web-v2\`.
+   - Cam kết giữ vững: **Không thay đổi bất kỳ file nào trong `Prototype/web-demo`**.
+
+### 20. [CHÍNH THỨC ĐÃ DUYỆT / OFFICIALLY APPROVED] Nâng Cấp Màu Vải Tươi Sáng & Cơ Chế Viền "Mảnh Sau Đè Lên Che Viền Chỉ Mảnh Trước" (2026-11-10)
+
+1. **Bối cảnh & Yêu cầu của người chơi**:
+   - *Về màu sắc*: Người chơi nhận xét các màn Dâu Tây (`strawberry`) và Cà Rốt (`carrot`) có màu sắc rất tươi sáng, đẹp mắt; trong khi các màn cũ trông tối và xỉn màu hơn. Người chơi yêu cầu: **Bỏ vệt sáng trắng (specular highlight), giữ màu tươi sáng** — màu sắc căng tươi, chuyển sắc mềm mại, sáng sủa, không bị lóa trắng bóng kính.
+   - *Về phần viền & lỗi đè viền chỉ ở màn 2*: Người chơi đề xuất ý tưởng khắc phục triệt để và tự nhiên: **Hình mảnh sau sẽ đè lên viền chỉ của mảnh trước và che phần chỉ của mảnh trước**, như thế hình ảnh sẽ được khắc phục một cách tự nhiên nhất mà không cần các can thiệp phức tạp.
+   - *Về phong cách nét viền*: Giữ viền nét bút chì màu sạch sẽ (`clean colored-pencil line`), trùng tông màu hình nhưng đậm hơn một chút để định hình rõ khối, không nham nhở, không tạo nếp nhăn giả.
+
+2. **Các cải tiến kỹ thuật cụ thể**:
+   - **Bỏ vệt sáng trắng & Giữ màu tươi sáng (`paintFlat` & `paintFabric`)**:
+     - Trong `paintFlat`: Bỏ vệt cong elip trắng (`ellipse`) và chấm sáng (`arc`), giữ lại **Radial Gradient đa sắc** tỏa từ góc trên trái đón sáng `(0.32w, 0.28h)` đến thân màu căng mọng và rìa bóng đổ 3D.
+     - Trong `paintFabric`: Loại bỏ hoàn toàn lớp gradient đen dìm tối $22\%$ `rgba(fb.dark, 0.22)` ở đáy và gỡ bỏ viền đen trong $25\%$ dày 6px gây bẩn/xỉn màu. Thay bằng **ánh sáng ấm chiếu từ trên xuống** (`rgba(255,255,255,0.22)` đỉnh $\to$ $0$ đáy) và viền bóng siêu mỏng $0.08$.
+     - Nâng cấp bảng màu cho toàn bộ 7 sản phẩm trong `levels.js`: Viên kem dâu sữa ngọt `#FF7B9B`, Ốc quế mật ong `#E2A855`, Áo len xanh bạc hà tươi `#48C774`, Áo lót trắng kem sạch `#FFF8EB`, Cổ áo xanh tươi `#3CB867`, Trái tim san hô `#FF5E7E`, Bé thỏ ngọc trai `#FFFDFC`, Chậu hoa terracotta ấm `#E87D48`, Sen đá ngọc bích `#58C774`. Toàn bộ sản phẩm bừng sáng tươi tắn, đồng bộ với Dâu Tây & Cà Rốt.
+   - **Cơ chế viền phân tầng "Mảnh sau đè lên che viền chỉ mảnh trước" (Layered Piece-over-Seam Rendering)**:
+     - Trước đây: Toàn bộ các mảnh được vẽ xong, sau đó hàm `drawSeam` vẽ toàn bộ đường may đè lên trên cùng. Dẫn tới ở Màn 2, đường may dọc của áo lót bị vẽ đè lên trên cổ áo chữ V.
+     - Cơ chế mới: Trong `drawReward` (ở các pha `stitch`, `cinch`, `tapReady` và pha hoàn thành `deep`), vòng lặp duyệt theo thứ tự lớp từ dưới lên trên `backToFront()` (`order`):
+       1. Vẽ mảnh thứ $k$.
+       2. Vẽ các đường may thuộc sở hữu của mảnh $k$ (`drawSeam(p, pc.i)`).
+       3. Mảnh tiếp theo $k+1$ (mảnh sau) được vẽ đè lên $\to$ lớp vải của mảnh sau tự nhiên che phủ hoàn toàn bất kỳ phần viền chỉ nào của mảnh trước nằm bên dưới nó!
+       4. Vẽ đường may của mảnh $k+1$.
+     - Kết quả: Áo lót vẽ trước $\to$ đường may áo lót vẽ xong $\to$ Cổ áo vẽ đè lên trên $\to$ Cổ áo tự nhiên che khuất toàn bộ phần đường may áo lót bên dưới, hai đường may cổ áo V nổi bật sắc nét trên cùng. Khắc phục 100% tự nhiên, đúng nguyên lý may mặc thực tế!
+   - **Nét viền bút chì màu sạch sẽ (Clean Colored-Pencil Seam Line)**:
+     - Nét viền $2.2\text{px}$ dạng bút chì màu (`tn.pencil = darken(dark, 0.25)`), kèm bóng mờ nhẹ $3.0\text{px}$ bên dưới.
+     - Không có nét đứt nham nhở, không tạo nếp nhăn/dimples giả làm dơ hình.
+
+3. **Kiểm thử tự động & Đồng bộ**:
+   - `node smoke.js`: **PASS 100% cả 7 sản phẩm** (`icecream`, `cardigan`, `heart`, `bunny`, `flowerpot`, `strawberry`, `carrot`).
+   - `node alt-solve.js`, `bend-target.js`, `check.js`: **PASS 100%**.
+   - Đã đồng bộ mã nguồn sang máy local tại `D:\Work\Unity-project\GraphNode Puzzle\Prototype\web-v2\`.
+   - Cam kết giữ vững: **Không thay đổi bất kỳ file nào trong `Prototype/web-demo`**.
+
+### 21. [CHÍNH THỨC ĐÃ DUYỆT / OFFICIALLY APPROVED] Bỏ Cơ Chế Đổi Màu Ở Mảnh Hoàn Thiện & Tăng Cường Animation Nảy Mừng (2026-11-10)
+
+1. **Bối cảnh & Yêu cầu của người chơi**:
+   - Người chơi đề xuất: **Mảnh ghép đã có viền đen phân biệt rồi, mảnh hoàn thiện chỉ cần animation để người chơi hiểu đang làm gì, không cần thiết phải đổi màu, và mảnh trước đã đè lên mảnh sau nên không sợ bị sai đường viền**.
+   - Quyết định: Loại bỏ hoàn toàn cơ chế đổi màu / dìm tối (`deep`) ở màn thưởng; giữ nguyên vẹn 100% màu sắc tươi sáng nguyên bản của vải; tập trung vào Animation nảy tưng bừng (`squash & stretch bounce`) và hiệu ứng sóng ánh sáng chúc mừng (`celebratory sparkles / confetti`) để đem lại cảm giác thỏa mãn (satisfaction) tột độ.
+
+2. **Các cải tiến kỹ thuật cụ thể**:
+   - **Gỡ bỏ hoàn toàn logic đổi màu sẫm (`deep`)**:
+     - Trong `paintFabric`, `paintFlat`, và `paintPattern`: Loại bỏ các lớp phủ làm tối `rgba(fb.dark, 0.12 * deep)`. Màu sắc vải ở màn thưởng luôn giữ trọn vẹn màu gốc tươi tắn, không bị "ám tối" bất ngờ.
+     - Trong `drawReward`: Gỡ bỏ khối lệnh clip che màu `C.baseDeep` và `drawPiece(..., deep = 1)`. Vải nền và toàn bộ các mảnh vải giữ nguyên bảng màu ấm áp, sáng sủa và đồng bộ từ đầu đến cuối.
+   - **Tăng cường Animation Nảy Mừng khi hoàn thành (Squash & Stretch Bounce)**:
+     - Khi người chơi chạm vào sản phẩm ở pha `tapReady`: Kích hoạt dao động đàn hồi `R.sq = 0.15 * Math.cos(R.t * 14) * Math.exp(-R.t * 3.5)`. Sản phẩm nảy tưng lên vui nhộn như một chiếc gối nhồi bông thật sự khi được vỗ nhẹ.
+     - Bung nở chùm hạt ánh sáng vàng kem & sao sáng (`burst`, `sparkle`) kèm hợp âm du dương chúc mừng.
+   - **Cơ chế lớp đè lớp (Layered rendering)**:
+     - Tiếp tục vận hành mượt mà: Mảnh sau đè lên che viền chỉ của mảnh trước, đảm bảo đường may luôn nằm đúng lớp vật lý, không bao giờ bị cắt chéo hay sai lệch viền.
+
+3. **Kiểm thử tự động & Đồng bộ**:
+   - `node smoke.js`: **PASS 100% cả 7 sản phẩm**.
+   - `node alt-solve.js`, `bend-target.js`, `check.js`: **PASS 100%**.
+   - Đã đồng bộ mã nguồn sang máy local tại `D:\Work\Unity-project\GraphNode Puzzle\Prototype\web-v2\`.
+   - Cam kết giữ vững: **Không thay đổi bất kỳ file nào trong `Prototype/web-demo`**.
+
+
+### 22. Đồng bộ chuẩn từ `Prototype/web-demo` bản mới nhất (2026-11-11)
+
+1. **Nguồn chuẩn đồng bộ**:
+   - Đồng bộ toàn bộ mã nguồn mới nhất ngày `2026-11-11` từ `D:\Work\Unity-project\GraphNode Puzzle\Prototype\web-demo` (`web/core.js`, `web/levels.js`, `web/game.js`, `web/mask.js`, `web/startgen.js`, `web/thresholds.js`, `web/cat-vai-nam.html`, cùng các script kiểm thử `alt-solve.js`, `bend-target.js`, `check.js`, `smoke2.js` -> `smoke.js`).
+   - Đồng bộ đầy đủ vào cả hai thư mục `web-v2` (worktree `explain_git_worktree/Prototype/web-v2/` và local `D:\Work\Unity-project\GraphNode Puzzle\Prototype\web-v2/`), giữ nguyên cấu trúc phẳng (`index.html`, `server.js`) và **tuyệt đối không chỉnh sửa Unity hay `web-demo`**.
+
+2. **Nội dung thay đổi đồng bộ từ `web-demo`**:
+   - Bộ 6 sản phẩm (`icecream`, `cardigan`, `heart`, `bunny`, `flowerpot`, `strawberry` — Màn 1–6) với bảng màu `fabric.deep` + viền đen dày `#2A2326` kiểu tranh tô màu, cơ chế ép con dấu tròn (`drawPressPlate`, `drawPressRing`, `drawSheen`), hiệu ứng loang màu nền `C.baseDeep` và nhãn `"Hoàn thành!"` (`drawDoneLabel`).
+   - Các file logic `core.js`, `mask.js`, `startgen.js`, `thresholds.js` khớp 100% với `web-demo`.
+
+3. **Kiểm thử sau đồng bộ**:
+   - `node smoke.js`: **PASS 6/6 sản phẩm** (`icecream`, `cardigan`, `heart`, `bunny`, `flowerpot`, `strawberry`).
+   - `node alt-solve.js`: **PASS 7/7 trường hợp**.
+   - `node bend-target.js`: **PASS 6/6 kiểm tra**.
+   - `node check.js`: Hoàn tất cho 14 level.
+
+### 23. [ĐÃ DUYỆT / APPROVED] Nâng Cấp Nghệ Thuật Hướng A (Cozy Storybook Ink) & Trang Trí Cartoon Không Mặt Cười (2026-11-11)
+
+1. **Yêu cầu & định hướng thẩm mỹ**:
+   - Áp dụng **Hướng A (Cozy Storybook Ink)** trong phạm vi `Prototype/web-v2/` (tuyệt đối không sửa Unity hay `web-demo`).
+   - Nâng cấp toàn bộ phần trang trí (`DECOR`) theo phong cách **Cartoon nghệ thuật**, loại bỏ hoàn toàn kiểu mặt cười kawaii trên đồ vật (`icecream`, `heart`, `flowerpot`, `strawberry`) và tinh giản đôi mắt anime cỡ lớn trên `bunny`.
+
+2. **Các cải tiến cụ thể trong `Prototype/web-v2/game.js`**:
+   - **Đổ bóng, khối màu & nét đồng tông Hướng A (`drawPiece`, `fab`, `paintStoryGrad`, `paintInnerEdge`, `paintFabric`, `paintFlat`)**:
+     - Cho `fab(i)` dùng `fb.deep.line` pha 28% `#2A2326` (và `#5E1222` pha 28% cho `strawberry`), gỡ bỏ ghi đè cứng `if (cloth) ctx.strokeStyle = '#2A2326'`.
+     - Chuyển sắc tỏa tròn ánh sáng kem ấm góc trên-trái (`#FFF8EA`), râm nhẹ dưới-phải, kết hợp viền sáng mảnh bên trong (`#FFF9EE`) và bóng đổ tách lớp giữa các mảnh.
+   - **Nền sân khấu theo từng sản phẩm & vị trí nhãn (`STAGE_BG`, `drawRewardScene`, `drawDoneLabel`)**:
+     - Thay `C.baseDeep` phẳng bằng nền tỏa tròn pastel bổ trợ riêng từng màn (`STAGE_BG`) kèm bóng tiếp đất nhẹ dưới chân sản phẩm.
+     - Đẩy vị trí `drawDoneLabel` lên khoảng trống phía trên (`clamp(R.top - 66, 118, 168)`) để không che mất quả cherry hay cuống dâu khi hoàn thành.
+   - **Hiển thị `DECOR` đúng thứ tự chiều sâu (`clipTo` / `after`)**:
+     - Bổ sung cơ chế vẽ `clipTo` (cắt khít trong đường viền mảnh trước khi tô nét viền ngoài) và `after` (vẽ ngay sau từng mảnh để mảnh trên che đúng phần gốc, ví dụ bánh quế sau viên kem, gân lá sau chậu hoa, dây ruy-băng sau tim trong, nơ hoa sau mặt thỏ).
+     - Thiết kế mới chi tiết cho cả 6 màn:
+       - `icecream`: Sốt kem chảy gợn sóng, cốm màu pastel, bánh quế cuộn, cherry + lá bạc hà, áo giấy nếp sọc mint có ruy-băng cong.
+       - `cardigan`: Bo gân len ở cả gấu áo lẫn 2 cổ tay, dải nẹp áo + bóng cổ áo, 4 khuy gỗ chữ X, khăn gấp ló túi trái, ghim hoa cúc.
+       - `heart`: Chấm ngọc trai, dải ruy-băng vàng kem vắt chéo + nơ lụa vai phải, nhánh hoa 5 cánh + lá vai trái, vệt bóng men sứ tim trong.
+       - `bunny`: Hoa cúc có lá cài tai phải, mắt oval cartoon tối giản, má hồng loang mềm, mũi nhỏ tĩnh (không miệng cười ω), chấm bi trên nơ đỏ.
+       - `flowerpot`: Vẽ gân lá trước phần chậu để sạch mép chậu, bọ rùa cartoon đậu lá phải, dải men kem chấm đất nung + bóng vành chậu, nhụy hướng dương xoắn ốc Fibonacci.
+       - `strawberry`: Đài lá 2 tầng, cuống cong + hoa dâu trắng 5 cánh, lưới hạt dâu hình giọt nước xếp đều có hõm bóng và vệt sương căng mọng.
+
+3. **Đồng bộ & Kiểm thử**:
+   - Đã chạy `smoke.js`, `alt-solve.js`, `bend-target.js`, `check.js` và kiểm tra trực tiếp trên ảnh chụp Chrome của `http://localhost:3000/` cho toàn bộ 6 màn hoàn thiện + màn chơi.
+   - Đồng bộ `game.js` và `CHANGELOG-HANDOFF.md` sang bản `D:\Work\Unity-project\GraphNode Puzzle\Prototype\web-v2\` (chỉ trong thư mục `web-v2`).
+
+### 24. [MỚI / FEATURE] Thêm Màn 7 (`dogman`): Đầu Chó – Thân Người (3 Mảnh, Standalone) (2026-11-11)
+
+1. **Thiết kế màn chơi mới trong `Prototype/web-v2/levels.js` (`LEVELS[14..16]` & `PRODUCTS[6]`)**:
+   - Tạo **Màn 7 (`id: 'dogman'`, `standalone: true`)** gồm 3 mảnh theo thứ tự chơi `[14, 15, 16]` và thứ tự xếp lớp sau–trước `order: [14, 16, 15]` (áo thun xám bọc sát quanh chân cổ chú chó và phủ qua cạp quần kaki):
+     - `LEVELS[14]` (`dogman_pants` – **Quần kaki**, `tier: 'easy'`, 9 node, 3 node tự do, `bendFree: [1, 7]`, vải gân kem ấm `#E8DAC0`).
+     - `LEVELS[15]` (`dogman_shirt` – **Áo thun xám**, `tier: 'medium'`, 13 node, 6 node tự do, `bendFree: [7]`, vải len xám mát `#DDE3EC`).
+     - `LEVELS[16]` (`dogman_head` – **Đầu chú chó**, `tier: 'medium'`, 12 node, 5 node tự do, `bendFree: [7, 8]`, `solBendOverride: { 7: -0.026, 8: -0.028 }`, vải nỉ nâu caramel `#CC8242`).
+
+2. **Trang trí Cartoon Hướng A & tinh chỉnh Menu trong `Prototype/web-v2/game.js`**:
+   - Bổ sung màu nền sân khấu `STAGE_BG.dogman = '#DEE4F2'` và `DECOR.dogman` gồm 6 bước theo chiều sâu (`dogPantsDecor`, `dogHeadShade`, `dogHeadFace`, `dogShirtDecor`, `dogArm` trái/phải):
+     - Quần kaki có bóng đổ trong ống quần, đường may khóa kéo, hai túi chéo đính đinh tán vàng và nếp gấp đùi ngồi.
+     - Đầu chú chó tô loang mõm đen đặc trưng, quầng mắt tối, mảng lông cổ ấm, hõm tai trong, mũi đen bóng, nét mép trầm tư (không mặt cười), râu mép và mắt cartoon có chân mày nhẹ.
+     - Áo thun xám bo cổ ôm sát cổ chó, nếp gấp vải bụng áo, chữ ngực `YODY`, cùng hai cẳng tay/bàn tay cartoon (`dogArm`) thò ra từ dưới gấu tay áo ngắn đặt nhẹ lên đùi.
+   - Điều chỉnh bố cục menu thả xuống (`MENU_Y = 58`, `CHIP_H = 36`, `HEAD_H = 20`, `MENU_PAD = 10`) để tất cả 7 màn không chạm vào hai nút footer bên dưới trên khung `390×844`.
+
+### 25. [MỚI / FEATURE] Thêm Màn 8 (`mushroom`): Nấm Đỏ Từ Color Page Data (3 Mảnh, Standalone) (2026-11-11)
+
+1. **Bóc tách biên dạng từ dữ liệu Color Page (`ICON-mushroom.png` & `mushroom.json`) trong `Prototype/web-v2/levels.js` (`LEVELS[17..19]` & `PRODUCTS[7]`)**:
+   - Tạo **Màn 8 (`id: 'mushroom'`, `standalone: true`)** gồm 3 mảnh theo đúng thứ tự chơi và xếp lớp `order: [17, 18, 19]` (`mũ nấm` đè sạch mép cổ thân nấm, `cụm cỏ` đè sạch chân thân nấm — không lộ phần dư phía sau):
+     - `LEVELS[17]` (`mushroom_stem` – **Thân nấm**, `tier: 'medium'`, `winThreshold: 0.95`, 8 node, 4 node tự do `[2, 3, 6, 7]`, `bendFree: [4]`, `solBendOverride: {'3':-0.075,'4':-0.145,'5':-0.075}`).
+     - `LEVELS[18]` (`mushroom_cap` – **Mũ nấm đỏ**, `tier: 'medium'`, `winThreshold: 0.95`, 7 node, 4 node tự do `[1, 2, 5, 6]`, `bendFree: [3]`, `solBendOverride: {'3':-0.110}`).
+     - `LEVELS[19]` (`mushroom_grass` – **Cụm cỏ**, `tier: 'hard'`, `winThreshold: 0.94`, 5 node, 3 node tự do `[0, 2, 3]`, `bendFree: [2]`, `solBendOverride: {'0':-0.015,'1':-0.055,'2':-0.210,'3':-0.055,'4':-0.015}`).
+   - Toàn bộ biên dạng mảnh ghép khớp sát silhouette gốc `ICON-mushroom.png` (~96.76% hợp nhất 3 mảnh, ~98.08% mũ nấm, ~90.36% cụm cỏ), giữ `minNN >= 0.15` và đáp ứng đầy đủ ràng buộc `startgen` (`0` cảnh báo).
+
+2. **Trang trí Cartoon Hướng A theo Color Page & gọn Menu cho 8 màn trong `Prototype/web-v2/game.js`**:
+   - Thêm màu nền sân khấu `STAGE_BG.mushroom = '#EFF2E4'` và `DECOR.mushroom` (`clipTo` các mảnh `17, 18, 19`) với 3 hàm `mushroomStemDecor`, `mushroomCapDecor`, `mushroomGrassDecor` tái hiện bảng màu cel-shading gốc và đủ 6 đốm trắng trên mũ nấm.
+   - Thu gọn bố cục menu thả xuống (`MENU_Y = 56`, `MENU_PAD = 8`, `CHIP_H = 30`, `CHIP_GAP = 4`, `HEAD_H = 16`, font `12.5px`) để toàn bộ 28 mục thuộc 8 màn nằm gọn trên nút footer (`y <= 678`).
+
+### 26. [CẬP NHẬT / UPDATE] Vỏ Kem Ốc Quế Lên Lớp Trên & Rút Gọn Bộ 4 Màn Chính (`Màn 1`–`Màn 4`) (2026-11-11)
+
+1. **Đảo lớp vỏ bánh ốc quế lên trên viên kem ở Màn 1 (`icecream`)**:
+   - Trong `Prototype/web-v2/levels.js`: Đổi thứ tự vẽ thành phần hoàn thiện từ `order: [1, 0]` sang `order: [0, 1]` để mảnh `Ốc quế` (`1`) nằm đè lên `Viên kem` (`0`), hiện trọn vẹn toàn bộ hình tam giác vỏ ốc quế (mép trên tới mũi nhọn) kết hợp giữ nguyên lớp áo giấy sọc mint.
+   - Trong `Prototype/web-v2/game.js`: Bổ sung hỗ trợ hook `before` trong `drawRewardScene`, chuyển thanh bánh quế cuộn sang `{ before: 0 }` để giữ đúng chiều sâu phía sau viên kem, đồng thời gỡ bóng đổ ngược của viên kem lên mặt trước vỏ ốc quế trong `clipTo: 1`.
+
+2. **Bỏ Màn 3 (`heart`), Màn 5 (`flowerpot`), Màn 6 (`strawberry`), Màn 7 (`dogman`) và đánh số lại**:
+   - Trong `Prototype/web-v2/levels.js`: Rút gọn `LEVELS` về `11` mảnh (`0..10`) và `PRODUCTS` về `4` màn nối tiếp liền mạch:
+     - **Màn 1 (`icecream`)**: `[0, 1]` (`scoop`, `cone`)
+     - **Màn 2 (`cardigan`)**: `[2, 3, 4]` (`cardigan`, `shirt`, `collar`)
+     - **Màn 3 (`bunny`)** *(trước là Màn 4)*: `[5, 6, 7]` (`bunny_ears`, `bunny_head`, `bunny_bow`)
+     - **Màn 4 (`mushroom`)** *(trước là Màn 8, bỏ `standalone: true`)*: `[8, 9, 10]` (`mushroom_stem`, `mushroom_cap`, `mushroom_grass`)
+   - Trong `Prototype/web-v2/game.js`: Cập nhật lại toàn bộ chỉ số mảnh trong `DECOR.bunny` (`5, 6, 7`) và `DECOR.mushroom` (`8, 9, 10`); gỡ `STAGE_BG`, `DECOR` và các hàm trang trí của 4 màn đã bỏ; mở rộng lại kích thước menu thả xuống cho 4 màn (`MENU_Y = 62`, `MENU_PAD = 10`, `CHIP_H = 36`, `CHIP_GAP = 6`, `HEAD_H = 20`, font `13.5px`).
+   - Cập nhật bộ test trong `Prototype/web-v2/` (`alt-solve.js`, `bend-target.js`, `smoke.js`) cho đúng 4 màn còn lại.
+
+
+### 27. [CẬP NHẬT / FEATURE] Đảo Vỏ Ốc Quế Ra Sau Viên Kem (Màn 1) & Thêm Màn 5 (`acorn`: Hạt Dẻ & Lá Sồi Color Page) (2026-11-11)
+
+1. **Đưa vỏ ốc quế về lớp sau viên kem ở Màn 1 (`icecream`)**:
+   - Trong `Prototype/web-v2/levels.js`: Đổi thứ tự vẽ thành phẩm từ `order: [0, 1]` về lại `order: [1, 0]` để vỏ ốc quế (`1`) nằm phía sau viên kem (`0`), đồng bộ đúng phần chồng mép trên.
+   - Trong `Prototype/web-v2/game.js`: Khôi phục bóng đổ mềm của viên kem (`LV[0]`) lên miệng vỏ ốc quế trong `clipTo: 1`, chuyển que bánh quế cuộn về `{ after: 1 }` nằm sau viên kem và trước lớp trên cùng, cập nhật lại chú thích `drawRewardScene`.
+
+2. **Thêm Màn 5 (`acorn` – Hạt dẻ & Lá sồi) từ Color Page Data (`ICON-acorn.png` & `acorn.json`)**:
+   - Trong `Prototype/web-v2/levels.js` (`LEVELS[11..13]` & `PRODUCTS[4]`):
+     - Xây dựng **Màn 5** nối tiếp bình thường sau Màn 4 (`levels: [11, 12, 13]`, `order: [11, 12, 13]`, `seams: [[11, 0, 0], [12, 0, 0], [13, 0, 0]]`) với độ khớp hợp nhất 3 mảnh đạt **95.22% IoU** so với silhouette gốc `ICON-acorn.png`:
+       - `LEVELS[11]` (`oak_leaf` – **Lá sồi**, `tier: 'hard'`, `winThreshold: 0.94`, `12` node, `6` node tự do `[1, 4, 6, 8, 10, 11]`, `bendFree: [0, 10]`, `minNN: 0.154`).
+       - `LEVELS[12]` (`acorn_nut` – **Hạt dẻ**, `tier: 'medium'`, `winThreshold: 0.95`, `8` node, `4` node tự do `[2, 3, 5, 6]`, `bendFree: [2, 3]`, `minNN: 0.172`).
+       - `LEVELS[13]` (`acorn_cap` – **Mũ hạt dẻ**, `tier: 'medium'`, `winThreshold: 0.95`, `8` node, `4` node tự do `[1, 3, 5, 7]`, `bendFree: [0, 4]`, `minNN: 0.162`).
+   - Trong `Prototype/web-v2/game.js`: Bổ sung nền sân khấu `STAGE_BG.acorn = '#F2E7D5'`, trang trí Cartoon Hướng A `DECOR.acorn` và 3 hàm `oakLeafDecor`, `acornNutDecor`, `acornCapDecor` (dùng chung `acornImgMapper` để tái hiện đúng mảng cel-shading xanh `#3A7C00`, gân lá & giọt sương, bóng đổ hạt dẻ/mũ lên lá, vệt sáng `#FAB86E` trên hạt dẻ, bóng dưới vành mũ và hai dải vân sóng `#4F1A04` đặc trưng trên mũ hạt dẻ).
+   - Cập nhật `Prototype/web-v2/smoke.js` thông báo đủ 5 sản phẩm (`Kem, Cardigan, Bé thỏ, Nấm đỏ, Hạt dẻ`).
+
+3. **Kiểm chứng tổng thể**:
+   - Menu 5 màn (`19` nút) giữ nguyên bố cục rộng thoáng, đáy nút thấp nhất ở `y = 552` (an toàn phía trên footer).
+   - Kiểm tra đồng bộ 4 script (`check.js`, `bend-target.js`, `alt-solve.js`, `smoke.js`) và xác nhận trực quan bằng Chrome headless cho thấy 0 lỗi JS, 0 cảnh báo `startgen`.
+
+
+### 28. [CẬP NHẬT / FIX & FEATURE] Sửa Kéo Độ Cong Vòng Cung (`mushroom_grass`), Đặt Toàn Bộ Màn Độ Khó `hard` & Thêm Màn 6 (`sunflower`: Hoa Hướng Dương Color Page) (2026-11-11)
+
+1. **Sửa giới hạn kéo độ cong vòng cung trong `Prototype/web-v2/game.js`**:
+   - **Nguyên nhân**: Giới hạn `clamp(..., -0.18, 0.18)` trong `applyEdgeDrag` chặn cứng các cạnh có độ võng lớn hơn `0.18` (như cạnh `2` của `mushroom_grass` ở Màn 4 có `solBend[2] = -0.210`), cộng thêm độ trễ khi người chơi chạm lệch vào vùng hở giữa dây cung phẳng và viền mẫu.
+   - **Khắc phục**:
+     - `hitTestEdge`: trả thêm tọa độ gần nhất trên dây cung `cx, cy`.
+     - `startEdgeDrag` & `playDown`: lưu độ lệch pháp tuyến ban đầu `grabBias = pointerH0 - curveH0`.
+     - `applyEdgeDrag`: mở rộng biên độ võng lên `[-0.35, 0.35]` và bù mượt `grabBias` trong khoảng kéo `[8..32 px]` khi `Math.abs(ed.h0) < 0.02` (chỉ áp dụng cho dây gần phẳng, bảo toàn hành vi của các cạnh đã cong sẵn).
+
+2. **Chuyển toàn bộ màn sang mức độ `hard` & thêm Màn 6 (`sunflower` – Hoa hướng dương)**:
+   - Trong `Prototype/web-v2/levels.js`:
+     - Đặt toàn bộ `17` level (`LEVELS[0..16]`, Màn 1–6) về `tier: 'hard'`.
+     - Thêm **Màn 6** (`PRODUCTS[5]`, `id: 'sunflower'`, `label: 'Màn 6'`, `levels: [14, 15, 16]`, `order: [14, 15, 16]`, `seams: [[14, 0, 0], [15, 0, 0], [16, 0, 0]]`) dựng từ `IconSunflower.png` & `sunflower.json`, tổng IoU silhouette đạt **94.96%** (theo từng mảng Green/Yellow/Brown đạt `85.5% / 92.0% / 95.7%`, `minNN` `0.146 / 0.233 / 0.282`):
+       - `LEVELS[14]` (`sunflower_leaves` – **Đôi lá xanh**)
+       - `LEVELS[15]` (`sunflower_petals` – **Vòng cánh hoa**)
+       - `LEVELS[16]` (`sunflower_center` – **Nhụy hoa**)
+   - Trong `Prototype/web-v2/game.js`: Bổ sung nền sân khấu `STAGE_BG.sunflower = '#E3EFE4'`, `DECOR.sunflower` và 3 hàm `sunflowerLeavesDecor`, `sunflowerPetalsDecor`, `sunflowerCenterDecor` (tái sử dụng `acornImgMapper`, giữ phong cách cartoon Hướng A không mặt cười với gân lá, mảng bóng cánh hoa và vân lưới nhụy nâu).
+   - Cập nhật `Prototype/web-v2/smoke.js` log đủ 6 sản phẩm (`Kem, Cardigan, Bé thỏ, Nấm đỏ, Hạt dẻ, Hướng dương`).
+
+3. **Kiểm chứng**:
+   - Xác nhận bằng Node (`check.js`, `bend-target.js`, `alt-solve.js`, `smoke.js`) và Chrome headless (`23` mục menu, đáy chip thấp nhất ở `y = 658` phía trên footer; kéo cạnh đáy `mushroom_grass` đạt `-0.2100` và snap sạch; khay & màn hoàn thành Màn 6 khớp tạo hình).

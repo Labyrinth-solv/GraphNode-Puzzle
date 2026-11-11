@@ -1,7 +1,7 @@
 # Đặc Tả Feeling & Logic Đã Chốt (`web-v3` Feeling Specification & Handoff)
 
 > **Mục đích tài liệu:** Dùng để chuyển giao cho một session/phiên bản khác (có thể đang dùng kiến trúc hoặc logic nền khác) nhằm **đồng nhất toàn bộ cảm giác chơi (Game Feel / Juice), giao diện sợi chỉ, âm thanh ngũ cung, màn thưởng khâu ráp và thiết kế màn Lá số 8** thành một bản cuối cùng duy nhất.
-> **File tham chiếu chuẩn:** `Prototype/web-v3/game.js` và `Prototype/web-v3/levels.js`.
+> **File tham chiếu chuẩn:** `Prototype/web-v2/game.js` và `Prototype/web-v2/levels.js` (từ 2026-11-09 bản v2 là bản đích; `web-v3` không còn cập nhật).
 
 ---
 
@@ -125,6 +125,8 @@ function pentaF(step, oct) {
 
 ## 4. Màn Thưởng: Khâu Từng Mũi & Khoảnh Khắc "Chốt" Rút Chỉ (`Cinch & Flatten`)
 
+> **Đã duyệt thay đổi (2026-11-09, chưa làm):** bỏ viền mực của mảnh, thay đường may giữa các mảnh bằng hoạt ảnh khâu đắp viền chăn quanh mép từng mảnh. Xem CHANGELOG mục 16.6.
+
 Ở màn lắp ghép thành phẩm (`Reward Scene`), sau khi người chơi đặt các mảnh vải vào khung, giai đoạn khâu (`R.phase === 'stitch'`) được chia làm **2 pha nối tiếp**:
 
 1. **Pha Khâu từng mũi (`R.t <= stitchDur`):**
@@ -146,6 +148,7 @@ function pentaF(step, oct) {
 ## 5. Thiết Kế Màn Lá Đối Xứng (`flower_leaves`) — Bỏ Mép Gấp, Kéo Chéo Hình Số 8 (`∞`)
 
 - Trong sản phẩm Chậu hoa (`flowerpot`), mảnh **Đôi lá đối xứng (`flower_leaves`, Màn 5 - Mảnh 2)** đã **bỏ hoàn toàn cơ chế gấp đôi vải (`fold`)** để giữ độ thử thách `tier: 'hard'`:
+  - > **Đã cũ (2026-11-09):** màn này nay còn 4 node, bỏ 2 node mút lá; mút lá do uốn hai cạnh dọc tạo nên. Xem CHANGELOG-HANDOFF mục 15. Nội dung dưới đây là bản 6 node cũ.
   - Sử dụng **6 node tròn `'c'` toàn bộ kéo tự do (`free: [0, 1, 2, 3, 4, 5]`, `locked: []`, `winThreshold: 0.92`)**.
   - **Lời giải (`sol`):** Các node đi vắt chéo qua tâm tạo thành **hình số 8 (`∞`)** gồm 2 chiếc lá đối xứng giao nhau ở giữa:
     ```js
@@ -175,8 +178,10 @@ function pentaF(step, oct) {
 ## 6. Cơ Chế Uốn Cong Tự Do (`bendFree`), Hào Quang Bảy Màu & Chớp Sáng Chiến Thắng
 
 ### 6.1. Uốn cong viền tự do (`bendFree`) & Nhịp bồi dây viền (`chainedEdgeSnaps`)
+
+> **Cập nhật (2026-11-09):** nam châm dây, hiệu ứng khớp dây và gợi ý uốn giờ dùng đích độ uốn theo chốt hai đầu dây đang nằm, gợi ý hiện cho mọi cạnh lệch (không chỉ `bendFree`), và nắn cạnh thẳng về đúng viền cũng có hiệu ứng khớp dây. Xem CHANGELOG mục 16.1, 16.2.
 1. **Pinch Anywhere + Smart Hit-Box**:
-   - Cho phép người chơi chạm vào bất kỳ điểm nào dọc theo thân dây ($u \in [0.12, 0.88]$) để kéo uốn cong, trừ khi bấm thẳng lên đầu ghim của node mở ($bd < 0.044$).
+   - Cho phép người chơi chạm vào bất kỳ điểm nào dọc theo thân dây để kéo uốn cong. (Số cũ $u \in [0.12, 0.88]$ và $bd < 0.044$ đã thay bằng bộ lọc chạm 3 lớp ở mục 7.5: $u \in [0.25, 0.75]$, ưu tiên chốt trong $0.068$.)
    - Bán kính bắt chạm thân dây uốn cong `bestEdge.d` được mở rộng lên $0.085$ (vùng tìm kiếm $0.088$) giúp thao tác bằng ngón tay cái trên điện thoại cực kỳ nhạy bén.
 2. **Khóa chống lơ lửng (`isEdgeAnchoredToPins`)**:
    - Chỉ khi cả hai đầu mút của cạnh uốn đã cắm chặt vào chốt mục tiêu thì mới kích hoạt hiệu ứng snap viền (tia may vàng `Seam Zip Flash`, âm rút chỉ tơ tằm `sweep`, nốt Kalimba thanh thoát và nhịp nảy đàn hồi vi mô).
@@ -202,6 +207,8 @@ function pentaF(step, oct) {
 Đặc tả toàn diện giải pháp công thái học màn hình dọc di động (Portrait Ergonomics) đã được phê duyệt:
 
 ### 7.1. Micro-Breathing Focus Lens ($1.04\text{x}$) & Khóa Cứng Pan = 0
+
+> **Đã bỏ (2026-11-09):** người chơi thử thấy chóng mặt nên bỏ phóng 1,04 lần; khung vải đứng yên khi kéo. Nội dung dưới đây là lịch sử. Xem CHANGELOG mục 16.4.
 - **Khóa cứng Camera Pan ($\text{Pan} = 0$)**: Camera đứng yên $100\%$ tại tâm khung vải (`FCX = 195, FCY = 437`), không trôi dạt theo ngón tay, triệt tiêu $100\%$ nguy cơ gây choáng hay say chuyển động (Cybersickness).
 - **Mức zoom vi mô $1.04\text{x}$**: Khung vải chỉ nở nhẹ đúng $7\text{px}$ mỗi cạnh, hoạt động như ống kính máy ảnh khẽ nín thở siết nét (Focus Breath) một nhịp nhẹ nhàng.
 - **Tốc độ lerp thở $3.5$**: Chuyển tiếp mượt mà qua hàm lerp `cam.scale += (targetScale - cam.scale) * Math.min(1, dt * 3.5)`. Khi buông tay, camera tự động thở nhẹ về $1.0\text{x}$.
@@ -284,9 +291,9 @@ function pentaF(step, oct) {
   3. **Khớp nối thành phẩm (Reward Screen Assembly)**:
      - Tỉ lệ thu nhỏ của Mảnh 1 được đồng bộ chính xác với tỉ lệ lỗ khoét mới ($s = 0.55$, toạ độ `[118.0, 334.8, 154.0]`), đảm bảo trải nghiệm may vá mượt mà, thỏa mãn khi hoàn thành màn chơi.
 
-### 7.8. [ĐANG XEM XÉT / UNDER REVIEW] Cảm Giác Khớp Dây Nối Với Ghim Khóa & Hiển Thị Nút Cúc Kéo Dây Tức Thì
+### 7.8. [ĐÃ DUYỆT / APPROVED] Cảm Giác Khớp Dây Nối Với Ghim Khóa & Hiển Thị Nút Cúc Kéo Dây Tức Thì
 
-> **Trạng thái**: ĐANG XEM XÉT trên `Prototype/web-v2/`.
+> **Trạng thái**: ĐÃ DUYỆT theo báo cáo chuyển giao 2026-11-09. Điều kiện "đã neo" dùng bán kính chung `PIN_ON_R = 0.046` (xem CHANGELOG mục 14).
 
 - **Nguyên lý nhịp bồi âm thanh & thị giác (Chained Audio-Visual Resonance)**:
   - Khi ngón tay thả chốt kéo vào lỗ cắm, chốt phát ra tiếng cúc bấm gỗ (`pinSnapSound`).
@@ -299,3 +306,11 @@ function pentaF(step, oct) {
     $$\text{Ready}(k) = \text{isPinAnchored}(ra) \land \text{isPinAnchored}(rb) \land (|h - h_{sol}| \ge 0.012)$$
   - Ngay khi 2 đầu mút của cạnh cong đã được neo vững (dù là chốt kéo vừa cắm hay ghim khóa), nút bọ thêu cúc len lập tức xuất hiện, nhấp nháy thở nhẹ với quầng hào quang màu kem bơ, trao toàn quyền kiểm soát cho người chơi uốn dây bất cứ khi nào họ muốn.
 
+
+## 8. Vải Hướng D: Màu Thật & Vân Theo Chất Liệu (Đã chốt 2026-11-09)
+
+- Mỗi mảnh một màu lấy từ vật thật (nền, tông sáng, tông tối), không hoa văn trang trí; chỉ giữ chi tiết vật có thật (ô bánh quế).
+- Vân theo chất liệu, cùng tông: len đan (mũi chữ V rộng 1,7%, cao 1,4% bề rộng vải), nỉ (sợi lông ngắn 0,4–1,2%), len gân (gân 2,2%). Kích thước vân cố định theo khung vải.
+- Ánh sáng chung sáng trên tối dưới, mép trong hơi tối. Nền khung vải giữ như cũ.
+- Bảng màu đầy đủ ở đặc tả `Assets/Docs/GraphNode-Puzzle-Dac-ta.md`, mục "Mảnh vải: màu thật và vân len". Chi tiết code ở CHANGELOG mục 16.3.
+- Màn 6 "Dâu tây" thử phong cách tranh tô màu để so (CHANGELOG mục 16.5), chưa chốt.

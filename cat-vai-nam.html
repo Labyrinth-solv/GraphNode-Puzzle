@@ -1,4 +1,4 @@
-<title>Cắt Vải Cây Nấm</title>
+<title>Cắt Vải Theo Mẫu 2</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap">
 <style>
   /* Một màn hình game dọc, một bảng màu ấm cố định cho mọi theme. */
@@ -41,14 +41,14 @@
 <div id="stage"><canvas id="game" role="img" aria-label="Màn chơi cắt vải: kéo các điểm để viền cắt khớp hình mảnh vải"></canvas></div>
 <div id="devBar">
   <button id="thrBtn" type="button">Ngưỡng thắng</button>
-  <button id="maskBtn" type="button">Màu vùng tô</button>
-</div>
+  <button id="maskBtn" type="button">Màu vùng tô</button></div>
 <div id="thrPanel" class="dev-panel" hidden>
   <div class="thr-card" role="dialog" aria-modal="true" aria-labelledby="thrTitle">
     <h2 id="thrTitle">Ngưỡng thắng từng hình</h2>
     <div id="thrList"></div>
     <p id="thrNote" class="dev-note" aria-live="polite"></p>
     <div class="thr-actions">
+      <button id="thrReset" class="btn-close" type="button" style="margin-right: auto;">Mặc định Tier</button>
       <button id="thrClose" class="btn-close" type="button">Đóng</button>
       <button id="thrSave" class="btn-save" type="button">Lưu</button>
     </div>

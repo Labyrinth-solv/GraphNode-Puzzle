@@ -8,6 +8,15 @@
     blue: '#9DB8C9', halo: '#FFFAF0', fabric: '#F3DED6', weave: '#E8CCC2', thread: '#C29C90', hole: '#E3C2B6', chip: '#F1E1CF',
     barFar: '#EEB8B0', barMid: '#D88A74', barNear: '#5DB582', base: '#EEE2CB', baseDeep: '#F0CF83', cream: '#FFF7E8'
   };
+  // Nền bổ trợ dịu dạng radial theo từng sản phẩm khi hoàn thiện (Hướng A).
+  var STAGE_BG = {
+    icecream: '#D3ECE2',
+    cardigan: '#F5E1AF',
+    bunny: '#EEDAE8',
+    mushroom: '#EFF2E4',
+    acorn: '#F2E7D5',
+    sunflower: '#E3EFE4'
+  };
   var FONT = '"Baloo 2", system-ui, -apple-system, "Segoe UI", sans-serif';
   // Tấm vải vuông trong thẻ trắng, rộng gần hết chiều ngang màn hình (362/390 ≈ 93%) để node và viền dễ nhìn, dễ chạm.
   var FX = 14, FY = 256, FS = 362;
@@ -20,6 +29,9 @@
   // vị trí dọc viền vẫn do người chơi quyết định nên không tự giải hộ. (giá trị tạm)
   var MAG_R = 0.035, MAG_PULL = 0.5;
   var PIN_MAG_R = 0.048, PIN_SNAP_R = 0.038;
+  // Một bán kính duy nhất để coi node là đã cắm vào chốt: bộ đếm chốt, điều kiện thắng, gợi ý uốn, nút kéo dây,
+  // hiệu ứng khớp dây và chốt đã có người đều dùng chung, để không tín hiệu nào báo "đã cắm" khi tín hiệu khác báo chưa.
+  var PIN_ON_R = PIN_SNAP_R + 0.008;
   // Snap khi thắng: mọi node (và cây kim) đi cùng một tốc độ cố định, đi thẳng một mạch không tăng giảm tốc.
   // Phase dài theo node xa nhất, kẹp trong [MIN, MAX]; xa quá thì cả nhóm cùng nhanh lên một tốc độ chung. (giá trị tạm)
   var SNAP_SPEED = 0.4, SNAP_MIN = 0.2, SNAP_MAX = 0.5, SETTLE_T = 0.12;
@@ -72,7 +84,11 @@
   function easeOut(t) { t = clamp(t, 0, 1); return 1 - Math.pow(1 - t, 3); }
   function easeInOut(t) { t = clamp(t, 0, 1); return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
   function easeBack(t) { t = clamp(t, 0, 1); var c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); }
-  function hex(c) { return [parseInt(c.substr(1, 2), 16), parseInt(c.substr(3, 2), 16), parseInt(c.substr(5, 2), 16)]; }
+  function hex(c) {
+    if (c && c.charAt(0) === '#') return [parseInt(c.substr(1, 2), 16), parseInt(c.substr(3, 2), 16), parseInt(c.substr(5, 2), 16)];
+    var m = String(c).match(/\d+/g);
+    return m ? [+m[0], +m[1], +m[2]] : [0, 0, 0];
+  }
   function mix(a, b, t) { var A = hex(a), B = hex(b); return 'rgb(' + Math.round(lerp(A[0], B[0], t)) + ',' + Math.round(lerp(A[1], B[1], t)) + ',' + Math.round(lerp(A[2], B[2], t)) + ')'; }
   function rgba(c, a) { var A = hex(c); return 'rgba(' + A[0] + ',' + A[1] + ',' + A[2] + ',' + a + ')'; }
   function X(x) { return FX + x * FS; }
@@ -424,7 +440,7 @@
     cam: { scale: 1.0, targetScale: 1.0, x: 0, y: 0, targetX: 0, targetY: 0 }
   };
   window.GNJumpTo = jumpTo;
-  window.GNState = function () { return { scene: S.scene, phase: S.phase, rphase: R ? R.phase : null, cam: S.cam, drag: S.drag, edgeDrag: S.edgeDrag, pos: S.pos, li: S.li, iouV: S.iouV, ready: S.ready }; };
+  window.GNState = function () { return { scene: S.scene, phase: S.phase, rphase: R ? R.phase : null, cam: S.cam, drag: S.drag, edgeDrag: S.edgeDrag, pos: S.pos, bend: S.bend, zips: S.seamZips ? S.seamZips.length : 0, li: S.li, iouV: S.iouV, ready: S.ready }; };
   window.GNWorldToScreen = worldToScreen;
   window.GNScreenToWorld = screenToWorld;
   function product() { return PRODUCTS[S.pi]; }
@@ -433,12 +449,33 @@
   function hasNext() { return !product().standalone && S.pi + 1 < PRODUCTS.length; }
   function nextLabel() { return PRODUCTS[S.pi + 1] && PRODUCTS[S.pi + 1].standalone ? 'Tiếp tục' : 'Màn tiếp'; }
   /* ---------- danh sách chọn màn để thử nhanh ---------- */
-  var MENU = [];
+  // Mỗi sản phẩm một khối: tiêu đề "Màn N", dưới là các nút mảnh xếp ngang, hết chỗ thì xuống dòng
+  // (danh sách một cột cũ cao hơn màn hình khi có 6 sản phẩm nên không chọn được các màn cuối).
+  var MENU = [], MENU_HEAD = [];
   PRODUCTS.forEach(function (p, pi) {
-    p.levels.forEach(function (li) { MENU.push({ label: p.label + ' · ' + LEVELS[li].name, pi: pi, li: li }); });
-    MENU.push({ label: p.label + ' · Ghép thành phẩm', pi: pi, li: -1 });
+    MENU_HEAD.push({ label: p.label + (p.standalone ? ' · thử riêng' : ''), pi: pi });
+    p.levels.forEach(function (li) { MENU.push({ label: LEVELS[li].name, pi: pi, li: li }); });
+    MENU.push({ label: 'Ghép thành phẩm', pi: pi, li: -1 });
   });
-  var MENU_X = 20, MENU_Y = 62, MENU_W = 240, ROW_H = 44;
+  var MENU_X = 16, MENU_Y = 62, MENU_W = 358, MENU_PAD = 10, CHIP_H = 36, CHIP_GAP = 6, HEAD_H = 20, MENU_H = 0;
+  // Tính vị trí từng nút (gọi mỗi lần vẽ, rẻ); vùng chạm nới thêm quanh nút cho dễ bấm.
+  function layoutMenu() {
+    var y = MENU_Y + MENU_PAD;
+    ctx.font = '600 13.5px ' + FONT;
+    MENU_HEAD.forEach(function (hd) {
+      hd.y = y; y += HEAD_H;
+      var x = MENU_X + MENU_PAD;
+      MENU.forEach(function (m) {
+        if (m.pi !== hd.pi) return;
+        var w = Math.ceil(ctx.measureText(m.label).width) + 22;
+        if (x + w > MENU_X + MENU_W - MENU_PAD) { x = MENU_X + MENU_PAD; y += CHIP_H + CHIP_GAP; }
+        m.r = [x, y, w, CHIP_H]; x += w + CHIP_GAP;
+      });
+      y += CHIP_H + 8;
+    });
+    MENU_H = y - MENU_Y - 8 + MENU_PAD;
+  }
+  window.GNMenuItems = function () { layoutMenu(); return MENU.map(function (m) { return { pi: m.pi, li: m.li, label: m.label, r: m.r }; }); };
   function menuCurrent(m) { return m.pi === S.pi && (m.li === -1 ? S.scene === 'reward' : (S.scene === 'play' && m.li === S.li)); }
   function jumpTo(m) {
     S.parts = []; S.ripples = []; S.seamZips = []; S.edgeBounces = {}; S.cam = { scale: 1.0, targetScale: 1.0, x: 0, y: 0, targetX: 0, targetY: 0 }; S.readyGlowT = -9; S.winFlashT = -9; S.pi = m.pi; S.done = []; R = null; activeId = null;
@@ -451,13 +488,18 @@
     if (!S.menu) return;
     ctx.save(); ctx.fillStyle = 'rgba(74,59,53,0.18)'; ctx.fillRect(0, 0, W, H); ctx.restore();
     ctx.save(); ctx.shadowColor = 'rgba(74,59,53,0.25)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 6;
-    rr(MENU_X, MENU_Y, MENU_W, MENU.length * ROW_H + 12, 16); ctx.fillStyle = C.card; ctx.fill(); ctx.restore();
-    rr(MENU_X, MENU_Y, MENU_W, MENU.length * ROW_H + 12, 16); ctx.lineWidth = 2; ctx.strokeStyle = C.ink; ctx.stroke();
-    MENU.forEach(function (m, k) {
-      var y = MENU_Y + 6 + k * ROW_H;
-      if (menuCurrent(m)) { rr(MENU_X + 6, y + 3, MENU_W - 12, ROW_H - 6, 10); ctx.fillStyle = C.chip; ctx.fill(); }
-      if (k > 0 && MENU[k - 1].pi !== m.pi) { ctx.fillStyle = rgba(C.ink, 0.15); ctx.fillRect(MENU_X + 14, y, MENU_W - 28, 1.5); }
-      text(m.label, MENU_X + 18, y + ROW_H / 2 + 1, 15, m.li === -1 ? 700 : 600, C.ink, 'left');
+    layoutMenu();
+    rr(MENU_X, MENU_Y, MENU_W, MENU_H, 16); ctx.fillStyle = C.card; ctx.fill(); ctx.restore();
+    rr(MENU_X, MENU_Y, MENU_W, MENU_H, 16); ctx.lineWidth = 2; ctx.strokeStyle = C.ink; ctx.stroke();
+    MENU_HEAD.forEach(function (hd, k) {
+      if (k > 0) { ctx.fillStyle = rgba(C.ink, 0.12); ctx.fillRect(MENU_X + MENU_PAD, hd.y - 4, MENU_W - MENU_PAD * 2, 1.2); }
+      text(hd.label, MENU_X + MENU_PAD + 2, hd.y + 7, 13, 800, C.inkSoft, 'left');
+    });
+    MENU.forEach(function (m) {
+      var r = m.r, cur = menuCurrent(m);
+      rr(r[0], r[1], r[2], r[3], 10); ctx.fillStyle = cur ? C.chip : C.paper; ctx.fill();
+      ctx.lineWidth = cur ? 2 : 1.3; ctx.strokeStyle = cur ? C.ink : rgba(C.ink, 0.25); ctx.stroke();
+      text(m.label, r[0] + r[2] / 2, r[1] + r[3] / 2 + 1, 13.5, m.li === -1 ? 700 : 600, C.ink, 'center');
     });
   }
   function loadProduct(p) { S.pi = p; S.done = []; S.scene = 'play'; R = null; loadLevel(PRODUCTS[p].levels[0]); }
@@ -490,8 +532,6 @@
   /* ---------- gấp đôi vải: người chơi xếp nửa trái, nửa phải là bản soi gương qua cây kim (mép gấp) ---------- */
   function foldOf() { return LV[S.li].def.fold || null; }
   function foldY() { var f = foldOf(); return !!(f && f.axis === 'y'); }
-  function isMirror(i) { return false; }
-  function applyMirror(pos) {}
   // node đầu và cuối của mỗi đoạn cắt nằm trên mép gấp, chạy theo cây kim và chỉ trượt dọc mép
   function onFold(i) { var f = foldOf(); return !!(f && f.chains.some(function (c) { return c[0] === i || c[1] === i; })); }
   function cutLen(lv) { return lv.solPath.total; }
@@ -502,7 +542,7 @@
     if (fo && Math.abs(S.foldX - fo.solX) > 0.025) return false;
     for (var i = 0; i < def.sol.length; i++) {
       var d = Math.hypot(pos[i][0] - def.sol[i][0], pos[i][1] - def.sol[i][1]);
-      if (d > PIN_SNAP_R + 0.012) return false;
+      if (d > PIN_ON_R) return false;
     }
     return true;
   }
@@ -519,41 +559,76 @@
     var p = (targetQ && nodeIdx === targetQ.i) ? targetQ.pos : S.pos[nodeIdx];
     if (!p) return false;
     var d = Math.hypot(p[0] - lv.sol[nodeIdx][0], p[1] - lv.sol[nodeIdx][1]);
-    return d <= PIN_MAG_R + 0.025; // trùm toàn bộ bán kính nam châm và nhịp settle
+    return d <= PIN_ON_R; // lúc thả vào chốt đã truyền vị trí chốt đích (targetQ) nên không cần nới cho nhịp settle
   }
 
   // Kiểm tra hai đầu mút của cạnh k có đang được cắm chính xác vào hai chốt mục tiêu hay không
   function isEdgeAnchoredToPins(k, targetQ) {
     var lv = LV[S.li] ? LV[S.li].def : null;
     if (!lv || !lv.ring) return false;
-    var r = lv.ring, n = r.length;
-    var ra = r[k], rb = r[(k + 1) % n];
-    return isPinAnchored(ra, targetQ) && isPinAnchored(rb, targetQ);
+    return edgeTarget(k, targetQ) !== null;
   }
 
+  // Chốt mà node đang nằm (bán kính "đã cắm" chung), hoặc -1. Ghim khóa luôn ở chốt của nó; node mép gấp chỉ tính
+  // khi kim đã về đúng trục. Không so theo số thứ tự node, vì node nào vào chốt nào cũng được.
+  function pinOf(i, targetQ) {
+    var def = LV[S.li].def, fo = foldOf();
+    if (onFold(i) && fo && Math.abs(S.foldX - fo.solX) > 0.025) return -1;
+    if (locked(i)) return i;
+    var p = (targetQ && i === targetQ.i) ? targetQ.pos : S.pos[i], best = -1, bd = PIN_ON_R;
+    for (var j = 0; j < def.sol.length; j++) {
+      var d = Math.hypot(p[0] - def.sol[j][0], p[1] - def.sol[j][1]);
+      if (d <= bd) { bd = d; best = j; }
+    }
+    return best;
+  }
+  // Đích độ uốn của cạnh k theo chốt mà hai đầu đang nằm: nếu hai chốt là hai đầu một cạnh lời giải thì đích là độ uốn
+  // lời giải của cạnh đó (đổi dấu nếu đi ngược chiều). Hai đầu chưa ở chốt, hoặc hai chốt không liền nhau trên viền mẫu,
+  // thì không có đích: dây không bị hút, không có gợi ý, không có hiệu ứng khớp dây.
+  function edgeTarget(k, targetQ) {
+    var def = LV[S.li].def, r = def.ring, n = r.length;
+    if (!GN.inFoldChain(def, k)) return null;
+    var pa = pinOf(r[k], targetQ), pb = pinOf(r[(k + 1) % n], targetQ);
+    if (pa < 0 || pb < 0 || pa === pb) return null;
+    for (var g = 0; g < n; g++) {
+      if (!GN.inFoldChain(def, g)) continue;
+      var a = r[g], b = r[(g + 1) % n];
+      if (a === pa && b === pb) return { g: g, h: def.solBend[g] || 0 };
+      if (a === pb && b === pa) return { g: g, h: -(def.solBend[g] || 0) };
+    }
+    return null;
+  }
+  // Mảng độ uốn để vẽ cạnh k ở đúng đích (đường viền mẫu giữa hai chốt), không kèm gợn sóng lúc kéo.
+  var tgtBendBuf = [];
+  function bendsAt(k, h) {
+    tgtBendBuf.length = 0;
+    for (var i = 0; i < S.bend.length; i++) tgtBendBuf.push(S.bend[i] || 0);
+    tgtBendBuf[k] = h;
+    return tgtBendBuf;
+  }
+  // Các cạnh cần gợi ý uốn: có đích theo chốt và độ uốn còn lệch đích từ 1,2% trở lên. Mọi cạnh đều xét (cạnh nào cũng
+  // uốn được); cạnh người chơi phải tự uốn (bendFree) hiện đậm, cạnh khác hơi nhạt hơn.
+  function hintEdges() {
+    var def = LV[S.li].def, out = [];
+    for (var k = 0; k < def.ring.length; k++) {
+      var tg = edgeTarget(k);
+      if (!tg || Math.abs((S.bend[k] || 0) - tg.h) < 0.012) continue;
+      out.push({ k: k, h: tg.h, emph: def.bendFree && def.bendFree.indexOf(k) >= 0 ? 1 : 0.75 });
+    }
+    return out;
+  }
+  window.GNHintEdges = function () { return hintEdges(); };
   // Tìm các cạnh kề với node vừa cắm mà cạnh đó vừa chính thức khép kín và khớp hoàn toàn vào viền mẫu
   function checkChainedEdgeSnaps(nodeIdx, targetPos) {
     var lv = LV[S.li] ? LV[S.li].def : null;
     if (!lv || !lv.ring || !lv.sol) return [];
     var tQ = { i: nodeIdx, pos: targetPos || S.pos[nodeIdx] };
-    if (!isPinAnchored(nodeIdx, tQ)) return [];
-
-    var r = lv.ring, n = r.length;
-    var completed = [];
+    if (pinOf(nodeIdx, tQ) < 0) return [];
+    var r = lv.ring, n = r.length, completed = [];
     for (var k = 0; k < n; k++) {
-      var ra = r[k], rb = r[(k + 1) % n];
-      if (ra === nodeIdx || rb === nodeIdx) {
-        var oth = (ra === nodeIdx ? rb : ra);
-        // Kiểm tra xem đầu mút kia đã cắm đúng chốt mục tiêu của nó chưa (ghim khóa tự động coi là đã neo)
-        if (isPinAnchored(oth, tQ)) {
-          // Kiểm tra độ cong của cạnh này có đang khớp với viền mẫu không
-          var curH = S.bend ? (S.bend[k] || 0) : 0;
-          var solH = lv.solBend ? (lv.solBend[k] || 0) : 0;
-          if (Math.abs(curH - solH) < 0.025) {
-            completed.push(k);
-          }
-        }
-      }
+      if (r[k] !== nodeIdx && r[(k + 1) % n] !== nodeIdx) continue;
+      var tg = edgeTarget(k, tQ);
+      if (tg && Math.abs((S.bend[k] || 0) - tg.h) < 0.025) completed.push(k);
     }
     return completed;
   }
@@ -568,7 +643,7 @@
     for (var j = 0; j < n; j++) {
       for (var i = 0; i < pos.length; i++) {
         var d = Math.hypot(pos[i][0] - sol[j][0], pos[i][1] - sol[j][1]);
-        if (d <= PIN_SNAP_R + 0.008) {
+        if (d <= PIN_ON_R) {
           pairs.push({ j: j, i: i, d: d });
         }
       }
@@ -592,6 +667,43 @@
       filledCount: count,
       totalPins: n
     };
+  }
+  // Node nào vào chốt nào cũng được, nhưng độ uốn, phạt độ uốn, nam châm dây và snap đều so theo số thứ tự cạnh.
+  // Khi mọi chốt đã lấp và cách đặt là một vòng xoay hay soi gương của vòng lời giải (ghim khóa đứng yên, node mép gấp
+  // vẫn ở mép gấp), đánh số lại node và cạnh theo chốt để mọi phép so khớp đúng cạnh. Node trông giống nhau nên người chơi
+  // không thấy gì. Dây chưa uốn thì nhận độ uốn ban đầu của cạnh mới; dây đã uốn giữ nguyên hình (đổi dấu nếu ngược chiều).
+  // Trả về bảng chỉ số node cũ -> mới, hoặc null khi không đổi (đã đúng thứ tự, chưa lấp đủ, hoặc hình bắt chéo).
+  function canonicalizePins() {
+    var def = LV[S.li].def, r = def.ring, n = r.length, i, k;
+    var st = checkPins(def, S.pos);
+    if (!st.allFilled) return null;
+    var perm = st.nodeMatched, same = true;
+    for (i = 0; i < perm.length; i++) {
+      if (perm[i] < 0) return null;
+      if (perm[i] !== i) same = false;
+      if ((locked(i) && perm[i] !== i) || onFold(i) !== onFold(perm[i])) return null;
+    }
+    if (same) return null;
+    var inv = []; for (i = 0; i < perm.length; i++) inv[perm[i]] = i;
+    var edgeOf = {}; for (k = 0; k < n; k++) edgeOf[r[k] + ',' + r[(k + 1) % n]] = k;
+    var map = [];
+    for (k = 0; k < n; k++) {
+      var a = inv[r[k]], b = inv[r[(k + 1) % n]], g = edgeOf[a + ',' + b], s = 1;
+      if (g === undefined) { g = edgeOf[b + ',' + a]; s = -1; }
+      if (g === undefined || GN.inFoldChain(def, g) !== GN.inFoldChain(def, k)) return null;
+      map.push({ g: g, s: s });
+    }
+    var dfl = def.startBend || def.solBend, nb = [];
+    for (k = 0; k < n; k++) {
+      var v = S.bend[map[k].g] || 0;
+      nb.push(Math.abs(v - (dfl[map[k].g] || 0)) < 1e-6 ? (dfl[k] || 0) : map[k].s * v);
+    }
+    nb._waves = [];
+    function permute(arr) { var out = arr.slice(); for (var j = 0; j < perm.length; j++) out[perm[j]] = arr[j]; return out; }
+    S.pos = permute(S.pos); S.sc = permute(S.sc); S.pl = permute(S.pl); S.shake = permute(S.shake);
+    S.bend = nb; S.edgeWake = r.map(function () { return -9; }); S.seamZips = []; S.edgeBounces = {}; S.hint = null;
+    S.dirty = true;
+    return perm;
   }
   // Kim chỉ đi theo chiều vuông góc với chính nó (kim dọc thì đi trái phải, kim ngang thì đi lên xuống).
   function needleMove(p) {
@@ -668,9 +780,13 @@
     if (activeId !== null) return; // chỉ một ngón
     var p = toLogical(e);
     if (S.menu) {
-      var row = Math.floor((p[1] - MENU_Y - 6) / ROW_H);
-      if (inRect(p, MENU_X, MENU_Y, MENU_W, MENU.length * ROW_H + 12) && row >= 0 && row < MENU.length) jumpTo(MENU[row]);
-      S.menu = false; return;
+      layoutMenu();
+      var hit = null;
+      MENU.forEach(function (m) { if (!hit && inRect(p, m.r[0] - 2, m.r[1] - 2, m.r[2] + 4, m.r[3] + 4)) hit = m; });
+      if (hit) { jumpTo(hit); S.menu = false; return; }
+      // chạm vào khoảng trống trong bảng thì giữ bảng mở; chạm ra ngoài thì đóng
+      if (!inRect(p, MENU_X, MENU_Y, MENU_W, MENU_H)) S.menu = false;
+      return;
     }
     if (inRect(p, 14, 16, (S.chipW || 100) + 12, 44)) { S.menu = true; S.drag = null; pop(noteF(1), 0.04); return; }
     if (inRect(p, 326, 16, 44, 44)) { soundOn = !soundOn; S.toast = 1.2; if (soundOn) pop(noteF(4), 0.06); vib(8); return; }
@@ -710,14 +826,19 @@
         var u = (s + t) / m;
         if (u < 0.25 || u > 0.75) continue;
         var d = Math.hypot(fx - (ax + dx * t), fy - (ay + dy * t));
-        if (d < bd) { bd = d; best = { k: k, d: d, u: u }; }
+        if (d < bd) { bd = d; best = { k: k, d: d, u: u, cx: ax + dx * t, cy: ay + dy * t }; }
       }
     }
     return best;
   }
-  function startEdgeDrag(e, p, fx, fy, rk, u0) {
+  function startEdgeDrag(e, p, fx, fy, rk, u0, cx, cy) {
     var lv = LV[S.li].def, r = lv.ring, n = r.length, ra = r[rk], rb = r[(rk + 1) % n];
     var A = S.pos[ra], B = S.pos[rb], edx = B[0] - A[0], edy = B[1] - A[1], eL = Math.hypot(edx, edy) || 1;
+    var nx = -edy / eL, ny = edx / eL;
+    // Ghi nhận độ lệch pháp tuyến giữa điểm chạm ban đầu và thân dây để triệt tiêu dần khi người chơi kéo rõ nét
+    var curveH0 = (cx !== undefined && cy !== undefined) ? ((cx - A[0]) * nx + (cy - A[1]) * ny) : 0;
+    var pointerH0 = (fx - A[0]) * nx + (fy - A[1]) * ny;
+    var grabBias = (cx !== undefined && cy !== undefined) ? (pointerH0 - curveH0) : 0;
     if (S.phase === 'intro') setPhase('play');
     activeId = e.pointerId; try { cv.setPointerCapture(e.pointerId); } catch (er) {}
     var uInit = clamp(u0 !== undefined ? u0 : (((fx - A[0]) * edx + (fy - A[1]) * edy) / (eL * eL)), 0.25, 0.75);
@@ -726,8 +847,8 @@
     S.edgeDrag = {
       k: rk, a: ra, b: rb, sx: fx, sy: fy,
       ax: A[0], ay: A[1], tx: edx / eL, ty: edy / eL, eL: eL,
-      nx: -edy / eL, ny: edx / eL,
-      h0: S.bend[rk] || 0,
+      nx: nx, ny: ny,
+      h0: S.bend[rk] || 0, grabBias: grabBias, tgt: edgeTarget(rk),
       u: uInit, uSmooth: uInit, lastSoundU: uInit, rip: 0,
       fx: pw[0], fy: pw[1], startX: p[0], startY: p[1], lastP: [p[0], p[1]], moved: false, inMag: false, inSnap0: false, magH: null,
       isTouch: isTouch
@@ -761,7 +882,7 @@
     }
     for (var i = 0; i < S.pos.length; i++) {
       var d = Math.hypot(fx - S.pos[i][0], fy - S.pos[i][1]);
-      if (!isMirror(i) && d < pickRadius(i) && d < bd) { bd = d; best = i; }
+      if (d < pickRadius(i) && d < bd) { bd = d; best = i; }
     }
     var bestEdge = hitTestEdge(fx, fy);
     // [ĐÃ DUYỆT CHÍNH THỨC / APPROVED] BỘ LỌC CẢM ỨNG 3 LỚP (SMART 3-LAYER TAP ARBITRATION):
@@ -783,11 +904,11 @@
         if ((!locked(ra) && distToA < safeR) || (!locked(rb) && distToB < safeR)) {
           // Nằm trong bong bóng an toàn của chốt mở -> không uốn dây, tránh cướp cảm ứng khi người chơi bấm lệch ngoài rìa chốt
         } else {
-          startEdgeDrag(e, p, fx, fy, bestEdge.k, bestEdge.u);
+          startEdgeDrag(e, p, fx, fy, bestEdge.k, bestEdge.u, bestEdge.cx, bestEdge.cy);
           return;
         }
       } else {
-        startEdgeDrag(e, p, fx, fy, bestEdge.k, bestEdge.u);
+        startEdgeDrag(e, p, fx, fy, bestEdge.k, bestEdge.u, bestEdge.cx, bestEdge.cy);
         return;
       }
     }
@@ -838,7 +959,7 @@
     for (var k = 0; k < S.pos.length; k++) {
       if (k === d.i) continue;
       for (var pj = 0; pj < n; pj++) {
-        if (Math.hypot(S.pos[k][0] - sol[pj][0], S.pos[k][1] - sol[pj][1]) <= PIN_SNAP_R) occ[pj] = true;
+        if (Math.hypot(S.pos[k][0] - sol[pj][0], S.pos[k][1] - sol[pj][1]) <= PIN_ON_R) occ[pj] = true;
       }
     }
     var bestD = 9, bestPin = null, bestJ = -1;
@@ -862,7 +983,7 @@
     if (d.inPrev !== undefined && inPrev !== d.inPrev && !inMag) { softTone(pentaF(inPrev ? 1 : 0, -1), 0.045, 0.12); }
     d.inPrev = inPrev;
     d.inMag = inMag; d.magQ = inMag ? q : null;
-    S.pos[d.i] = raw; applyMirror(S.pos);
+    S.pos[d.i] = raw;
     var pw = screenToWorld(p);
     d.fx = pw[0]; d.fy = pw[1];
     S.dirty = true;
@@ -882,12 +1003,19 @@
     ed.u = uCur;
     ed.uSmooth += (uCur - ed.uSmooth) * 0.55;
     var deltaH = (fx0 - ed.sx) * ed.nx + (fy0 - ed.sy) * ed.ny;
+    // Khi kéo dây chưa uốn (|h0| < 0.02) rõ tay (> 8px), triệt tiêu dần lệch điểm chạm ban đầu để đỉnh cung chạm đúng đầu ngón tay
+    var compT = Math.abs(ed.h0) < 0.02 ? clamp((dragDist - 8) / 24, 0, 1) : 0;
+    var kComp = compT * compT * (3 - 2 * compT);
+    var effDeltaH = deltaH + (ed.grabBias || 0) * kComp;
     var uGain = 1 / clamp(4 * uCur * (1 - uCur) * (1 + 4.8 * (uCur - 0.5) * (uCur - 0.5)), 0.72, 1.08);
-    var rawH = clamp(ed.h0 + deltaH * uGain, -0.18, 0.18);
+    // Nới biên độ uốn lên [-0.35, 0.35] để các cung võng sâu (vd Cụm cỏ -0.210) kéo xuống hết tới viền mẫu
+    var rawH = clamp(ed.h0 + effDeltaH * uGain, -0.35, 0.35);
     var lv = LV[S.li].def;
-    var solH = lv.solBend[ed.k] || 0;
+    // chỉ hút khi hai đầu dây đã ở hai chốt liền nhau trên viền mẫu; đích là độ uốn của cạnh lời giải giữa hai chốt đó
+    var solH = ed.tgt ? ed.tgt.h : 0;
     var inMag = false, inSnap0 = false, magH = null, w0 = 0;
-    var dm = Math.abs(rawH - solH);
+    var dm = ed.tgt ? Math.abs(rawH - solH) : 9;
+    if (ed.tgt) ed.maxErr = Math.max(ed.maxErr || 0, dm); // để biết dây có thật sự bị kéo lệch rồi nắn lại không
     if (dm < MAG_R) {
       inMag = true;
       w0 = MAG_PULL * (1 - dm / MAG_R);
@@ -931,7 +1059,7 @@
       var dragDist = Math.hypot(p[0] - ed.startX, p[1] - ed.startY);
       if (dragDist > 8) {
         ed.moved = true;
-        S.cam.targetScale = 1.04;
+        // đã bỏ phóng 1,04 lần khi kéo (2026-11-09): người chơi thử thấy chóng mặt
         S.cam.targetX = 0;
         S.cam.targetY = 0;
       }
@@ -944,7 +1072,7 @@
     var dragDist = Math.hypot(p[0] - d.startX, p[1] - d.startY);
     if (dragDist > 8) {
       d.moved = true;
-      S.cam.targetScale = 1.04;
+      // đã bỏ phóng 1,04 lần khi kéo (2026-11-09): người chơi thử thấy chóng mặt
       S.cam.targetX = 0;
       S.cam.targetY = 0;
     }
@@ -958,13 +1086,13 @@
       var nd = S.needle; S.needle = null; pop(noteF(1) * 0.5, 0.085, 0, 0.15); vib(6);
       if (cancel || !nd.moved) return;
       if (nd.inMag) {
-        var x0 = S.foldX; setNeedle(foldOf().solX); recompute();
+        var x0 = S.foldX; setNeedle(foldOf().solX); canonicalizePins(); recompute();
         var winN = (S.iouV >= S.thr) && checkPins(LV[S.li].def, S.pos).allFilled; setNeedle(x0);
         if (winN) { startWin(); return; }
         S.needleSettle = { from: x0, to: foldOf().solX, t: 0 };
         return;
       }
-      recompute(); if (S.iouV >= S.thr && checkPins(LV[S.li].def, S.pos).allFilled) startWin();
+      canonicalizePins(); recompute(); if (S.iouV >= S.thr && checkPins(LV[S.li].def, S.pos).allFilled) startWin();
       return;
     }
     if (S.edgeDrag) {
@@ -976,10 +1104,12 @@
         S.dirty = true; return;
       }
       var lv = LV[S.li].def;
-      var isBendEdge = lv.bendFree && (lv.bendFree.indexOf(ed.k) !== -1) && (Math.abs(lv.solBend[ed.k] || 0) > 0.01);
-      var isSnappingToSol = (ed.magH !== null && Math.abs(ed.magH - (lv.solBend[ed.k] || 0)) < 1e-4);
-      var isAnchored = isEdgeAnchoredToPins(ed.k);
-      var isTrueContourSnap = isBendEdge && isSnappingToSol && isAnchored;
+      // khớp viền thật: dây có đích theo chốt và thả đúng vào vùng hút của đích, kể cả khi đích là đoạn thẳng
+      // (cạnh nào cũng uốn được nên nắn dây thẳng về viền cũng là một lần khớp). Chỉ tính khi dây thật sự được sửa:
+      // lúc bắt đầu kéo đã lệch đích từ 1,2%, hoặc trong lúc kéo bị kéo ra khỏi vùng hút; chạm nhẹ dây đang đúng thì không.
+      var tg = ed.tgt;
+      var wasOff = !!tg && (Math.abs(ed.h0 - tg.h) >= 0.012 || (ed.maxErr || 0) >= MAG_R);
+      var isTrueContourSnap = !!tg && wasOff && ed.magH !== null && Math.abs(ed.magH - tg.h) < 1e-4;
 
       if (isTrueContourSnap) {
         var curH = S.bend[ed.k]; S.bend[ed.k] = ed.magH; recompute();
@@ -1029,14 +1159,17 @@
       vib([8, 14, 10]);
 
       // chấm thắng theo vị trí đã đặt hẳn lên viền, nhưng hình vẽ trượt dần tới đó
-      var rawP = S.pos[d.i].slice(); S.pos[d.i] = d.magQ.slice(); recompute();
-      var win = (S.iouV >= S.thr) && checkPins(LV[S.li].def, S.pos).allFilled; S.pos[d.i] = rawP; S.dirty = true;
+      var rawP = S.pos[d.i].slice(); S.pos[d.i] = d.magQ.slice();
+      // chốt cuối vừa lấp theo thứ tự khác lời giải: đánh số lại trước khi chấm
+      var perm = canonicalizePins(), di = perm ? perm[d.i] : d.i;
+      recompute();
+      var win = (S.iouV >= S.thr) && checkPins(LV[S.li].def, S.pos).allFilled; S.pos[di] = rawP; S.dirty = true;
       if (win) { startWin(); return; }
-      S.settle = { i: d.i, from: rawP, to: d.magQ.slice(), t: 0 };
+      S.settle = { i: di, from: rawP, to: d.magQ.slice(), t: 0 };
       S.ripples.push({ x: X(d.magQ[0]), y: Y(d.magQ[1]), t0: now(), c: C.mustard, world: true });
 
       // NHỊP BỒI TRỖI DÂY (Chained Edge Snap): Nếu cạnh nối với chốt này vừa được hoàn tất khớp viền
-      var chainedEdges = checkChainedEdgeSnaps(d.i, d.magQ);
+      var chainedEdges = checkChainedEdgeSnaps(di, d.magQ);
       if (chainedEdges.length > 0) {
         var tSnap = now() + 0.05;
         chainedEdges.forEach(function (ek) {
@@ -1066,17 +1199,18 @@
     if (S.hints <= 0) { vib(20); pop(200, 0.05, 0, 0.1); return; }
     var lv = LV[S.li].def, bi = -1, bd = -1, bk = -1, be = -1;
     for (var i = 0; i < S.pos.length; i++) {
-      if (locked(i) || isMirror(i)) continue;
+      if (locked(i)) continue;
       var d = Math.hypot(S.pos[i][0] - lv.sol[i][0], S.pos[i][1] - lv.sol[i][1]);
       if (d > bd) { bd = d; bi = i; }
     }
+    var bh = 0;
     for (var k = 0; k < lv.ring.length; k++) {
-      if (!GN.inFoldChain(lv, k)) continue;
-      var ediff = Math.abs((S.bend[k] || 0) - (lv.solBend[k] || 0)) * 2.2;
-      if (ediff > be) { be = ediff; bk = k; }
+      var tg = edgeTarget(k); if (!tg) continue; // chỉ gợi ý dây khi biết đích theo chốt
+      var ediff = Math.abs((S.bend[k] || 0) - tg.h) * 2.2;
+      if (ediff > be) { be = ediff; bk = k; bh = tg.h; }
     }
     S.hints--;
-    if (be > bd && be > 0.015) S.hint = { edge: bk, t0: now() };
+    if (be > bd && be > 0.015) S.hint = { edge: bk, th: bh, t0: now() };
     else S.hint = { i: bi, t0: now() };
     chord([2, 4], 0.05, 0.06); vib(10);
   }
@@ -1135,7 +1269,7 @@
       if (!lv.def.fold && bd > lv.solPath.total - 1e-4) bd = 0;
       out.push({ i: i, d: bd });
     }
-    out.filter(function (o) { return !isMirror(o.i); }).sort(function (a, b) { return a.d - b.d; }).forEach(function (o, r) { o.rank = r; });
+    out.slice().sort(function (a, b) { return a.d - b.d; }).forEach(function (o, r) { o.rank = r; });
     out.forEach(function (o) { if (o.rank === undefined) o.rank = 0; });
     return out;
   }
@@ -1196,13 +1330,14 @@
         fitFactor = uFit * uFit * (3 - 2 * uFit);
       }
       var isPinchingK = (S.edgeDrag && S.edgeDrag.k === k) || (S.waveSettle && S.waveSettle.k === k);
-      var isUnbentFreeEdge = allFilledIdle && level.bendFree && (level.bendFree.indexOf(k) !== -1);
+      // dây nhắc nhẹ về phía đích khi người chơi đứng yên: mọi cạnh có đích theo chốt mà còn lệch, không chỉ bendFree
+      var bTg = allFilledIdle && LV[S.li] && LV[S.li].def === level ? edgeTarget(k) : null;
       var beckonWave = 0;
-      if (isUnbentFreeEdge) {
-        var bsolH = (level.solBend && level.solBend[k] !== undefined) ? level.solBend[k] : 0;
+      if (bTg) {
+        var bsolH = bTg.h;
         var bcurH = (S.bend && S.bend[k] !== undefined) ? S.bend[k] : 0;
         if (Math.abs(bcurH - bsolH) > 0.012) {
-          var dirSign = (bsolH >= 0 ? 1 : -1);
+          var dirSign = (bsolH - bcurH >= 0 ? 1 : -1);
           var pulse = 0.5 + 0.5 * Math.sin(idleAge * 3.2 + k * 0.7);
           beckonWave = (pulse * 1.5 * dirSign) / FS;
         }
@@ -1396,7 +1531,6 @@
       var L = cutLen(lv) * clamp(S.t / cutDur(lv), 0, 1);
       for (var q = 0; q < S.cutD.length; q++) {
         var cd = S.cutD[q];
-        if (isMirror(cd.i)) continue;
         if (S.cutLast < cd.d && cd.d <= L) {
           pop(risingF(cd.rank), 0.07, 0, 0.3); S.cutHit[cd.i] = now(); S.pl[cd.i] = 1;
           S.ripples.push({ x: X(S.pos[cd.i][0]), y: Y(S.pos[cd.i][1]), t0: now(), c: C.cream, world: true });
@@ -1488,7 +1622,7 @@
     rr(20, 80, 140, 148, 18); ctx.fillStyle = C.card; ctx.fill(); ctx.lineWidth = 2.2; ctx.strokeStyle = C.ink; ctx.stroke();
     text('Hình mẫu', 90, 101, 13, 700, C.inkSoft, 'center');
     var lv = LV[S.li], tf = fitTf(lv, 90, 165, 92);
-    outlinePath(lv.outline, tf.ox, tf.oy, tf.s); ctx.fillStyle = rgba(lv.def.pattern.base, 0.45); ctx.fill();
+    outlinePath(lv.outline, tf.ox, tf.oy, tf.s); ctx.fillStyle = rgba((fab(S.li) || lv.def.pattern).base, 0.45); ctx.fill();
     ctx.setLineDash([5, 4]); ctx.lineWidth = 2; ctx.strokeStyle = C.ink; ctx.stroke(); ctx.setLineDash([]);
 
     rr(172, 80, 198, 148, 18); ctx.fillStyle = C.card; ctx.fill();
@@ -2029,7 +2163,7 @@
       var rk = h.edge, ra = lv.ring[rk], rb = lv.ring[(rk + 1) % lv.ring.length];
       var pCur = GN.edgePoly(lv, S.pos, ra, rb, 20, polyBuf, S.bend), mCur = Math.floor(pCur.length / 4) * 2;
       a = [pCur[mCur], pCur[mCur + 1]];
-      var pSol = GN.edgePoly(lv, lv.sol, ra, rb, 20, hitPolyBuf, lv.solBend), mSol = Math.floor(pSol.length / 4) * 2;
+      var pSol = GN.edgePoly(lv, S.pos, ra, rb, 20, hitPolyBuf, bendsAt(rk, h.th)), mSol = Math.floor(pSol.length / 4) * 2;
       b = [pSol[mSol], pSol[mSol + 1]];
     } else {
       a = S.pos[h.i]; b = lv.sol[h.i];
@@ -2050,24 +2184,35 @@
 
   /* ---------- mảnh vải: màu và họa tiết ---------- */
   // Mũ: hồng phấn chấm bi kem; thân: xanh xô thơm kẻ caro mù tạt. Hai mảnh không trùng màu, không trùng họa tiết.
-  function drawPiece(i, ox, oy, s, fill, lifted, stitchA, deep) {
-    var lv = LV[i], pts = lv.outline, b = lv.bbox;
+  function drawPiece(i, ox, oy, s, fill, lifted, stitchA, deep, underBorderFn) {
+    var lv = LV[i], pts = lv.outline, b = lv.bbox, fb = fab(i);
     if (lifted) {
-      ctx.save(); ctx.shadowColor = 'rgba(74,59,53,0.28)'; ctx.shadowBlur = 16; ctx.shadowOffsetY = 9;
+      ctx.save(); ctx.shadowColor = 'rgba(65,42,36,0.28)'; ctx.shadowBlur = 16; ctx.shadowOffsetY = 9;
+      outlinePath(pts, ox, oy, s); ctx.fillStyle = C.cream; ctx.fill(); ctx.restore();
+    } else if (fb) {
+      // Hướng A: đổ bóng nhẹ phân tách các lớp vải/cartoon khỏi nền và tầng dưới
+      ctx.save(); ctx.shadowColor = 'rgba(65,42,36,0.18)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 3;
       outlinePath(pts, ox, oy, s); ctx.fillStyle = C.cream; ctx.fill(); ctx.restore();
     }
     outlinePath(pts, ox, oy, s); ctx.fillStyle = C.cream; ctx.fill();
     ctx.save(); outlinePath(pts, ox, oy, s); ctx.clip();
     ctx.fillStyle = weave(); ctx.fillRect(ox + b[0] * s, oy + b[1] * s, (b[2] - b[0]) * s, (b[3] - b[1]) * s);
     if (fill > 0) {
+      ctx.save();
       var top = oy + b[3] * s - (b[3] - b[1]) * s * fill - 2;
       ctx.beginPath(); ctx.rect(ox + b[0] * s - 4, top, (b[2] - b[0]) * s + 8, (b[3] - b[1]) * s + 8); ctx.clip();
       paintPattern(i, ox, oy, s, deep || 0);
       if (fill < 1) { ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.fillRect(ox + b[0] * s - 4, top, (b[2] - b[0]) * s + 8, 3); }
+      ctx.restore();
     }
+    if (typeof underBorderFn === 'function') underBorderFn(ox, oy, s, fb);
     ctx.restore();
-    outlinePath(pts, ox, oy, s); ctx.lineWidth = Math.max(1.4, 2.6 * Math.min(1, s / 200)); ctx.strokeStyle = C.ink; ctx.lineJoin = 'round'; ctx.stroke();
-    if (stitchA > 0) {
+    // Hướng A: dùng nét mực đồng tông fb.line hài hòa thay cho viền đen cứng, phân cấp nhẹ độ dày
+    outlinePath(pts, ox, oy, s); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.lineWidth = fb ? Math.max(1.8, 3.6 * Math.min(1, s / 200)) : Math.max(1.4, 2.6 * Math.min(1, s / 200));
+    ctx.strokeStyle = fb ? (fb.line || C.ink) : C.ink;
+    ctx.stroke();
+    if (stitchA > 0 && !fb) {
       var cx = ox + lv.cen[0] * s, cy = oy + lv.cen[1] * s, k = 0.88;
       ctx.save(); ctx.translate(cx, cy); ctx.scale(k, k); ctx.translate(-cx, -cy);
       outlinePath(pts, ox, oy, s); ctx.setLineDash([5 / k * Math.min(1, s / 200) + 1, 4 / k * Math.min(1, s / 200) + 1]);
@@ -2076,7 +2221,132 @@
   }
   // Mỗi mảnh một họa tiết riêng: chấm bi, kẻ caro, cốm rắc, ô bánh quế. Không mảnh nào trùng màu hay họa tiết.
   var SPR = ['#FFFFFF', '#E3A6A1', '#E9C46A', '#A9C1A0'];
+  /* ---------- vải hướng D: màu thật, vân theo chất liệu (chốt 2026-11-09) ---------- */
+  // Vân vẽ sẵn thành một ô lặp cho mỗi mảnh (vẽ ở 2x cho nét trên màn hình dày điểm ảnh), mỗi khung hình chỉ tô lại.
+  // Kích thước vân cố định theo khung vải (FS), không co giãn theo cỡ mảnh: mảnh nhỏ vẫn có mũi đan cùng cỡ như vải thật.
+  var fabricCache = {};
+  // Màu mảnh (2026-11-11): bảng đậm tươi kèm viền đồng tông Hướng A.
+  var fabDeep = {};
+  function fab(i) {
+    var f = LV[i].def.fabric;
+    if (!f) return f;
+    if (!fabDeep[i]) {
+      var src = f.deep || f;
+      var rawLine = (f.deep && f.deep.line) || (f.mat === 'flat' ? '#5E1222' : f.line) || '#2A2326';
+      fabDeep[i] = {
+        mat: f.mat, detail: f.detail, base: src.base, light: src.light, dark: src.dark,
+        line: mix(rawLine, '#2A2326', 0.28), isDeep: !!f.deep
+      };
+    }
+    return fabDeep[i];
+  }
+  function fabricRand(seed) { var h = seed >>> 0; return function () { h += 0x6D2B79F5; var t = h; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  function fabricPattern(i) {
+    if (fabricCache[i] !== undefined) return fabricCache[i];
+    var fb = fab(i), k = 2, tw, th;
+    // len đan: mũi rộng 1,7% và cao 1,4% bề rộng vải; nỉ: ô 96 pt; len gân: gân 2,2%
+    var sw = Math.round(FS * 0.017), sh = Math.round(FS * 0.014), rw = Math.round(FS * 0.022);
+    if (fb.mat === 'knit') { tw = sw * 10; th = sh * 10; } else if (fb.mat === 'rib') { tw = rw * 2; th = 16; } else { tw = th = 96; }
+    var c = document.createElement('canvas'); c.width = tw * k; c.height = th * k;
+    var g = c.getContext('2d'); g.scale(k, k);
+    g.fillStyle = fb.base; g.fillRect(0, 0, tw, th);
+    if (fb.mat === 'knit') {
+      for (var j = 0; j <= 10; j++) for (var q = 0; q < 10; q++) {
+        var cx = q * sw + sw / 2, cy = j * sh;
+        [[-1, 0.5], [1, -0.5]].forEach(function (lg) {
+          g.save(); g.translate(cx + lg[0] * sw * 0.22, cy); g.rotate(lg[1]);
+          g.beginPath(); g.ellipse(0, 0, sw * 0.2, sh * 0.62, 0, 0, 7);
+          g.fillStyle = rgba(fb.light, 0.5); g.fill(); // mũi đan chỉ bằng tông sáng, không nét tối để màu sạch
+          g.restore();
+        });
+      }
+    } else if (fb.mat === 'rib') {
+      for (var x = 0; x < tw; x += rw) {
+        var gr = g.createLinearGradient(x, 0, x + rw, 0);
+        // gân len: rãnh giữ màu nền, sống gân sáng lên (không phủ tông tối)
+        gr.addColorStop(0, rgba(fb.light, 0)); gr.addColorStop(0.5, rgba(fb.light, 0.55)); gr.addColorStop(1, rgba(fb.light, 0));
+        g.fillStyle = gr; g.fillRect(x, 0, rw, th);
+      }
+    } else {
+      // nỉ: sợi lông ngắn cùng tông; sợi gần mép vẽ lặp sang ô bên cạnh để ô lặp không lộ đường nối
+      var r = fabricRand(i * 7919 + 13), n = Math.round(tw * th / 7);
+      g.lineCap = 'round'; g.lineWidth = 0.7;
+      for (var f = 0; f < n; f++) {
+        var fx = r() * tw, fy = r() * th, a = r() * Math.PI, l = (0.004 + r() * 0.008) * FS, col = rgba(fb.light, 0.25 + r() * 0.25); // chỉ sợi sáng: sợi tối làm màu lấm tấm bẩn
+        for (var dx = -1; dx <= 1; dx++) for (var dy = -1; dy <= 1; dy++) {
+          var px = fx + dx * tw, py = fy + dy * th;
+          if (px < -l || px > tw + l || py < -l || py > th + l) continue;
+          g.strokeStyle = col; g.beginPath(); g.moveTo(px, py);
+          g.quadraticCurveTo(px + Math.cos(a + 0.6) * l * 0.5, py + Math.sin(a + 0.6) * l * 0.5, px + Math.cos(a) * l, py + Math.sin(a) * l); g.stroke();
+        }
+      }
+    }
+    var pat = ctx.createPattern(c, 'repeat');
+    if (pat && pat.setTransform && window.DOMMatrix) pat.setTransform(new DOMMatrix().scale(1 / k));
+    fabricCache[i] = pat;
+    return pat;
+  }
+  // Hướng A (Cozy Storybook Ink): chuyển sắc sáng kem ấm trên-trái, râm nhẹ dưới-phải, kèm viền ánh sáng dịu và tối góc tinh tế.
+  function paintStoryGrad(fb, x0, y0, w, h) {
+    var hiCol = mix(fb.light, '#FFF8EA', 0.28);
+    var loCol = mix(fb.dark, fb.line || '#2A2326', 0.14);
+    var cg = ctx.createRadialGradient(x0 + w * 0.30, y0 + h * 0.24, Math.min(w, h) * 0.03, x0 + w * 0.52, y0 + h * 0.54, Math.max(w, h) * 0.82);
+    cg.addColorStop(0, hiCol); cg.addColorStop(0.55, fb.base); cg.addColorStop(1, loCol);
+    ctx.fillStyle = cg; ctx.fillRect(x0 - 4, y0 - 4, w + 8, h + 8);
+  }
+  function paintInnerEdge(i, fb, ox, oy, s, x0, y0, w, h) {
+    var rk = Math.max(1.3, s * 0.011);
+    ctx.save(); ctx.lineJoin = 'round';
+    outlinePath(LV[i].outline, ox + rk * 0.9, oy + rk * 0.9, s);
+    ctx.lineWidth = rk * 2.8;
+    ctx.strokeStyle = rgba(mix(fb.light, '#FFF9EE', 0.5), 0.26);
+    ctx.stroke();
+    var sg = ctx.createLinearGradient(x0, y0, x0 + w * 0.8, y0 + h);
+    sg.addColorStop(0, 'rgba(255,255,255,0)');
+    sg.addColorStop(0.72, 'rgba(0,0,0,0)');
+    sg.addColorStop(1, rgba(fb.line || '#2A2326', 0.14));
+    ctx.fillStyle = sg; ctx.fillRect(x0 - 4, y0 - 4, w + 8, h + 8);
+    ctx.restore();
+  }
+  function paintFabric(i, ox, oy, s, deep) {
+    var fb = fab(i), b = LV[i].bbox, x0 = ox + b[0] * s, y0 = oy + b[1] * s, w = (b[2] - b[0]) * s, h = (b[3] - b[1]) * s;
+    ctx.fillStyle = fb.base; ctx.fillRect(x0 - 4, y0 - 4, w + 8, h + 8);
+    if (fb.mat === 'flat') { paintFlat(i, fb, ox, oy, s, x0, y0, w, h); return; }
+    paintStoryGrad(fb, x0, y0, w, h);
+    // gân len cổ áo là chi tiết vật thật nên giữ (ô lặp bám theo mảnh)
+    if (fb.mat === 'rib') {
+      var pat = fabricPattern(i);
+      if (pat) { ctx.save(); ctx.translate(ox, oy); ctx.globalAlpha = 0.45; ctx.fillStyle = pat; ctx.fillRect(x0 - ox - 4, y0 - oy - 4, w + 8, h + 8); ctx.restore(); }
+    }
+    if (fb.detail === 'waffle') {
+      // ô bánh quế hai lớp sáng-tối tạo độ nổi giòn
+      var gq = Math.max(8, s * 0.085);
+      for (var pass = 0; pass < 2; pass++) {
+        ctx.beginPath();
+        for (var d = -h; d < w + h; d += gq) {
+          var o = pass ? 0 : 1.5;
+          ctx.moveTo(x0 + d, y0 + h + o); ctx.lineTo(x0 + d + h, y0 + o);
+          ctx.moveTo(x0 + d, y0 + o); ctx.lineTo(x0 + d + h, y0 + h + o);
+        }
+        ctx.lineWidth = pass ? Math.max(1.1, s * 0.0055) : Math.max(1.3, s * 0.0068);
+        ctx.strokeStyle = pass ? 'rgba(255,246,225,0.28)' : rgba(mix(fb.dark, '#6E3F0E', 0.25), 0.36);
+        ctx.stroke();
+      }
+    }
+    paintInnerEdge(i, fb, ox, oy, s, x0, y0, w, h);
+  }
+  function paintFlat(i, fb, ox, oy, s, x0, y0, w, h) {
+    paintStoryGrad(fb, x0, y0, w, h);
+    paintInnerEdge(i, fb, ox, oy, s, x0, y0, w, h);
+    // Bóng sương căng mọng nhẹ nhàng kiểu storybook-cartoon thay cho vệt trắng gắt
+    ctx.save();
+    ctx.translate(x0 + w * 0.24, y0 + h * 0.34); ctx.rotate(-0.35);
+    ctx.beginPath(); ctx.ellipse(0, 0, Math.max(2, w * 0.042), Math.max(5, h * 0.105), 0, 0, 7);
+    ctx.fillStyle = 'rgba(255,245,245,0.34)'; ctx.fill();
+    ctx.restore();
+  }
   function paintPattern(i, ox, oy, s, deep) {
+    if (LV[i].def.fabric) { paintFabric(i, ox, oy, s, deep); return; }
     var pt = LV[i].def.pattern, b = LV[i].bbox, x0 = ox + b[0] * s, y0 = oy + b[1] * s, w = (b[2] - b[0]) * s, h = (b[3] - b[1]) * s, u = s / 324;
     ctx.fillStyle = mix(pt.base, pt.deep, deep); ctx.fillRect(x0 - 4, y0 - 4, w + 8, h + 8);
     var row, xx, yy;
@@ -2158,6 +2428,8 @@
         var bt = p.age / p.life, br = p.r + 34 * easeOut(bt);
         ctx.beginPath(); ctx.arc(0, 0, br, 0, 7); ctx.lineWidth = 7 * (1 - bt) + 1; ctx.strokeStyle = 'rgba(74,59,53,0.18)'; ctx.stroke();
         ctx.lineWidth = 5 * (1 - bt) + 1; ctx.strokeStyle = '#FFFFFF'; ctx.stroke();
+      } else if (p.kind === 'steam') {
+        ctx.beginPath(); ctx.arc(0, 0, p.r * (1 + p.age * 1.2), 0, 7); ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.fill();
       } else if (p.kind === 'button') {
         ctx.beginPath(); ctx.arc(0, 0, p.r, 0, 7); ctx.fillStyle = p.c; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = C.ink; ctx.stroke();
         ctx.fillStyle = C.ink; for (var q = 0; q < 4; q++) { ctx.beginPath(); ctx.arc((q % 2 ? 1 : -1) * p.r * 0.3, (q < 2 ? -1 : 1) * p.r * 0.3, p.r * 0.13, 0, 7); ctx.fill(); }
@@ -2358,7 +2630,7 @@
 
   function drawBreathingCrescentGaps(intro) {
     var lv = LV[S.li];
-    if (!lv || !lv.def || !lv.def.bendFree || !lv.def.bendFree.length) return;
+    if (!lv || !lv.def) return;
     var def = lv.def;
     if (S.iouV >= S.thr) return;
     if (S.phase !== 'play' && S.phase !== 'verify') return;
@@ -2373,17 +2645,13 @@
     var idleTime = clk - (S.lastAction || 0);
     var isIdle = (idleTime > 1.8);
 
-    for (var bi = 0; bi < def.bendFree.length; bi++) {
-      var k = def.bendFree[bi];
-      if (!isEdgeAnchoredToPins(k)) continue;
-      var solH = def.solBend ? (def.solBend[k] || 0) : 0;
-      var curH = S.bend ? (S.bend[k] || 0) : 0;
-      var bendErr = Math.abs(curH - solH);
-      if (bendErr < 0.012) continue; // Cạnh này đã uốn đúng hoặc gần khít, không cần gợi ý
-
+    var list = hintEdges();
+    for (var bi = 0; bi < list.length; bi++) {
+      var k = list[bi].k;
       var ra = def.ring[k], rb = def.ring[(k + 1) % def.ring.length];
       var pCur = GN.edgePoly(def, S.pos, ra, rb, 24, gapCurBuf, S.bend);
-      var pSol = GN.edgePoly(def, def.sol, ra, rb, 24, gapSolBuf, def.solBend);
+      // viền đích vẽ giữa chính hai đầu dây, ở độ uốn đích theo chốt
+      var pSol = GN.edgePoly(def, S.pos, ra, rb, 24, gapSolBuf, bendsAt(k, list[bi].h));
       if (!pCur || pCur.length < 4 || !pSol || pSol.length < 4) continue;
 
       var breath = 0.5 + 0.5 * Math.sin(clk * 3.2 + bi * 0.8);
@@ -2391,6 +2659,7 @@
       var aFill = (0.28 + 0.22 * breath * depth) * intro * fadeIn;
 
       ctx.save();
+      ctx.globalAlpha = list[bi].emph;
 
       // 1. TẦNG NỀN: Mảng khuyết hình trăng khuyết khép kín giữa sợi dây và viền mẫu
       ctx.beginPath();
@@ -2487,7 +2756,7 @@
   // Vẽ trên mặt sợi dây để người chơi có điểm chạm xúc giác (Affordance) rõ ràng
   function drawPinchBeads(intro) {
     var lv = LV[S.li];
-    if (!lv || !lv.def || !lv.def.bendFree || !lv.def.bendFree.length) return;
+    if (!lv || !lv.def) return;
     var def = lv.def;
     if (S.iouV >= S.thr) return;
     if (S.phase !== 'play' && S.phase !== 'verify') return;
@@ -2502,14 +2771,9 @@
     var idleTime = clk - (S.lastAction || 0);
     var isIdle = (idleTime > 1.8);
 
-    for (var bi = 0; bi < def.bendFree.length; bi++) {
-      var k = def.bendFree[bi];
-      if (!isEdgeAnchoredToPins(k)) continue;
-      var solH = def.solBend ? (def.solBend[k] || 0) : 0;
-      var curH = S.bend ? (S.bend[k] || 0) : 0;
-      var bendErr = Math.abs(curH - solH);
-      if (bendErr < 0.012) continue;
-
+    var list = hintEdges();
+    for (var bi = 0; bi < list.length; bi++) {
+      var k = list[bi].k;
       var ra = def.ring[k], rb = def.ring[(k + 1) % def.ring.length];
       var pCur = GN.edgePoly(def, S.pos, ra, rb, 24, gapCurBuf, S.bend);
       if (!pCur || pCur.length < 4) continue;
@@ -2520,6 +2784,7 @@
       var r = (5.2 + 0.8 * breath) * (0.4 + 0.6 * fadeIn);
 
       ctx.save();
+      ctx.globalAlpha = list[bi].emph;
       // Quầng thở phát sáng nhẹ quanh cúc len
       ctx.beginPath(); ctx.arc(bx, by, r + 4.5 * breath, 0, Math.PI * 2);
       ctx.lineWidth = 1.4;
@@ -2760,6 +3025,174 @@
     });
     return out;
   }
+  /* ---------- khâu đắp mảnh lên vải nền (đã duyệt 2026-11-09, làm 2026-11-10) ---------- */
+  // Kim chạy dọc mép từng mảnh (mảnh dưới trước), mũi khâu cách mép vào trong đều một khoảng, tính bằng cách dời đường
+  // viền vào trong theo pháp tuyến (không thu nhỏ quanh tâm, cách cũ lệch ra ngoài ở tay áo, tai thỏ, lỗ tim).
+  // 2026-11-11: mũi khâu nổi trông xấu nên chỉ còn sợi cực mảnh cùng màu với mảnh (gần như ẩn); 'none' bỏ hẳn mũi khâu để so.
+  // 2026-11-11: mặc định là rãnh chần chìm cùng màu vải kèm mép phồng (quilt); giữ mũi chạy và "không khâu" để so.
+  var STITCH_KINDS = ['quilt', 'running', 'none'], STITCH_NAMES = { quilt: 'Rãnh chìm', blanket: 'Viền chăn', running: 'Mũi chạy', whip: 'Quấn mép', none: 'Không khâu' };
+  var STITCH_KIND = 'quilt';
+  try { var savedKind = localStorage.getItem('gn-stitch3'); if (STITCH_KINDS.indexOf(savedKind) >= 0) STITCH_KIND = savedKind; } catch (e) {}
+  // khoảng dời vào trong theo khung của mảnh, khoảng cách mũi (pt trên màn hình), thời lượng cả lượt khâu (giá trị tạm)
+  var APPLIQUE_INSET = 0.03, APPLIQUE_STEP = 8, APPLIQUE_T = 2.2;
+  (function () {
+    var btn = document.getElementById('stitchBtn');
+    if (!btn || typeof btn.addEventListener !== 'function') return;
+    function label() { btn.textContent = 'Mũi khâu: ' + STITCH_NAMES[STITCH_KIND]; }
+    label();
+    btn.addEventListener('click', function () {
+      STITCH_KIND = STITCH_KINDS[(STITCH_KINDS.indexOf(STITCH_KIND) + 1) % STITCH_KINDS.length];
+      try { localStorage.setItem('gn-stitch3', STITCH_KIND); } catch (e) {}
+      label();
+    });
+  })();
+  function pointInLoop(lp, x, y) {
+    var inside = false, n = lp.length / 2;
+    for (var i = 0, j = n - 1; i < n; j = i++) {
+      var xi = lp[i * 2], yi = lp[i * 2 + 1], xj = lp[j * 2], yj = lp[j * 2 + 1];
+      if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+    }
+    return inside;
+  }
+  var insetCache = {};
+  function insideLoops(loops, x, y) { var c = 0; for (var q = 0; q < loops.length; q++) if (pointInLoop(loops[q], x, y)) c++; return c % 2 === 1; }
+  // Đường mũi khâu của mảnh i (toạ độ khung của mảnh): mỗi vòng viền dời vào trong một khoảng d theo pháp tuyến.
+  // Chiều "vào trong" xét riêng từng điểm (thử dời một chút, ra ngoài mảnh thì đảo), vì vòng tự bắt chéo (lá số 8) đổi
+  // chiều giữa hai thùy, và vòng lỗ ngược chiều vòng ngoài. Góc lõm kéo dài tối đa 1,6 lần để mũi không lùi quá sâu.
+  function insetLoops(i) {
+    if (insetCache[i]) return insetCache[i];
+    var loops = LV[i].outline.loops || [LV[i].outline], d = APPLIQUE_INSET, out = [], side = 1;
+    loops.forEach(function (raw) {
+      // bỏ điểm trùng liền nhau (kể cả điểm cuối lặp lại điểm đầu), nếu không góc đó chỉ có pháp tuyến của một cạnh
+      var lp = [];
+      for (var t = 0; t < raw.length; t += 2) {
+        var lx = lp.length ? lp[lp.length - 2] : null, ly = lp.length ? lp[lp.length - 1] : null;
+        if (lx === null || Math.hypot(raw[t] - lx, raw[t + 1] - ly) > 1e-7) lp.push(raw[t], raw[t + 1]);
+      }
+      if (lp.length > 4 && Math.hypot(lp[0] - lp[lp.length - 2], lp[1] - lp[lp.length - 1]) < 1e-7) lp.length -= 2;
+      var n = lp.length / 2, pts = [], nrm = [];
+      for (var j = 0; j < n; j++) {
+        var pj = (j + n - 1) % n, nj = (j + 1) % n;
+        var ax = lp[j * 2] - lp[pj * 2], ay = lp[j * 2 + 1] - lp[pj * 2 + 1], al = Math.hypot(ax, ay);
+        var bx = lp[nj * 2] - lp[j * 2], by = lp[nj * 2 + 1] - lp[j * 2 + 1], bl = Math.hypot(bx, by);
+        if (al < 1e-9) { ax = bx; ay = by; al = bl; }
+        if (bl < 1e-9) { bx = ax; by = ay; bl = al; }
+        if (al < 1e-9) continue;
+        var n1x = -ay / al * side, n1y = ax / al * side, n2x = -by / bl * side, n2y = bx / bl * side;
+        var vx = n1x + n2x, vy = n1y + n2y, vl = Math.hypot(vx, vy) || 1; vx /= vl; vy /= vl;
+        if (!insideLoops(loops, lp[j * 2] + vx * 0.006, lp[j * 2 + 1] + vy * 0.006)) { vx = -vx; vy = -vy; n1x = -n1x; n1y = -n1y; }
+        var k = Math.min(1.6, 1 / Math.max(0.4, vx * n1x + vy * n1y));
+        pts.push(lp[j * 2] + vx * d * k, lp[j * 2 + 1] + vy * d * k); nrm.push(vx, vy);
+      }
+      out.push({ pts: pts, nrm: nrm });
+    });
+    return (insetCache[i] = out);
+  }
+  // màu chỉ: tương phản nhẹ với từng mảnh (vải sáng dùng chỉ tối cùng họ màu, vải đậm dùng chỉ kem)
+  function threadColor(fb) {
+    var A = hex(fb.base), lum = (0.299 * A[0] + 0.587 * A[1] + 0.114 * A[2]) / 255;
+    // chỉ cùng màu với mảnh: tông tối của chính mảnh, vải rất sáng thì đậm thêm một chút cho còn thấy
+    return lum > 0.78 ? mix(fb.dark, C.ink, 0.12) : fb.dark;
+  }
+  // dựng mũi khâu cho mọi mảnh vải theo thứ tự vẽ (mảnh dưới trước), toạ độ màn hình
+  function buildApplique() {
+    R.stitches = []; R.seams = [];
+    backToFront().forEach(function (li) {
+      var fb = LV[li].def.fabric; if (!fb || fb.mat === 'flat') return; // tranh tô màu giữ viền đen, không khâu
+      var tf = placeOf(li), dpx = APPLIQUE_INSET * tf.s, col = threadColor(fb);
+      insetLoops(li).forEach(function (loop) {
+        var n = loop.pts.length / 2, sp = [], cum = [0];
+        for (var j = 0; j <= n; j++) { var q = j % n; sp.push([tf.ox + loop.pts[q * 2] * tf.s, tf.oy + loop.pts[q * 2 + 1] * tf.s, loop.nrm[q * 2], loop.nrm[q * 2 + 1]]); }
+        for (j = 1; j < sp.length; j++) cum.push(cum[j - 1] + Math.hypot(sp[j][0] - sp[j - 1][0], sp[j][1] - sp[j - 1][1]));
+        var L = cum[cum.length - 1], m = Math.max(8, Math.round(L / APPLIQUE_STEP)), seg = 1;
+        function at(dist) {
+          while (seg < cum.length - 1 && cum[seg] < dist) seg++;
+          var a = sp[seg - 1], b = sp[seg], u = clamp((dist - cum[seg - 1]) / Math.max(1e-6, cum[seg] - cum[seg - 1]), 0, 1);
+          return [lerp(a[0], b[0], u), lerp(a[1], b[1], u), a[2], a[3]];
+        }
+        var pts = [];
+        for (var k = 0; k <= m; k++) pts.push(at(L * k / m));
+        R.seams.push([[pts[0][0], pts[0][1]], [pts[m][0], pts[m][1]]]);
+        for (k = 0; k < m; k++) {
+          var a = pts[k], b = pts[k + 1], ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
+          R.stitches.push({ li: li, a: [a[0], a[1]], b: [b[0], b[1]], m: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], ang: ang, nx: a[2], ny: a[3], d: dpx, col: col });
+        }
+      });
+    });
+  }
+  // vẽ mũi khâu của một mảnh (gọi ngay sau khi vẽ mảnh đó để mảnh phía trên che đúng mũi của mảnh phía dưới)
+  // Rãnh chần chìm và mép phồng (2026-11-11): mọi nét lấy từ màu của chính mảnh nên chìm vào vải, chỉ còn sáng tối tạo khối.
+  // Ánh sáng từ trên trái. Mép phồng: trong mảnh, dải sáng bám mép trên trái và dải tối bám mép dưới phải (vẽ nét viền dịch
+  // chéo rồi cắt theo mảnh). Rãnh: nét tối làm đáy rãnh, nét sáng mảnh lệch xuống dưới phải là thành rãnh phía xa bắt sáng.
+  // Theo tiến độ khâu: rãnh hiện tới đâu kim đi tới đó, mép phồng dần theo phần đã khâu của mảnh.
+  function drawQuilt(li, count) {
+    var fb = LV[li].def.fabric; if (!fb) return;
+    var tf = placeOf(li), pts = LV[li].outline, total = 0, done = 0, d = APPLIQUE_INSET * tf.s;
+    for (var j = 0; j < R.stitches.length; j++) if (R.stitches[j].li === li) { total++; if (j < count) done++; }
+    if (!total || !done) return;
+    var prog = done / total, rim = Math.max(2, d * 0.9);
+    ctx.save();
+    outlinePath(pts, tf.ox, tf.oy, tf.s); ctx.clip();
+    ctx.lineJoin = 'round';
+    [[1, 0.55], [0.6, 0.35]].forEach(function (ly) {
+      var off = rim * 0.55 * ly[0];
+      ctx.save(); ctx.translate(off, off); outlinePath(pts, tf.ox, tf.oy, tf.s);
+      ctx.lineWidth = rim * 2 * ly[0]; ctx.strokeStyle = rgba(fb.light, ly[1] * prog); ctx.stroke(); ctx.restore();
+      ctx.save(); ctx.translate(-off, -off); outlinePath(pts, tf.ox, tf.oy, tf.s);
+      ctx.lineWidth = rim * 2 * ly[0]; ctx.strokeStyle = rgba(fb.dark, (ly[1] + 0.05) * prog); ctx.stroke(); ctx.restore();
+    });
+    ctx.restore();
+    ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    [[0, 0, 1.7, rgba(fb.dark, 0.6)], [0.9, 0.9, 1.0, rgba(fb.light, 0.75)]].forEach(function (ln) {
+      ctx.beginPath();
+      var prev = null;
+      for (var k = 0; k < count; k++) {
+        var st = R.stitches[k]; if (st.li !== li) continue;
+        // bắt đầu vòng mới khi mũi này không nối tiếp mũi trước (mảnh có lỗ có hai vòng)
+        if (!prev || Math.hypot(prev[0] - st.a[0], prev[1] - st.a[1]) > 0.5) ctx.moveTo(st.a[0] + ln[0], st.a[1] + ln[1]);
+        ctx.lineTo(st.b[0] + ln[0], st.b[1] + ln[1]); prev = st.b;
+      }
+      ctx.lineWidth = ln[2]; ctx.strokeStyle = ln[3]; ctx.stroke();
+    });
+    ctx.restore();
+  }
+  function drawPieceStitches(li) {
+    if (!R || !R.stitches || !R.stitches.length) return;
+    var show = R.phase === 'stitch' || R.phase === 'cinch' || R.phase === 'tapReady' || R.phase === 'reveal' || R.phase === 'decor' || R.phase === 'done';
+    if (!show || STITCH_KIND === 'none') return;
+    var count = R.phase === 'stitch' ? Math.min(R.stitches.length, Math.floor(R.stDone)) : R.stitches.length;
+    if (STITCH_KIND === 'quilt') { drawQuilt(li, count); return; }
+    ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    for (var pass = 1; pass < 2; pass++) { // không còn nét bóng dưới sợi chỉ
+      ctx.beginPath();
+      for (var j = 0; j < count; j++) {
+        var st = R.stitches[j]; if (st.li !== li) continue;
+        var a = st.a, b = st.b, nx = st.nx, ny = st.ny, d = st.d, o = pass ? 0 : 0.9;
+        if (STITCH_KIND === 'running') {
+          ctx.moveTo(a[0], a[1] + o); ctx.lineTo(lerp(a[0], b[0], 0.6), lerp(a[1], b[1], 0.6) + o);
+        } else if (STITCH_KIND === 'whip') {
+          ctx.moveTo(a[0], a[1] + o); ctx.lineTo(lerp(a[0], b[0], 0.5) - nx * d * 1.25, lerp(a[1], b[1], 0.5) - ny * d * 1.25 + o);
+        } else {
+          // viền chăn: một sợi chạy dọc đường khâu, mỗi mũi một gạch vuông góc ra tới mép mảnh
+          ctx.moveTo(b[0], b[1] + o); ctx.lineTo(a[0], a[1] + o); ctx.lineTo(a[0] - nx * d * 0.92, a[1] - ny * d * 0.92 + o);
+        }
+      }
+      if (pass === 0) { ctx.lineWidth = 2.8; ctx.strokeStyle = 'rgba(74,59,53,0.22)'; }
+      else { ctx.lineWidth = 0.9; ctx.globalAlpha = 0.8; ctx.strokeStyle = (function () { for (var q = 0; q < R.stitches.length; q++) if (R.stitches[q].li === li) return R.stitches[q].col; return '#FFF6E8'; })(); }
+      ctx.stroke();
+    }
+    // nhịp rút chỉ: nếp nhăn nhỏ dọc mép khâu, thưa để không rối
+    if (R.pucker > 0.02) {
+      var puck = R.pucker;
+      for (var p2 = 0; p2 < count; p2 += 4) {
+        var s2 = R.stitches[p2]; if (s2.li !== li) continue;
+        var wLen = (5 + (p2 % 3) * 2) * puck;
+        ctx.beginPath(); ctx.moveTo(s2.m[0] - s2.nx * wLen, s2.m[1] - s2.ny * wLen); ctx.lineTo(s2.m[0] + s2.nx * wLen, s2.m[1] + s2.ny * wLen);
+        ctx.lineWidth = 1.6; ctx.strokeStyle = 'rgba(74,59,53,' + (0.16 * puck) + ')'; ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
   function startReward() {
     humStop();
     var p = product(), homes = HOMES[p.levels.length], fitted = fitProductPlaces(p);
@@ -2769,14 +3202,9 @@
       }), drag: null, stitch: 0, tap: null, reveal: 0, decor: [], decorT: 0, replay: 0, sq: 0, wig: 0,
       stitches: [], stDone: 0, cinch: 0, pucker: 0, cinchSound: 0, fast: 1, seamCen: [195, 395]
     };
-    R.seams = [];
-    p.seams.forEach(function (sm) {
-      if (LV[sm[0]].def.fold) { var tf0 = placeOf(sm[0]); LV[sm[0]].outline.loops.forEach(function (lp) { var pp = []; for (var z = 0; z <= lp.length; z += 2) { var zz = z % lp.length; pp.push([tf0.ox + lp[zz] * tf0.s, tf0.oy + lp[zz + 1] * tf0.s]); } R.seams.push(pp); }); return; }
-      var sp = LV[sm[0]].solPath, tf = placeOf(sm[0]), a = sp.nodeD[sm[1]], b = sm[2] === 0 ? sp.total : sp.nodeD[sm[2]], pts = [];
-      for (var i = 0; i < sp.cum.length; i++) if (sp.cum[i] >= a - 1e-6 && sp.cum[i] <= b + 1e-6) pts.push([tf.ox + sp.pts[i * 2] * tf.s, tf.oy + sp.pts[i * 2 + 1] * tf.s]);
-      R.seams.push(pts);
-    });
-    R.stitches = buildStitches(R.seams);
+    // khâu đắp quanh mép từng mảnh thay cho đường may vàng giữa các mảnh (dữ liệu seams không còn dùng ở đây)
+    // 2026-11-11: bỏ khâu đắp và rút chỉ; hoàn thiện bằng cú ép khi người chơi chạm (pha 'press'), nên không dựng mũi khâu
+    R.stitches = []; R.seams = [];
     if (R.stitches.length) {
       var sx = 0, sy = 0; R.stitches.forEach(function (st) { sx += st.m[0]; sy += st.m[1]; });
       R.seamCen = [sx / R.stitches.length, sy / R.stitches.length];
@@ -2784,11 +3212,17 @@
     var by = 0;
     p.levels.forEach(function (li) { var t = placeOf(li); by = Math.max(by, t.oy + LV[li].bbox[3] * t.s); });
     R.base = [195, by];
+    // mép trên của sản phẩm: bàn ép chạm vào đây; các mốc hiệu ứng ép đặt lại cho mỗi lần vào màn thưởng
+    var topY = 999;
+    p.levels.forEach(function (li) { var t = placeOf(li); topY = Math.min(topY, t.oy + LV[li].bbox[1] * t.s); });
+    R.top = topY; R.labelT = 0; R.sheenT = -9; R.flashT = -9; R.shakeT = -9;
     chord([0, 4, 7], 0.05, 0.08);
   }
   function productTf() {
     var bx = R.base[0], by = R.base[1];
     ctx.translate(bx, by); ctx.rotate(R.wig); ctx.scale(1 + R.sq * 0.6, 1 - R.sq); ctx.translate(-bx, -by);
+    // cú ép nhìn từ trên xuống: sản phẩm lún vào (thu nhỏ đều quanh tâm) rồi nảy lại
+    if (R.pz && R.pz !== 1) { var pcy = (R.top + R.base[1]) / 2; ctx.translate(195, pcy); ctx.scale(R.pz, R.pz); ctx.translate(-195, -pcy); }
     if (R.pucker && Math.abs(R.pucker) > 1e-4) {
       var cx = R.seamCen[0], cy = R.seamCen[1];
       ctx.translate(cx, cy); ctx.scale(1 - R.pucker * 0.055, 1 - R.pucker * 0.04); ctx.translate(-cx, -cy);
@@ -2839,8 +3273,10 @@
       }
     }
     if (R.phase === 'tapReady' && Math.hypot(p[0] - 195, p[1] - 395) < 175) {
-      R.tap = p; R.phase = 'reveal'; R.t = 0; R.sq = 0; chord([0, 2, 4, 7, 9, 12], 0.06, 0.06); vib([20, 30, 20]);
-      burst(p[0], p[1], 16); burst(p[0], p[1], 40);
+      // chạm là cú ép: nén xuống, va chạm, bật lại, rồi mới loang màu (pha 'press' trong updateReward)
+      R.tap = p; R.phase = 'press'; R.t = 0; R.sq = 0; R.pressHit = false; R.pressRelease = false; R.ringT = 0;
+      // tiếng "vút" ngắn lúc con dấu hạ xuống
+      noise(0.18, 0.03, 1400, 'bandpass'); noise(0.12, 0.02, 2600, 'bandpass', 0.06);
     }
   }
   function rewardMove(p) { if (!R || !R.drag) return; var pc = R.drag.pc; pc.x = p[0] + R.drag.dx; pc.y = p[1] + R.drag.dy; }
@@ -2860,24 +3296,26 @@
     });
     if (R.phase === 'enter' && R.t > 0.6) { R.phase = 'place'; R.t = 0; }
     if (R.phase === 'place' && R.pieces.every(function (pc) { return pc.placed && !pc.snap; })) {
-      R.phase = 'stitch'; R.t = 0; R.tick = 0; R.cheered = false;
-      burst(195, 395, 40); pop(110, 0.09, 0, 0.25); vib(18);
+      // đủ mảnh: chờ người chơi chạm để ép (không còn bước khâu tự chạy)
+      R.phase = 'tapReady'; R.t = 0;
+      pop(noteF(4), 0.06, 0, 0.2); vib(10);
     }
     if (R.phase === 'stitch') {
       var spd = (R.fast || 1);
       var k = clamp(R.t / 0.35, 0, 1);
       R.sq = reduce ? 0 : 0.06 * Math.sin(k * Math.PI * 2) * (1 - k);
       var prevSt = Math.floor(R.stDone);
-      var stitchRate = Math.max(13, R.stitches.length / 1.65) * spd;
+      // cả lượt khâu đắp xong trong APPLIQUE_T giây dù tổng số mũi nhiều hay ít
+      if (STITCH_KIND === 'none') R.stDone = R.stitches.length; // không khâu: sang thẳng nhịp chốt
+      var stitchRate = Math.max(13, R.stitches.length / APPLIQUE_T) * spd;
       R.stDone += dt * stitchRate;
       var newSt = Math.floor(R.stDone);
       if (newSt > prevSt) {
         for (var si = prevSt; si < Math.min(newSt, R.stitches.length); si++) {
-          pop(risingF(si), 0.05, 0, 0.2);
-          noise(0.025, 0.015, 2000, 'bandpass');
-          vib(3);
-          var stObj = R.stitches[si];
-          if (stObj) sparkle(stObj.m[0], stObj.m[1], 2);
+          // mũi rất dày nên cả lượt chỉ phát khoảng 12 nốt leo dần (không lên quá 2,5 quãng tám), tiếng kim mỗi 2 mũi
+          var every = Math.max(1, Math.round(R.stitches.length / 12));
+          if (si % every === 0) { pop(risingF(Math.floor(si / every)), 0.05, 0, 0.2); vib(3); var stObj = R.stitches[si]; if (stObj) sparkle(stObj.m[0], stObj.m[1], 2); }
+          if (si % 2 === 0) noise(0.02, 0.012, 2000, 'bandpass');
         }
       }
       if (R.stDone >= R.stitches.length) {
@@ -2927,9 +3365,33 @@
       }
     }
     if (R.phase === 'tapReady') R.sq = reduce ? 0 : 0.012 * Math.sin(clock * 3);
+    if (R.phase === 'press') {
+      // Ép hoàn thiện kiểu con dấu tròn (2026-11-11, số tạm), nhìn từ trên xuống: con dấu tròn đúng cỡ vải nền hạ thẳng
+      // xuống trong 0,2 s (to 1,35 lần và mờ, nhỏ dần; bóng tròn co lại và đậm dần); chạm thì khớp mép nền, nén nhẹ
+      // 0,1 s (rung, chớp sáng, tiếng thịch); nhấc lên 0,3 s (to ra, mờ đi), hơi nước bốc đều quanh mép tròn và để lại
+      // vết ép tròn nổi cùng màu nền; rồi màu loang từ tâm ra mép nền, nhãn "Hoàn thành!".
+      var T_HIT = 0.2, T_LIFT = 0.3, T_END = 0.6, pt = R.t;
+      R.sq = 0; R.pz = 1;
+      if (pt >= T_HIT && !R.pressHit) {
+        R.pressHit = true; R.flashT = clock; R.shakeT = clock;
+        // tiếng "thịch" trầm êm như nỉ, rung mạnh một nhịp
+        pop(92, 0.16, 0, 0.4); noise(0.18, 0.07, 450, 'lowpass'); vib(40);
+      }
+      if (pt >= T_LIFT && !R.pressRelease) {
+        R.pressRelease = true; R.ringT = clock;
+        noise(0.3, 0.03, 4200, 'highpass'); // hơi nước xì khi nhấc con dấu
+        // hơi nước bốc đều quanh mép tròn: hướng ra ngoài và lên trên
+        for (var sm = 0; sm < 22; sm++) {
+          var sa = sm / 22 * Math.PI * 2 + Math.random() * 0.2, sx = 195 + Math.cos(sa) * 165, sy = 395 + Math.sin(sa) * 165;
+          S.parts.push({ x: sx, y: sy, vx: Math.cos(sa) * (18 + Math.random() * 16), vy: Math.sin(sa) * 14 - 34 - Math.random() * 26, life: 0.9 + Math.random() * 0.3, age: 0, kind: 'steam', r: 9 + Math.random() * 8, rot: 0, vr: 0, g: -12 });
+        }
+        burst(195, 395, 150);
+      }
+      if (pt >= T_END) { R.sq = 0; R.phase = 'reveal'; R.t = 0; R.labelT = clock; R.sheenT = clock; chord([0, 2, 4, 7, 9, 12], 0.06, 0.06); vib([12, 20, 12]); }
+    }
     if (R.phase === 'reveal') {
-      R.reveal = easeInOut(R.t / 1.0);
-      if (R.t > 1.0) { R.phase = 'decor'; R.t = 0; R.decorT = 0; sparkle(R.tap[0], R.tap[1], 18); }
+      R.reveal = easeInOut(clamp(R.t / 0.6, 0, 1));
+      if (R.t > 0.6) { R.phase = 'decor'; R.t = 0; R.decorT = 0; sparkle(195, 395, 18); }
     }
     if (R.phase === 'decor') {
       var idx = Math.floor(R.t / 0.24);
@@ -2942,264 +3404,599 @@
       if (R.decor.length >= DEC.length && R.t > DEC.length * 0.24 + 0.4) { R.phase = 'done'; R.t = 0; confetti(70); chord([0, 4, 7, 12, 16], 0.07, 0.09); }
     }
   }
-  function smile(p, k, spread) {
-    ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(k, k);
-    ctx.beginPath(); ctx.ellipse(-spread, -2, 7, 4.5, 0, 0, 7); ctx.ellipse(spread, -2, 7, 4.5, 0, 0, 7); ctx.fillStyle = rgba(C.roseDeep, 0.75); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(-7, -2); ctx.quadraticCurveTo(0, 6, 7, -2); ctx.lineWidth = 2.6; ctx.strokeStyle = C.ink; ctx.lineCap = 'round'; ctx.stroke(); ctx.restore();
+  // Hàm vẽ bông hoa 5 cánh nhỏ dùng chung (cài áo cardigan, nhành hoa trái tim, hoa dâu, hoa tai thỏ).
+  function drawBlossom(x, y, petals, pr, pd, centerR, petalFill, petalInk, centerFill, centerInk) {
+    ctx.save(); ctx.translate(x, y);
+    for (var q = 0; q < petals; q++) {
+      var a = q * (Math.PI * 2 / petals) - 0.25;
+      ctx.beginPath(); ctx.arc(Math.cos(a) * pr, Math.sin(a) * pr, pd, 0, 7);
+      ctx.fillStyle = petalFill; ctx.fill(); ctx.lineWidth = 1.6; ctx.strokeStyle = petalInk; ctx.stroke();
+    }
+    ctx.beginPath(); ctx.arc(0, 0, centerR, 0, 7);
+    ctx.fillStyle = centerFill; ctx.fill(); ctx.lineWidth = 1.6; ctx.strokeStyle = centerInk; ctx.stroke();
+    ctx.restore();
   }
-  // Decor xuất hiện lần lượt sau lần chạm duy nhất.
+  function drawLeafSprig(x, y, rx, ry, rot) {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(rot);
+    ctx.beginPath(); ctx.ellipse(0, 0, rx, ry, 0, 0, 7);
+    ctx.fillStyle = '#6BD486'; ctx.fill(); ctx.lineWidth = 1.7; ctx.strokeStyle = '#1B5E34'; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-rx * 0.6, 0); ctx.lineTo(rx * 0.6, 0); ctx.lineWidth = 1.1; ctx.stroke();
+    ctx.restore();
+  }
+  // Decor Hướng A phong cách Cartoon nghệ thuật (không mặt cười); hỗ trợ before (sau lưng mảnh), clipTo (trong clip mảnh) và after (đúng tầng chiều sâu).
   var DECOR = {
     icecream: [
-      { at: function () { return ptOf(0, 0.52, 0.10); }, draw: function (p, k) {
-        // quả anh đào trên đỉnh viên kem
-        ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(k, k);
-        ctx.beginPath(); ctx.moveTo(2, -10); ctx.quadraticCurveTo(6, -24, 16, -28); ctx.lineWidth = 2.4; ctx.strokeStyle = C.ink; ctx.lineCap = 'round'; ctx.stroke();
-        ctx.beginPath(); ctx.arc(0, 0, 11, 0, 7); ctx.fillStyle = '#D9665F'; ctx.fill(); ctx.lineWidth = 2.2; ctx.stroke();
-        ctx.beginPath(); ctx.arc(-3.5, -3.5, 3, 0, 7); ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.fill(); ctx.restore(); } },
-      { at: function () { return ptOf(0, 0.26, 0.40); }, draw: function (p, k) { star(p, 7 * k, '#FFFFFF'); } },
-      { at: function () { return ptOf(0, 0.78, 0.44); }, draw: function (p, k) { star(p, 5 * k, '#FFFFFF'); } },
-      { at: function () { return ptOf(0, 0.40, 0.42); }, draw: function (p, k) { eye(p, k); } },
-      { at: function () { return ptOf(0, 0.60, 0.42); }, draw: function (p, k) { eye(p, k); } },
-      { at: function () { return ptOf(0, 0.50, 0.51); }, draw: function (p, k) { smile(p, k, 26); } },
-      { at: function () { return ptOf(1, 0.50, 0.50); }, draw: function (p, k) {
-        // trái tim may đắp trên ốc quế
-        ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(k, k);
-        ctx.beginPath(); ctx.moveTo(0, 9); ctx.bezierCurveTo(-14, -1, -9, -13, 0, -5); ctx.bezierCurveTo(9, -13, 14, -1, 0, 9);
-        ctx.fillStyle = C.rose; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = C.ink; ctx.stroke();
-        ctx.setLineDash([2.5, 2.5]); ctx.lineWidth = 1.2; ctx.strokeStyle = '#FFFFFF'; ctx.scale(0.7, 0.7); ctx.stroke(); ctx.restore(); } }
+      { clipTo: 1, at: function () { return ptOf(1, 0.50, 0.72); }, draw: function (p, k) {
+        var p1 = placeOf(1), b1 = LV[1].bbox, p0 = placeOf(0);
+        var x0 = p1.ox + b1[0] * p1.s, y0 = p1.oy + b1[1] * p1.s, w = (b1[2] - b1[0]) * p1.s, h = (b1[3] - b1[1]) * p1.s;
+        var al = clamp(k, 0, 1), cutY = p1.oy + 0.48 * p1.s + (1 - Math.min(k, 1.04)) * 18;
+        ctx.save(); ctx.globalAlpha = al;
+        // Bóng mềm của viên kem đổ xuống miệng ốc quế
+        ctx.save(); ctx.translate(0, 6);
+        outlinePath(LV[0].outline, p0.ox, p0.oy, p0.s);
+        ctx.fillStyle = 'rgba(95,38,30,0.22)'; ctx.fill(); ctx.restore();
+        // Áo giấy nếp sọc mint có mép lượn sóng & dải ruy-băng cong
+        ctx.beginPath(); ctx.moveTo(x0 - 8, cutY + 4);
+        var steps = 6;
+        for (var q = 0; q < steps; q++) {
+          var sx0 = (x0 - 4) + ((w + 8) * q / steps), sx1 = (x0 - 4) + ((w + 8) * (q + 1) / steps);
+          var sag = Math.sin(((q + 0.5) / steps) * Math.PI) * 6;
+          ctx.quadraticCurveTo((sx0 + sx1) / 2, cutY + (q % 2 === 0 ? -5 : 7) + sag, sx1, cutY + 3 + sag * 0.6);
+        }
+        ctx.lineTo(x0 + w + 8, y0 + h + 8); ctx.lineTo(x0 - 8, y0 + h + 8); ctx.closePath();
+        ctx.fillStyle = '#FFF7EE'; ctx.fill();
+        ctx.save(); ctx.clip();
+        ctx.fillStyle = '#BBE3D4';
+        for (var sx = x0 - 12; sx < x0 + w + 12; sx += 18) ctx.fillRect(sx, cutY - 12, 8, h + 16);
+        ctx.beginPath(); ctx.moveTo(x0 - 6, cutY + 13); ctx.quadraticCurveTo(x0 + w * 0.5, cutY + 23, x0 + w + 6, cutY + 13);
+        ctx.lineWidth = 7; ctx.strokeStyle = '#FF8FA8'; ctx.stroke();
+        ctx.lineWidth = 1.6; ctx.strokeStyle = '#6E2B3E'; ctx.stroke();
+        ctx.restore();
+        ctx.lineWidth = 2.0; ctx.strokeStyle = '#6E4C3C'; ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(x0 + w * 0.5, cutY + 18, 6.2, 4, 0, 0, 7);
+        ctx.fillStyle = '#FFE3EA'; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = '#6E2B3E'; ctx.stroke();
+        ctx.restore(); } },
+      { after: 1, at: function () { return ptOf(0, 0.74, 0.24); }, draw: function (p, k) {
+        var sc = Math.max(0.01, k);
+        ctx.save(); ctx.translate(p[0], p[1]); ctx.rotate(0.45); ctx.scale(sc, sc);
+        rr(-10, -56, 20, 76, 7);
+        var wg = ctx.createLinearGradient(-10, 0, 10, 0); wg.addColorStop(0, '#F7CE8A'); wg.addColorStop(1, '#DF9F52');
+        ctx.fillStyle = wg; ctx.fill();
+        ctx.save(); ctx.clip();
+        ctx.strokeStyle = '#BA6D28'; ctx.lineWidth = 5;
+        for (var yy = -62; yy < 32; yy += 16) { ctx.beginPath(); ctx.moveTo(-14, yy); ctx.lineTo(14, yy + 12); ctx.stroke(); }
+        ctx.restore();
+        ctx.lineWidth = 2.8; ctx.strokeStyle = '#6E3F0E'; ctx.stroke(); ctx.restore(); } },
+      { clipTo: 0, at: function () { return ptOf(0, 0.50, 0.28); }, draw: function (p, k) {
+        var p0 = placeOf(0), b0 = LV[0].bbox, fb0 = fab(0), al = clamp(k, 0, 1);
+        var x0 = p0.ox + b0[0] * p0.s, y0 = p0.oy + b0[1] * p0.s, w = (b0[2] - b0[0]) * p0.s, h = (b0[3] - b0[1]) * p0.s;
+        ctx.save(); ctx.globalAlpha = al; ctx.translate(0, (1 - Math.min(k, 1.05)) * -12);
+        ctx.beginPath();
+        ctx.moveTo(x0 - 4, y0 - 4); ctx.lineTo(x0 + w + 4, y0 - 4); ctx.lineTo(x0 + w + 4, y0 + h * 0.42);
+        ctx.bezierCurveTo(x0 + w * 0.85, y0 + h * 0.54, x0 + w * 0.78, y0 + h * 0.34, x0 + w * 0.67, y0 + h * 0.46);
+        ctx.bezierCurveTo(x0 + w * 0.56, y0 + h * 0.60, x0 + w * 0.46, y0 + h * 0.36, x0 + w * 0.34, y0 + h * 0.50);
+        ctx.bezierCurveTo(x0 + w * 0.22, y0 + h * 0.60, x0 + w * 0.14, y0 + h * 0.36, x0 - 4, y0 + h * 0.44);
+        ctx.closePath();
+        var ig = ctx.createLinearGradient(0, y0, 0, y0 + h * 0.55); ig.addColorStop(0, '#FFFDF9'); ig.addColorStop(1, '#FFE8EF');
+        ctx.fillStyle = ig; ctx.fill(); ctx.lineWidth = 2.4; ctx.strokeStyle = mix(fb0.line, '#D66E88', 0.4); ctx.stroke();
+        ctx.save(); ctx.translate(x0 + w * 0.22, y0 + h * 0.28); ctx.rotate(-0.62);
+        ctx.beginPath(); ctx.ellipse(0, 0, 16, 5.8, 0, 0, 7); ctx.fillStyle = 'rgba(255,255,255,0.65)'; ctx.fill(); ctx.restore();
+        ctx.restore(); } },
+      { after: 0, at: function () { return ptOf(0, 0.50, 0.36); }, draw: function (p, k) {
+        var sc = Math.max(0.01, k);
+        [[0.34, 0.27, -0.4, '#FFD24C'], [0.48, 0.22, 0.5, '#7AD6A8'], [0.62, 0.29, -0.2, '#82C8F5'],
+         [0.25, 0.36, 0.7, '#FF7596'], [0.54, 0.36, 0.3, '#FFD24C'], [0.71, 0.37, -0.6, '#7AD6A8'],
+         [0.39, 0.58, 0.4, '#FFF8EA'], [0.61, 0.59, -0.5, '#FFE074']].forEach(function (sp) {
+          var q = ptOf(0, sp[0], sp[1]);
+          ctx.save(); ctx.translate(q[0], q[1]); ctx.rotate(sp[2]); ctx.scale(sc, sc);
+          rr(-6, -2.5, 12, 5, 2.5); ctx.fillStyle = sp[3]; ctx.fill(); ctx.lineWidth = 1.3; ctx.strokeStyle = '#6E263D'; ctx.stroke(); ctx.restore();
+        }); } },
+      { at: function () { return ptOf(0, 0.48, 0.12); }, draw: function (p, k) {
+        var sc = Math.max(0.01, k) * 1.12;
+        ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(sc, sc);
+        drawLeafSprig(-13, -2, 13, 6.2, -0.55);
+        ctx.beginPath(); ctx.moveTo(0, -10); ctx.quadraticCurveTo(-5, -25, -14, -28);
+        ctx.lineWidth = 2.8; ctx.strokeStyle = '#1E5E34'; ctx.lineCap = 'round'; ctx.stroke();
+        ctx.beginPath(); ctx.arc(0, 0, 12.5, 0, 7);
+        var cg = ctx.createRadialGradient(-4, -4, 1, 0, 0, 12.5);
+        cg.addColorStop(0, '#FF7D88'); cg.addColorStop(0.6, '#E83A52'); cg.addColorStop(1, '#A61C34');
+        ctx.fillStyle = cg; ctx.fill(); ctx.lineWidth = 2.4; ctx.strokeStyle = '#6B1325'; ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(-4.5, -4.5, 3.8, 2.3, -0.6, 0, 7); ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.fill(); ctx.restore(); } }
     ],
     cardigan: [
-      { at: function () { return ptOf(3, 0.5, 0.34); }, draw: function (p, k) { coatButton(p, k); } },
-      { at: function () { return ptOf(3, 0.5, 0.48); }, draw: function (p, k) { coatButton(p, k); } },
-      { at: function () { return ptOf(3, 0.5, 0.62); }, draw: function (p, k) { coatButton(p, k); } },
-      { at: function () { return ptOf(3, 0.5, 0.76); }, draw: function (p, k) { coatButton(p, k); } },
-      { at: function () { return ptOf(2, 0.33, 0.72); }, draw: function (p, k) { pocket(p, k); } },
-      { at: function () { return ptOf(2, 0.67, 0.72); }, draw: function (p, k) { pocket(p, k); } },
-      { at: function () { return ptOf(2, 0.68, 0.46); }, draw: function (p, k) {
-        // ghim cài hoa nhỏ trên ngực áo
-        ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(k, k);
-        ctx.beginPath(); ctx.ellipse(-4, 9, 4, 8, -0.6, 0, 7); ctx.ellipse(5, 9, 4, 8, 0.6, 0, 7); ctx.fillStyle = C.sageDeep; ctx.fill(); ctx.lineWidth = 1.4; ctx.strokeStyle = C.ink; ctx.stroke();
-        for (var q = 0; q < 5; q++) { var a = q * 1.2566; ctx.beginPath(); ctx.arc(Math.cos(a) * 6, Math.sin(a) * 6 - 2, 5, 0, 7); ctx.fillStyle = C.mustard; ctx.fill(); ctx.stroke(); }
-        ctx.beginPath(); ctx.arc(0, -2, 3.4, 0, 7); ctx.fillStyle = C.roseDeep; ctx.fill(); ctx.stroke(); ctx.restore(); } }
-    ],
-    heart: [
-      { at: function () { return ptOf(5, 0.38, 0.42); }, draw: function (p, k) { eye(p, k * 0.6); } },
-      { at: function () { return ptOf(5, 0.62, 0.42); }, draw: function (p, k) { eye(p, k * 0.6); } },
-      { at: function () { return ptOf(5, 0.50, 0.55); }, draw: function (p, k) { smile(p, k, 14); } },
-      { at: function () { return ptOf(6, 0.28, 0.30); }, draw: function (p, k) { star(p, 7 * k, '#FFFFFF'); } },
-      { at: function () { return ptOf(6, 0.72, 0.30); }, draw: function (p, k) { star(p, 7 * k, '#FFFFFF'); } },
-      { at: function () { return ptOf(6, 0.50, 0.80); }, draw: function (p, k) { star(p, 5 * k, '#FFFFFF'); } }
+      { clipTo: 2, at: function () { return ptOf(2, 0.50, 0.85); }, draw: function (p, k) {
+        var p2 = placeOf(2), b2 = LV[2].bbox, x0 = p2.ox + b2[0] * p2.s, w = (b2[2] - b2[0]) * p2.s, h = (b2[3] - b2[1]) * p2.s;
+        var hemY = p2.oy + 0.78 * p2.s;
+        ctx.save(); ctx.globalAlpha = clamp(k, 0, 1);
+        ctx.fillStyle = '#20944D'; ctx.fillRect(x0 - 4, hemY, w + 8, h);
+        ctx.strokeStyle = rgba('#124F2A', 0.55); ctx.lineWidth = 1.8;
+        ctx.beginPath(); ctx.moveTo(x0, hemY); ctx.lineTo(x0 + w, hemY); ctx.stroke();
+        ctx.strokeStyle = rgba('#82EEAC', 0.42); ctx.lineWidth = 1.5;
+        for (var rx = x0 + 9; rx < x0 + w; rx += 11) { ctx.beginPath(); ctx.moveTo(rx, hemY + 2); ctx.lineTo(rx, p2.oy + b2[3] * p2.s); ctx.stroke(); }
+        [[0.04, 0.58, 0.15, 0.65], [0.96, 0.58, 0.85, 0.65]].forEach(function (seg, si) {
+          var a = ptOf(2, seg[0], seg[1]), b = ptOf(2, seg[2], seg[3]);
+          ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]);
+          ctx.lineWidth = 2.2; ctx.strokeStyle = '#145C32'; ctx.stroke();
+          ctx.strokeStyle = rgba('#82EEAC', 0.42); ctx.lineWidth = 1.4;
+          for (var q = 0.25; q <= 0.75; q += 0.25) {
+            var cx = lerp(a[0], b[0], q), cy = lerp(a[1], b[1], q);
+            ctx.beginPath(); ctx.moveTo(cx, cy + 2); ctx.lineTo(cx + (si === 0 ? -5 : 5), cy + 13); ctx.stroke();
+          }
+        });
+        ctx.restore(); } },
+      { clipTo: 3, at: function () { return ptOf(3, 0.50, 0.55); }, draw: function (p, k) {
+        var p3 = placeOf(3), p4 = placeOf(4), b3 = LV[3].bbox, y0 = p3.oy + b3[1] * p3.s, h = (b3[3] - b3[1]) * p3.s;
+        var cx3 = p3.ox + 0.5 * p3.s;
+        ctx.save(); ctx.globalAlpha = clamp(k, 0, 1);
+        ctx.fillStyle = 'rgba(225,198,162,0.38)'; ctx.fillRect(cx3 - 11, y0, 22, h);
+        ctx.strokeStyle = 'rgba(155,120,82,0.45)'; ctx.lineWidth = 1.3; ctx.setLineDash([3.5, 3]);
+        ctx.beginPath(); ctx.moveTo(cx3 - 11, y0); ctx.lineTo(cx3 - 11, y0 + h); ctx.moveTo(cx3 + 11, y0); ctx.lineTo(cx3 + 11, y0 + h); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.save(); ctx.translate(0, 5);
+        outlinePath(LV[4].outline, p4.ox, p4.oy, p4.s); ctx.fillStyle = 'rgba(18,75,42,0.20)'; ctx.fill(); ctx.restore();
+        ctx.restore(); } },
+      { clipTo: 4, at: function () { return ptOf(4, 0.50, 0.50); }, draw: function (p, k) {
+        var p4 = placeOf(4);
+        ctx.save(); ctx.globalAlpha = clamp(k, 0, 1);
+        ctx.strokeStyle = 'rgba(235,255,242,0.48)'; ctx.lineWidth = 1.6; ctx.setLineDash([5, 3.5]);
+        outlinePath(LV[4].outline, p4.ox, p4.oy - 3, p4.s); ctx.stroke(); ctx.setLineDash([]); ctx.restore(); } },
+      { at: function () { return ptOf(3, 0.5, 0.36); }, draw: function (p, k) { coatButton(p, k); } },
+      { at: function () { return ptOf(3, 0.5, 0.50); }, draw: function (p, k) { coatButton(p, k); } },
+      { at: function () { return ptOf(3, 0.5, 0.64); }, draw: function (p, k) { coatButton(p, k); } },
+      { at: function () { return ptOf(3, 0.5, 0.77); }, draw: function (p, k) { coatButton(p, k); } },
+      { at: function () { return ptOf(2, 0.33, 0.71); }, draw: function (p, k) { pocket(p, k, true); } },
+      { at: function () { return ptOf(2, 0.67, 0.71); }, draw: function (p, k) { pocket(p, k, false); } },
+      { at: function () { return ptOf(2, 0.69, 0.45); }, draw: function (p, k) {
+        var sc = Math.max(0.01, k) * 1.15;
+        ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(sc, sc);
+        drawLeafSprig(-5, 11, 8.5, 4.4, -0.9); drawLeafSprig(5, 11, 8.5, 4.4, 0.9);
+        drawBlossom(0, -2, 5, 7, 5.6, 4.5, '#FFFDF5', '#6B4E24', '#FFBE3B', '#75470E');
+        ctx.restore(); } }
     ],
     bunny: [
-      { at: function () { return ptOf(7, 0.24, 0.36); }, draw: function (p, k) { bunnyEarInner(p, k, -0.22); } },
-      { at: function () { return ptOf(7, 0.76, 0.36); }, draw: function (p, k) { bunnyEarInner(p, k, 0.22); } },
-      { at: function () { return ptOf(8, 0.50, 0.20); }, draw: function (p, k) { bunnyTuft(p, k); } },
-      { at: function () { return ptOf(8, 0.34, 0.50); }, draw: function (p, k) { bunnyEye(p, k, -1); } },
-      { at: function () { return ptOf(8, 0.66, 0.50); }, draw: function (p, k) { bunnyEye(p, k, 1); } },
-      { at: function () { return ptOf(8, 0.50, 0.60); }, draw: function (p, k) { bunnyMuzzleAndCheeks(p, k); } },
-      { at: function () { return ptOf(9, 0.50, 0.50); }, draw: function (p, k) { bunnyBowKnot(p, k); } }
+      { after: 5, at: function () { return ptOf(5, 0.24, 0.36); }, draw: function (p, k) { bunnyEarInner(p, k, -0.22); } },
+      { after: 5, at: function () { return ptOf(5, 0.76, 0.36); }, draw: function (p, k) { bunnyEarInner(p, k, 0.22); } },
+      { clipTo: 6, at: function () { return ptOf(6, 0.50, 0.86); }, draw: function (p, k) {
+        var p7 = placeOf(7);
+        ctx.save(); ctx.globalAlpha = clamp(k, 0, 1); ctx.translate(0, -3);
+        outlinePath(LV[7].outline, p7.ox, p7.oy, p7.s); ctx.fillStyle = 'rgba(120,70,58,0.14)'; ctx.fill(); ctx.restore(); } },
+      { after: 6, at: function () { return ptOf(6, 0.50, 0.20); }, draw: function (p, k) { bunnyTuft(p, k); } },
+      { after: 6, at: function () { return ptOf(6, 0.77, 0.23); }, draw: function (p, k) {
+        var sc = Math.max(0.01, k) * 1.05;
+        ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(sc, sc);
+        drawLeafSprig(11, 7, 10, 4.8, 0.5);
+        drawBlossom(0, 0, 6, 8.5, 5.2, 4.6, '#FFFDF5', '#7D5C48', '#FFC240', '#7A4F16');
+        ctx.restore(); } },
+      { after: 6, at: function () { return ptOf(6, 0.34, 0.50); }, draw: function (p, k) { bunnyEye(p, k, -1); } },
+      { after: 6, at: function () { return ptOf(6, 0.66, 0.50); }, draw: function (p, k) { bunnyEye(p, k, 1); } },
+      { after: 6, at: function () { return ptOf(6, 0.50, 0.58); }, draw: function (p, k) { bunnyMuzzleAndCheeks(p, k); } },
+      { clipTo: 7, at: function () { return ptOf(7, 0.50, 0.50); }, draw: function (p, k) {
+        ctx.save(); ctx.globalAlpha = clamp(k, 0, 1); ctx.fillStyle = 'rgba(255,244,240,0.68)';
+        [[0.22, 0.34], [0.30, 0.68], [0.78, 0.34], [0.70, 0.68], [0.18, 0.52], [0.82, 0.52]].forEach(function (uv) {
+          var d = ptOf(7, uv[0], uv[1]); ctx.beginPath(); ctx.arc(d[0], d[1], 3.6, 0, 7); ctx.fill();
+        });
+        ctx.restore(); } },
+      { after: 7, at: function () { return ptOf(7, 0.50, 0.50); }, draw: function (p, k) { bunnyBowKnot(p, k); } }
     ],
-    flowerpot: [
-      { at: function () { return ptOf(12, 0.50, 0.20); }, draw: function (p, k) { flowerStemAndRim(p, k); } },
-      { at: function () { return ptOf(11, 0.25, 0.52); }, draw: function (p, k) { flowerLeafVeins(p, k, -1); } },
-      { at: function () { return ptOf(11, 0.75, 0.52); }, draw: function (p, k) { flowerLeafVeins(p, k, 1); } },
-      { at: function () { return ptOf(10, 0.50, 0.50); }, draw: function (p, k) { flowerCenterDisc(p, k); } },
-      { at: function () { return ptOf(10, 0.50, 0.50); }, draw: function (p, k) { flowerFaceFeatures(p, k); } }
+    mushroom: [
+      { clipTo: 8, at: function () { return ptOf(8, 0.50, 0.50); }, draw: function (p, k) { mushroomStemDecor(placeOf(8), k); } },
+      { clipTo: 9, at: function () { return ptOf(9, 0.50, 0.48); }, draw: function (p, k) { mushroomCapDecor(placeOf(9), k); } },
+      { clipTo: 10, at: function () { return ptOf(10, 0.50, 0.50); }, draw: function (p, k) { mushroomGrassDecor(placeOf(10), k); } }
+    ],
+    acorn: [
+      { clipTo: 11, at: function () { return ptOf(11, 0.35, 0.50); }, draw: function (p, k) { oakLeafDecor(placeOf(11), k); } },
+      { clipTo: 12, at: function () { return ptOf(12, 0.50, 0.50); }, draw: function (p, k) { acornNutDecor(placeOf(12), k); } },
+      { clipTo: 13, at: function () { return ptOf(13, 0.55, 0.44); }, draw: function (p, k) { acornCapDecor(placeOf(13), k); } }
+    ],
+    sunflower: [
+      { clipTo: 14, at: function () { return ptOf(14, 0.50, 0.65); }, draw: function (p, k) { sunflowerLeavesDecor(placeOf(14), k); } },
+      { clipTo: 15, at: function () { return ptOf(15, 0.50, 0.50); }, draw: function (p, k) { sunflowerPetalsDecor(placeOf(15), k); } },
+      { clipTo: 16, at: function () { return ptOf(16, 0.50, 0.50); }, draw: function (p, k) { sunflowerCenterDecor(placeOf(16), k); } }
     ]
   };
+  function mushroomStemDecor(tf, k) {
+    var al = clamp(k, 0, 1);
+    var px = function (u) { return tf.ox + u * tf.s; }, py = function (v) { return tf.oy + v * tf.s; };
+    ctx.save(); ctx.globalAlpha = al; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    // Cel-shading mảng tối #BCAC88 phía trái cổ áo và thân nấm, giữ mảng kem sáng #F0E0AC bên phải (Color Page)
+    ctx.fillStyle = '#BCAC88';
+    ctx.beginPath();
+    ctx.moveTo(px(0.05), py(0.10));
+    ctx.lineTo(px(0.55), py(0.10));
+    ctx.quadraticCurveTo(px(0.45), py(0.24), px(0.32), py(0.35));
+    ctx.lineTo(px(0.40), py(0.45));
+    ctx.quadraticCurveTo(px(0.55), py(0.42), px(0.76), py(0.45));
+    ctx.quadraticCurveTo(px(0.52), py(0.53), px(0.43), py(0.68));
+    ctx.quadraticCurveTo(px(0.41), py(0.79), px(0.48), py(0.90));
+    ctx.lineTo(px(0.05), py(0.90));
+    ctx.closePath(); ctx.fill();
+    // Bóng đổ mềm ngay dưới nếp váy cổ nấm
+    ctx.fillStyle = rgba('#8E7C5A', 0.34);
+    ctx.beginPath();
+    ctx.moveTo(px(0.14), py(0.35));
+    ctx.quadraticCurveTo(px(0.50), py(0.46), px(0.86), py(0.35));
+    ctx.lineTo(px(0.85), py(0.46));
+    ctx.quadraticCurveTo(px(0.50), py(0.54), px(0.15), py(0.46));
+    ctx.closePath(); ctx.fill();
+    // Nếp nhấn cổ nấm màu nâu đất nhẹ
+    ctx.strokeStyle = rgba('#5D4D37', 0.45);
+    ctx.lineWidth = Math.max(1.3, tf.s * 0.011);
+    ctx.beginPath();
+    ctx.moveTo(px(0.16), py(0.355));
+    ctx.quadraticCurveTo(px(0.50), py(0.435), px(0.84), py(0.355));
+    ctx.stroke();
+    // Điểm sáng kem ấm bên phải thân nấm
+    ctx.fillStyle = rgba('#FFF6D9', 0.55);
+    ctx.beginPath();
+    ctx.ellipse(px(0.69), py(0.63), tf.s * 0.11, tf.s * 0.13, -0.25, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+  function mushroomCapDecor(tf, k) {
+    var al = clamp(k, 0, 1);
+    var px = function (u) { return tf.ox + u * tf.s; }, py = function (v) { return tf.oy + v * tf.s; };
+    ctx.save(); ctx.globalAlpha = al; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    // Mảng đỏ đậm cel-shading bên trái mũ nấm (#BC040C theo ICON-mushroom.png)
+    ctx.fillStyle = '#BC040C';
+    ctx.beginPath();
+    ctx.moveTo(px(0.05), py(0.18));
+    ctx.lineTo(px(0.47), py(0.20));
+    ctx.quadraticCurveTo(px(0.31), py(0.32), px(0.31), py(0.50));
+    ctx.quadraticCurveTo(px(0.31), py(0.63), px(0.34), py(0.75));
+    ctx.lineTo(px(0.05), py(0.75));
+    ctx.closePath(); ctx.fill();
+    // Dải highlight bóng bẩy bên phải mũ nấm (#F85A60)
+    ctx.strokeStyle = rgba('#FF6E74', 0.65);
+    ctx.lineWidth = Math.max(3, tf.s * 0.042);
+    ctx.beginPath();
+    ctx.moveTo(px(0.58), py(0.28));
+    ctx.quadraticCurveTo(px(0.78), py(0.35), px(0.81), py(0.59));
+    ctx.stroke();
+    // 6 đốm trắng cel-shaded theo đúng vị trí ICON-mushroom.png
+    var spots = [
+      [0.491, 0.352, 0.057, true],
+      [0.696, 0.531, 0.080, true],
+      [0.306, 0.563, 0.098, true],
+      [0.683, 0.370, 0.022, false],
+      [0.293, 0.373, 0.022, false],
+      [0.514, 0.662, 0.022, false]
+    ];
+    spots.forEach(function (sp) {
+      var cx = px(sp[0]), cy = py(sp[1]), r = tf.s * sp[2];
+      if (sp[3]) {
+        ctx.fillStyle = '#D4D4CC';
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+        ctx.save();
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.clip();
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath(); ctx.arc(cx + r * 0.16, cy - r * 0.14, r * 0.92, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        ctx.strokeStyle = rgba('#4A1418', 0.18);
+        ctx.lineWidth = Math.max(1, tf.s * 0.004);
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+      } else {
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+      }
+    });
+    ctx.restore();
+  }
+  function mushroomGrassDecor(tf, k) {
+    var al = clamp(k, 0, 1);
+    var px = function (u) { return tf.ox + u * tf.s; }, py = function (v) { return tf.oy + v * tf.s; };
+    ctx.save(); ctx.globalAlpha = al; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    // Bóng xanh rêu đậm phần chân cỏ & lá trái (#208C26)
+    ctx.fillStyle = '#208C26';
+    ctx.beginPath();
+    ctx.moveTo(px(0.04), py(0.38));
+    ctx.quadraticCurveTo(px(0.28), py(0.53), px(0.45), py(0.55));
+    ctx.quadraticCurveTo(px(0.38), py(0.44), px(0.50), py(0.30));
+    ctx.lineTo(px(0.50), py(0.58));
+    ctx.quadraticCurveTo(px(0.68), py(0.63), px(0.95), py(0.54));
+    ctx.lineTo(px(0.95), py(0.75));
+    ctx.lineTo(px(0.04), py(0.75));
+    ctx.closePath(); ctx.fill();
+    // Mảng lá xanh sáng phía nắng bên phải lá giữa và lá phải (#54D05C)
+    ctx.fillStyle = '#54D05C';
+    ctx.beginPath();
+    ctx.moveTo(px(0.50), py(0.34));
+    ctx.quadraticCurveTo(px(0.61), py(0.44), px(0.61), py(0.56));
+    ctx.quadraticCurveTo(px(0.53), py(0.54), px(0.50), py(0.45));
+    ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(px(0.66), py(0.52));
+    ctx.quadraticCurveTo(px(0.80), py(0.45), px(0.89), py(0.48));
+    ctx.quadraticCurveTo(px(0.78), py(0.56), px(0.67), py(0.60));
+    ctx.closePath(); ctx.fill();
+    // Nét tách 3 nhánh lá mềm mại theo kiểu Storybook Ink
+    ctx.strokeStyle = rgba('#183616', 0.45);
+    ctx.lineWidth = Math.max(1.2, tf.s * 0.008);
+    ctx.beginPath();
+    ctx.moveTo(px(0.35), py(0.51)); ctx.quadraticCurveTo(px(0.39), py(0.57), px(0.43), py(0.62));
+    ctx.moveTo(px(0.65), py(0.51)); ctx.quadraticCurveTo(px(0.61), py(0.57), px(0.58), py(0.62));
+    ctx.stroke();
+    ctx.restore();
+  }
+  function acornImgMapper(tf, x0, y0, k) {
+    return function (u, v) { return [tf.ox + (u - x0) * k * tf.s, tf.oy + (v - y0) * k * tf.s]; };
+  }
+  function oakLeafDecor(tf, k) {
+    var al = clamp(k, 0, 1), pt = acornImgMapper(tf, -0.080, -0.050, 0.88);
+    var p = function (u, v) { return pt(u, v); }, p12 = placeOf(12), p13 = placeOf(13);
+    ctx.save(); ctx.globalAlpha = al; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    // Mảng cel-shading xanh lá đậm (#3A7C00) phía đỉnh lá & nửa phải theo đúng ICON-acorn.png
+    ctx.fillStyle = '#3A7C00';
+    ctx.beginPath();
+    var a = p(0.58, 0.01), b = p(0.96, 0.01), c = p(0.96, 1.00), d = p(0.24, 1.00), e = p(0.27, 0.52), f = p(0.36, 0.25), g = p(0.62, 0.14);
+    ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(c[0], c[1]); ctx.lineTo(d[0], d[1]);
+    ctx.quadraticCurveTo(e[0], e[1], f[0], f[1]); ctx.quadraticCurveTo(g[0], g[1], a[0], a[1]);
+    ctx.closePath(); ctx.fill();
+    // Vệt nắng xanh non dịu bên rìa thùy lá trái
+    ctx.strokeStyle = rgba('#9CE03B', 0.45); ctx.lineWidth = tf.s * 0.022;
+    ctx.beginPath();
+    var h0 = p(0.11, 0.34), h1 = p(0.28, 0.16), h2 = p(0.45, 0.05);
+    ctx.moveTo(h0[0], h0[1]); ctx.quadraticCurveTo(h1[0], h1[1], h2[0], h2[1]); ctx.stroke();
+    // Gân lá sồi tinh tế theo chiều cuống hướng lên ngọn lá phải
+    ctx.strokeStyle = rgba('#214B03', 0.34); ctx.lineWidth = Math.max(1.2, tf.s * 0.0085);
+    ctx.beginPath();
+    var v0 = p(0.22, 0.90), v1 = p(0.36, 0.46), v2 = p(0.84, 0.10);
+    ctx.moveTo(v0[0], v0[1]); ctx.quadraticCurveTo(v1[0], v1[1], v2[0], v2[1]);
+    var l0 = p(0.25, 0.72), l1 = p(0.14, 0.64), l2 = p(0.06, 0.63);
+    ctx.moveTo(l0[0], l0[1]); ctx.quadraticCurveTo(l1[0], l1[1], l2[0], l2[1]);
+    var u0 = p(0.30, 0.44), u1 = p(0.18, 0.37), u2 = p(0.10, 0.34);
+    ctx.moveTo(u0[0], u0[1]); ctx.quadraticCurveTo(u1[0], u1[1], u2[0], u2[1]);
+    ctx.stroke();
+    // Bóng mềm của hạt dẻ & mũ hạt dẻ đổ xuống nền lá sồi
+    ctx.save(); ctx.translate(-4, 6);
+    ctx.fillStyle = 'rgba(26, 48, 4, 0.25)';
+    outlinePath(LV[12].outline, p12.ox, p12.oy, p12.s); ctx.fill();
+    outlinePath(LV[13].outline, p13.ox, p13.oy, p13.s); ctx.fill();
+    ctx.restore();
+    // Giọt sương mai trong trẻo đọng trên thùy lá trái
+    var dw = p(0.115, 0.635), dr = tf.s * 0.022;
+    ctx.beginPath(); ctx.ellipse(dw[0], dw[1], dr, dr * 0.78, -0.35, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(232, 250, 255, 0.72)'; ctx.fill();
+    ctx.lineWidth = 1.1; ctx.strokeStyle = 'rgba(34, 86, 12, 0.45)'; ctx.stroke();
+    ctx.beginPath(); ctx.arc(dw[0] - dr * 0.34, dw[1] - dr * 0.25, dr * 0.26, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.92)'; ctx.fill();
+    ctx.restore();
+  }
+  function acornNutDecor(tf, k) {
+    var al = clamp(k, 0, 1), pt = acornImgMapper(tf, 0.160, 0.220, 1.15);
+    var p = function (u, v) { return pt(u, v); }, p13 = placeOf(13);
+    ctx.save(); ctx.globalAlpha = al; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    // Mảng cel-shading cam sẫm (#CE6B08) ôm viền phải & đáy hạt dẻ theo ICON-acorn.png
+    ctx.fillStyle = '#CE6B08';
+    ctx.beginPath();
+    var s0 = p(0.60, 0.38), s1 = p(0.84, 0.58), s2 = p(0.75, 0.78), s3 = p(0.45, 0.92), s4 = p(0.95, 0.95), s5 = p(0.95, 0.36);
+    ctx.moveTo(s0[0], s0[1]); ctx.quadraticCurveTo(s1[0], s1[1], s2[0], s2[1]);
+    ctx.quadraticCurveTo(s2[0] - tf.s * 0.08, s3[1] - tf.s * 0.03, s3[0], s3[1]);
+    ctx.lineTo(s4[0], s4[1]); ctx.lineTo(s5[0], s5[1]); ctx.closePath(); ctx.fill();
+    // Bóng đổ mềm ngay dưới vành mũ hạt dẻ
+    ctx.save(); ctx.translate(0, 6);
+    outlinePath(LV[13].outline, p13.ox, p13.oy, p13.s);
+    ctx.fillStyle = 'rgba(72, 24, 4, 0.28)'; ctx.fill(); ctx.restore();
+    // Vệt bóng sáng màu mơ nhạt (#FAB86E) dọc má trái hạt dẻ đúng chất Color Page
+    var h0 = p(0.382, 0.482), h1 = p(0.355, 0.610), h2 = p(0.398, 0.728);
+    ctx.strokeStyle = '#FAB86E'; ctx.lineWidth = tf.s * 0.064;
+    ctx.beginPath(); ctx.moveTo(h0[0], h0[1]); ctx.quadraticCurveTo(h1[0], h1[1], h2[0], h2[1]); ctx.stroke();
+    ctx.restore();
+  }
+  function acornCapDecor(tf, k) {
+    var al = clamp(k, 0, 1), pt = acornImgMapper(tf, 0.180, -0.040, 1.12);
+    var p = function (u, v) { return pt(u, v); };
+    ctx.save(); ctx.globalAlpha = al; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    // Mảng cel-shading nâu sẫm (#752B0A) ở nửa phải mũ & cuống nhỏ trên đỉnh
+    ctx.fillStyle = '#752B0A';
+    ctx.beginPath();
+    var c0 = p(0.75, 0.12), c1 = p(0.68, 0.26), c2 = p(0.84, 0.45), c3 = p(0.89, 0.64), c4 = p(1.03, 0.64), c5 = p(1.03, 0.10);
+    ctx.moveTo(c0[0], c0[1]); ctx.quadraticCurveTo(c1[0], c1[1], c2[0], c2[1]);
+    ctx.lineTo(c3[0], c3[1]); ctx.lineTo(c4[0], c4[1]); ctx.lineTo(c5[0], c5[1]); ctx.closePath(); ctx.fill();
+    // Viền tối nhẹ ôm dưới vành mũ (#5E2006)
+    ctx.strokeStyle = 'rgba(78, 25, 4, 0.42)'; ctx.lineWidth = tf.s * 0.032;
+    ctx.beginPath();
+    var r0 = p(0.31, 0.422), r1 = p(0.60, 0.405), r2 = p(0.91, 0.615);
+    ctx.moveTo(r0[0], r0[1]); ctx.quadraticCurveTo(r1[0], r1[1], r2[0], r2[1]); ctx.stroke();
+    // Vệt highlight nâu ấm bên vai trái chỏm mũ
+    ctx.strokeStyle = rgba('#D46C34', 0.48); ctx.lineWidth = tf.s * 0.030;
+    ctx.beginPath();
+    var hl0 = p(0.38, 0.285), hl1 = p(0.49, 0.205), hl2 = p(0.64, 0.210);
+    ctx.moveTo(hl0[0], hl0[1]); ctx.quadraticCurveTo(hl1[0], hl1[1], hl2[0], hl2[1]); ctx.stroke();
+    // Hai cụm nét sóng vỏ mũ hạt dẻ (#4F1A04) đặc trưng của ICON-acorn.png
+    ctx.strokeStyle = '#4F1A04'; ctx.lineWidth = Math.max(2.2, tf.s * 0.028);
+    var m0 = p(0.402, 0.308), m1 = p(0.452, 0.252), m2 = p(0.504, 0.296), m3 = p(0.556, 0.254), m4 = p(0.606, 0.308);
+    ctx.beginPath(); ctx.moveTo(m0[0], m0[1]); ctx.quadraticCurveTo(m1[0], m1[1], m2[0], m2[1]); ctx.quadraticCurveTo(m3[0], m3[1], m4[0], m4[1]); ctx.stroke();
+    var n0 = p(0.768, 0.376), n1 = p(0.818, 0.360), n2 = p(0.854, 0.414), n3 = p(0.898, 0.402), n4 = p(0.928, 0.460);
+    ctx.beginPath(); ctx.moveTo(n0[0], n0[1]); ctx.quadraticCurveTo(n1[0], n1[1], n2[0], n2[1]); ctx.quadraticCurveTo(n3[0], n3[1], n4[0], n4[1]); ctx.stroke();
+    ctx.restore();
+  }
+  function sunflowerLeavesDecor(tf, k) {
+    var al = clamp(k, 0, 1), pt = acornImgMapper(tf, 0.055, 0.250, 1.08);
+    var p = function (u, v) { return pt(u, v); }, p15 = placeOf(15);
+    ctx.save(); ctx.globalAlpha = al; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    // Cel-shading nửa trong của từng chiếc lá xanh sẫm (#067626) giống IconSunflower.png
+    ctx.fillStyle = '#067626';
+    ctx.beginPath();
+    var l0 = p(0.145, 0.942), l1 = p(0.320, 0.720), l2 = p(0.510, 0.640), l3 = p(0.490, 0.950), l4 = p(0.140, 0.960);
+    ctx.moveTo(l0[0], l0[1]); ctx.quadraticCurveTo(l1[0], l1[1], l2[0], l2[1]); ctx.lineTo(l3[0], l3[1]); ctx.lineTo(l4[0], l4[1]); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    var r0 = p(0.510, 0.640), r1 = p(0.720, 0.735), r2 = p(0.865, 0.942), r3 = p(0.880, 0.960), r4 = p(0.510, 0.940);
+    ctx.moveTo(r0[0], r0[1]); ctx.quadraticCurveTo(r1[0], r1[1], r2[0], r2[1]); ctx.lineTo(r3[0], r3[1]); ctx.lineTo(r4[0], r4[1]); ctx.closePath(); ctx.fill();
+    // Gân lá sáng màu xanh non (#40B030 / #72E468) dọc sống từng lá
+    ctx.strokeStyle = rgba('#62DF68', 0.65); ctx.lineWidth = Math.max(1.5, tf.s * 0.015);
+    var gl0 = p(0.155, 0.925), gl1 = p(0.305, 0.735), gl2 = p(0.455, 0.655);
+    ctx.beginPath(); ctx.moveTo(gl0[0], gl0[1]); ctx.quadraticCurveTo(gl1[0], gl1[1], gl2[0], gl2[1]); ctx.stroke();
+    var gr0 = p(0.850, 0.925), gr1 = p(0.710, 0.745), gr2 = p(0.565, 0.670);
+    ctx.beginPath(); ctx.moveTo(gr0[0], gr0[1]); ctx.quadraticCurveTo(gr1[0], gr1[1], gr2[0], gr2[1]); ctx.stroke();
+    // Vệt sáng rìa lá hướng nắng trên đỉnh 2 vai lá
+    ctx.strokeStyle = rgba('#92F27C', 0.42); ctx.lineWidth = tf.s * 0.020;
+    var sl0 = p(0.135, 0.840), sl1 = p(0.155, 0.700), sl2 = p(0.240, 0.625);
+    ctx.beginPath(); ctx.moveTo(sl0[0], sl0[1]); ctx.quadraticCurveTo(sl1[0], sl1[1], sl2[0], sl2[1]); ctx.stroke();
+    var sr0 = p(0.810, 0.680), sr1 = p(0.885, 0.770), sr2 = p(0.892, 0.875);
+    ctx.beginPath(); ctx.moveTo(sr0[0], sr0[1]); ctx.quadraticCurveTo(sr1[0], sr1[1], sr2[0], sr2[1]); ctx.stroke();
+    // Bóng đổ mềm của vòng cánh hoa vàng lên phần gốc hai chiếc lá
+    ctx.save(); ctx.translate(0, 5);
+    outlinePath(LV[15].outline, p15.ox, p15.oy, p15.s);
+    ctx.fillStyle = 'rgba(4, 52, 18, 0.30)'; ctx.fill(); ctx.restore();
+    ctx.restore();
+  }
+  function sunflowerPetalsDecor(tf, k) {
+    var al = clamp(k, 0, 1), pt = acornImgMapper(tf, 0.060, -0.005, 1.12);
+    var p = function (u, v) { return pt(u, v); }, p16 = placeOf(16);
+    var cx = 0.509, cy = 0.438;
+    ctx.save(); ctx.globalAlpha = al; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    // Mảng cel-shading vàng cam (#F29A18 / #FFA030) ôm viền phải-dưới vòng cánh hoa theo IconSunflower.png
+    ctx.fillStyle = '#F29A18';
+    ctx.beginPath();
+    var sh0 = p(0.62, 0.08), sh1 = p(0.85, 0.36), sh2 = p(0.74, 0.68), sh3 = p(0.38, 0.78), sh4 = p(0.15, 0.66), sh5 = p(0.12, 0.90), sh6 = p(0.95, 0.90), sh7 = p(0.95, 0.04);
+    ctx.moveTo(sh0[0], sh0[1]);
+    ctx.quadraticCurveTo(sh1[0], sh1[1], sh2[0], sh2[1]);
+    ctx.quadraticCurveTo(sh3[0], sh3[1], sh4[0], sh4[1]);
+    ctx.lineTo(sh5[0], sh5[1]); ctx.lineTo(sh6[0], sh6[1]); ctx.lineTo(sh7[0], sh7[1]);
+    ctx.closePath(); ctx.fill();
+    // Đường gập bóng sáng nhẹ dọc cánh trên & trái (#FFEE88)
+    [-90, -135, 180].forEach(function (deg) {
+      var a = deg * Math.PI / 180;
+      var a1 = p(cx + Math.cos(a) * 0.23, cy + Math.sin(a) * 0.22);
+      var a2 = p(cx + Math.cos(a) * 0.35, cy + Math.sin(a) * 0.34);
+      ctx.strokeStyle = rgba('#FFF29A', 0.65); ctx.lineWidth = tf.s * 0.030;
+      ctx.beginPath(); ctx.moveTo(a1[0], a1[1]); ctx.lineTo(a2[0], a2[1]); ctx.stroke();
+    });
+    // 8 nét kẽ tách cánh hoa tỏa ra từ nhụy về từng khe cánh (Cartoon Ink dịu)
+    ctx.strokeStyle = rgba('#C46808', 0.48); ctx.lineWidth = Math.max(1.4, tf.s * 0.011);
+    [-112.5, -67.5, -22.5, 22.5, 67.5, 112.5, 157.5, -157.5].forEach(function (deg) {
+      var a = deg * Math.PI / 180;
+      var q1 = p(cx + Math.cos(a) * 0.195, cy + Math.sin(a) * 0.185);
+      var q2 = p(cx + Math.cos(a) * 0.295, cy + Math.sin(a) * 0.295);
+      ctx.beginPath(); ctx.moveTo(q1[0], q1[1]); ctx.lineTo(q2[0], q2[1]); ctx.stroke();
+    });
+    // Bóng đổ ấm của nhụy hoa nâu lên nền cánh vàng
+    ctx.save(); ctx.translate(-2, 4);
+    outlinePath(LV[16].outline, p16.ox, p16.oy, p16.s);
+    ctx.fillStyle = 'rgba(130, 52, 6, 0.32)'; ctx.fill(); ctx.restore();
+    ctx.restore();
+  }
+  function sunflowerCenterDecor(tf, k) {
+    var al = clamp(k, 0, 1), pt = acornImgMapper(tf, 0.188, 0.120, 1.56);
+    var p = function (u, v) { return pt(u, v); };
+    ctx.save(); ctx.globalAlpha = al; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    // Mảng cel-shading nâu sẫm (#6A190C) ở phần dưới-phải nhụy hoa
+    ctx.fillStyle = '#6A190C';
+    ctx.beginPath();
+    var c0 = p(0.68, 0.29), c1 = p(0.62, 0.49), c2 = p(0.46, 0.58), c3 = p(0.32, 0.56), c4 = p(0.32, 0.66), c5 = p(0.73, 0.66), c6 = p(0.73, 0.28);
+    ctx.moveTo(c0[0], c0[1]); ctx.quadraticCurveTo(c1[0], c1[1], c2[0], c2[1]);
+    ctx.lineTo(c3[0], c3[1]);
+    ctx.lineTo(c4[0], c4[1]); ctx.lineTo(c5[0], c5[1]); ctx.lineTo(c6[0], c6[1]); ctx.closePath(); ctx.fill();
+    // Vệt ánh sáng dịu phía trên-trái nhụy hoa
+    ctx.strokeStyle = rgba('#D46648', 0.45); ctx.lineWidth = tf.s * 0.032;
+    ctx.beginPath();
+    var h0 = p(0.36, 0.44), h1 = p(0.40, 0.31), h2 = p(0.55, 0.295);
+    ctx.moveTo(h0[0], h0[1]); ctx.quadraticCurveTo(h1[0], h1[1], h2[0], h2[1]); ctx.stroke();
+    // Mạng đường gạch chéo đan hạt (#541006) đặc trưng của IconSunflower.png (phong cách Color Page, không vẽ mặt cười)
+    ctx.strokeStyle = '#541006'; ctx.lineWidth = Math.max(2.2, tf.s * 0.026);
+    var lines = [
+      [[0.40, 0.36], [0.63, 0.41]],
+      [[0.38, 0.48], [0.61, 0.53]],
+      [[0.46, 0.32], [0.40, 0.54]],
+      [[0.57, 0.34], [0.51, 0.56]]
+    ];
+    lines.forEach(function (seg) {
+      var a = p(seg[0][0], seg[0][1]), b = p(seg[1][0], seg[1][1]);
+      ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+    });
+    // Chấm hạt li ti nhẹ ở các ô giao
+    ctx.fillStyle = rgba('#D87050', 0.55);
+    [[0.49, 0.42], [0.44, 0.46], [0.54, 0.47], [0.49, 0.50]].forEach(function (uv) {
+      var q = p(uv[0], uv[1]); ctx.beginPath(); ctx.arc(q[0], q[1], Math.max(1.4, tf.s * 0.013), 0, Math.PI * 2); ctx.fill();
+    });
+    ctx.restore();
+  }
   function coatButton(p, k) {
-    ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(k, k);
-    ctx.beginPath(); ctx.arc(0, 0, 6.5, 0, 7); ctx.fillStyle = '#3F5F5C'; ctx.fill(); ctx.lineWidth = 1.6; ctx.strokeStyle = C.ink; ctx.stroke();
-    ctx.beginPath(); ctx.arc(0, 0, 3.6, 0, 7); ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 1.2; ctx.stroke();
+    var sc = Math.max(0.01, k) * 1.12;
+    ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(sc, sc);
+    ctx.beginPath(); ctx.arc(0, 1.6, 7.2, 0, 7); ctx.fillStyle = 'rgba(70,40,20,0.22)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(0, 0, 7, 0, 7);
+    var bg = ctx.createRadialGradient(-2, -2, 1, 0, 0, 7); bg.addColorStop(0, '#E8AE74'); bg.addColorStop(1, '#A4622E');
+    ctx.fillStyle = bg; ctx.fill(); ctx.lineWidth = 1.7; ctx.strokeStyle = '#593012'; ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, 4.6, 0, 7); ctx.strokeStyle = 'rgba(89,48,18,0.4)'; ctx.lineWidth = 1.0; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-2.2, -2.2); ctx.lineTo(2.2, 2.2); ctx.moveTo(2.2, -2.2); ctx.lineTo(-2.2, 2.2);
+    ctx.lineWidth = 1.5; ctx.strokeStyle = '#FFF5E0'; ctx.lineCap = 'round'; ctx.stroke();
     ctx.restore();
   }
   function bunnyEarInner(p, k, rot) {
-    ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(k, k); ctx.rotate(rot);
+    var sc = Math.max(0.01, k);
+    ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(sc, sc); ctx.rotate(rot);
     ctx.beginPath(); ctx.ellipse(0, 0, 14, 34, 0, 0, 7);
-    ctx.fillStyle = '#F7BFBE'; ctx.fill();
-    ctx.lineWidth = 1.6; ctx.strokeStyle = 'rgba(212,131,124,0.65)'; ctx.stroke();
+    ctx.fillStyle = '#FABAC0'; ctx.fill(); ctx.lineWidth = 1.7; ctx.strokeStyle = 'rgba(175,98,104,0.6)'; ctx.stroke();
     ctx.beginPath(); ctx.ellipse(rot < 0 ? 3 : -3, 10, 5, 16, rot * 0.4, 0, 7);
-    ctx.fillStyle = 'rgba(232,155,154,0.45)'; ctx.fill();
+    ctx.fillStyle = 'rgba(235,140,148,0.42)'; ctx.fill();
     ctx.restore();
   }
   function bunnyTuft(p, k) {
-    ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(k, k);
+    var sc = Math.max(0.01, k);
+    ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(sc, sc);
     ctx.beginPath();
-    ctx.moveTo(-12, 3);
-    ctx.quadraticCurveTo(-5, -16, 4, -14);
-    ctx.quadraticCurveTo(0, -6, 3, -3);
-    ctx.quadraticCurveTo(10, -8, 12, -1);
-    ctx.quadraticCurveTo(8, 3, 5, 5);
+    ctx.moveTo(-12, 3); ctx.quadraticCurveTo(-5, -16, 4, -14); ctx.quadraticCurveTo(0, -6, 3, -3);
+    ctx.quadraticCurveTo(10, -8, 12, -1); ctx.quadraticCurveTo(8, 3, 5, 5);
     ctx.fillStyle = '#FDF0E4'; ctx.fill();
-    ctx.lineWidth = 2.2; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = C.ink; ctx.stroke();
+    ctx.lineWidth = 2.2; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#6A4E3F'; ctx.stroke();
     ctx.restore();
   }
   function bunnyEye(p, k, dir) {
-    ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(k, k);
-    // lông mày cong nhẹ phía trên
-    ctx.beginPath(); ctx.moveTo(-7, -18); ctx.quadraticCurveTo(0, -22, 7, -18);
-    ctx.lineWidth = 1.8; ctx.lineCap = 'round'; ctx.strokeStyle = C.ink; ctx.stroke();
-    // mi mắt xinh ở rìa ngoài
-    ctx.beginPath();
-    ctx.moveTo(dir * 9, -8); ctx.lineTo(dir * 13.5, -11.5);
-    ctx.moveTo(dir * 10.5, -3); ctx.lineTo(dir * 15, -5);
-    ctx.lineWidth = 1.9; ctx.stroke();
-    // tròng mắt to tròn đen nhánh
-    ctx.beginPath(); ctx.ellipse(0, 0, 11.5, 13.5, 0, 0, 7);
-    ctx.fillStyle = C.ink; ctx.fill();
-    // ánh hồng dịu ở đáy mắt giống ảnh mẫu 1
-    ctx.save(); ctx.beginPath(); ctx.ellipse(0, 0, 10, 12, 0, 0, 7); ctx.clip();
-    ctx.beginPath(); ctx.ellipse(0, 7.5, 7.5, 5.5, 0, 0, 7); ctx.fillStyle = '#F5B5B8'; ctx.fill();
-    ctx.beginPath(); ctx.ellipse(0, 4.2, 7.5, 5.5, 0, 0, 7); ctx.fillStyle = C.ink; ctx.fill();
-    ctx.restore();
-    // hai đốm sáng trắng long lanh
-    ctx.beginPath(); ctx.arc(-3.2, -4.2, 4.0, 0, 7); ctx.fillStyle = '#FFFFFF'; ctx.fill();
-    ctx.beginPath(); ctx.arc(3.5, 3.2, 1.8, 0, 7); ctx.fillStyle = '#FFFFFF'; ctx.fill();
+    var sc = Math.max(0.01, k);
+    ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(sc, sc);
+    ctx.beginPath(); ctx.moveTo(-7, -15); ctx.quadraticCurveTo(0, -19, 7, -15);
+    ctx.lineWidth = 2.0; ctx.lineCap = 'round'; ctx.strokeStyle = '#63483A'; ctx.stroke();
+    // Mắt oval cartoon tối giản hài hòa, không tròn kawaii lấp lánh quá cỡ
+    ctx.beginPath(); ctx.ellipse(0, 0, 6.4, 9.0, dir * -0.06, 0, 7); ctx.fillStyle = '#4A342B'; ctx.fill();
+    ctx.beginPath(); ctx.arc(-2, -3.2, 2.2, 0, 7); ctx.fillStyle = '#FFFDF8'; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(dir * 4.5, -5.5); ctx.lineTo(dir * 9.5, -8.5); ctx.lineWidth = 1.8; ctx.strokeStyle = '#4A342B'; ctx.stroke();
     ctx.restore();
   }
   function bunnyMuzzleAndCheeks(p, k) {
-    ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(k, k);
-    // đôi má hồng bầu bĩnh ở hai bên má phính
-    ctx.beginPath();
-    ctx.ellipse(-68, 14, 19, 12, 0, 0, 7);
-    ctx.ellipse(68, 14, 19, 12, 0, 0, 7);
-    ctx.fillStyle = 'rgba(246,180,178,0.82)'; ctx.fill();
-    // râu thỏ hai bên má (lấy cảm hứng từ ảnh mẫu 2)
-    ctx.lineWidth = 1.7; ctx.lineCap = 'round'; ctx.strokeStyle = rgba(C.ink, 0.78);
-    [-1, 1].forEach(function (sg) {
-      ctx.beginPath();
-      ctx.moveTo(sg * 74, 10); ctx.quadraticCurveTo(sg * 88, 7, sg * 100, 10);
-      ctx.moveTo(sg * 74, 16); ctx.quadraticCurveTo(sg * 88, 16, sg * 100, 20);
-      ctx.stroke();
+    var sc = Math.max(0.01, k);
+    ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(sc, sc);
+    [-64, 64].forEach(function (bx) {
+      var bg = ctx.createRadialGradient(bx, 12, 2, bx, 12, 22);
+      bg.addColorStop(0, 'rgba(244,148,154,0.62)'); bg.addColorStop(1, 'rgba(244,148,154,0)');
+      ctx.fillStyle = bg; ctx.beginPath(); ctx.ellipse(bx, 12, 22, 14, 0, 0, 7); ctx.fill();
     });
-    // chiếc mũi hồng tam giác bo góc dễ thương
-    ctx.beginPath();
-    ctx.moveTo(0, 4);
-    ctx.quadraticCurveTo(-8, -3, -5, -5.5);
-    ctx.quadraticCurveTo(0, -7, 5, -5.5);
-    ctx.quadraticCurveTo(8, -3, 0, 4);
-    ctx.fillStyle = '#F29B9B'; ctx.fill();
-    ctx.lineWidth = 1.8; ctx.strokeStyle = C.ink; ctx.stroke();
-    // miệng chữ ω (ㅅ) đặc trưng của thỏ
-    ctx.beginPath();
-    ctx.moveTo(0, 4); ctx.lineTo(0, 11);
-    ctx.moveTo(0, 10); ctx.quadraticCurveTo(-6.5, 16.5, -13, 10);
-    ctx.moveTo(0, 10); ctx.quadraticCurveTo(6.5, 16.5, 13, 10);
-    ctx.lineWidth = 2.2; ctx.strokeStyle = C.ink; ctx.stroke();
+    ctx.lineWidth = 1.7; ctx.lineCap = 'round'; ctx.strokeStyle = 'rgba(105,78,64,0.72)';
+    [-1, 1].forEach(function (sg) {
+      ctx.beginPath(); ctx.moveTo(sg * 70, 8); ctx.quadraticCurveTo(sg * 86, 5, sg * 98, 8);
+      ctx.moveTo(sg * 70, 14); ctx.quadraticCurveTo(sg * 86, 14, sg * 98, 18); ctx.stroke();
+    });
+    ctx.beginPath(); ctx.moveTo(0, 4); ctx.quadraticCurveTo(-7, -3, -4.5, -5); ctx.quadraticCurveTo(0, -6.5, 4.5, -5); ctx.quadraticCurveTo(7, -3, 0, 4);
+    ctx.fillStyle = '#F28E94'; ctx.fill(); ctx.lineWidth = 1.8; ctx.strokeStyle = '#63483A'; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, 4); ctx.lineTo(0, 10);
+    ctx.moveTo(-4, 11); ctx.quadraticCurveTo(0, 9.5, 4, 11); // nét mõm tĩnh nhẹ nhàng, không cười ngoác
+    ctx.lineWidth = 2.0; ctx.strokeStyle = '#63483A'; ctx.stroke();
     ctx.restore();
   }
   function bunnyBowKnot(p, k) {
-    ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(k, k);
-    // hai nếp gấp cánh nơ hai bên nút thắt
-    ctx.strokeStyle = C.ink; ctx.lineWidth = 1.8; ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(-9, -3); ctx.quadraticCurveTo(-16, -6, -21, -4);
-    ctx.moveTo(-9, 3); ctx.quadraticCurveTo(-16, 6, -21, 4);
-    ctx.moveTo(9, -3); ctx.quadraticCurveTo(16, -6, 21, -4);
-    ctx.moveTo(9, 3); ctx.quadraticCurveTo(16, 6, 21, 4);
-    ctx.stroke();
-    // nút thắt tròn ở tâm chiếc nơ
-    ctx.beginPath(); ctx.ellipse(0, 0, 8.5, 9.5, 0, 0, 7);
-    ctx.fillStyle = '#C96660'; ctx.fill();
-    ctx.lineWidth = 2.1; ctx.strokeStyle = C.ink; ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(-2.2, -2.5, 2.2, 3.0, 0.3, 0, 7);
-    ctx.fillStyle = 'rgba(255,255,255,0.45)'; ctx.fill();
+    var sc = Math.max(0.01, k);
+    ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(sc, sc);
+    ctx.strokeStyle = '#6B1324'; ctx.lineWidth = 1.8; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-9, -3); ctx.quadraticCurveTo(-16, -6, -21, -4); ctx.moveTo(-9, 3); ctx.quadraticCurveTo(-16, 6, -21, 4);
+    ctx.moveTo(9, -3); ctx.quadraticCurveTo(16, -6, 21, -4); ctx.moveTo(9, 3); ctx.quadraticCurveTo(16, 6, 21, 4); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(0, 0, 8.5, 9.5, 0, 0, 7); ctx.fillStyle = '#D94E60'; ctx.fill(); ctx.lineWidth = 2.1; ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(-2.2, -2.5, 2.2, 3.0, 0.3, 0, 7); ctx.fillStyle = 'rgba(255,255,255,0.45)'; ctx.fill();
     ctx.restore();
   }
-  function flowerStemAndRim(p, k) {
-    var topP = ptOf(10, 0.50, 0.78), rimL = ptOf(12, 0.18, 0.36), rimR = ptOf(12, 0.82, 0.36);
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(lerp(p[0], rimL[0], k), rimL[1]);
-    ctx.lineTo(lerp(p[0], rimR[0], k), rimR[1]);
-    ctx.lineWidth = 2.2; ctx.lineCap = 'round'; ctx.strokeStyle = C.ink; ctx.stroke();
-    var sy = lerp(p[1], topP[1], k);
-    ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(topP[0], sy);
-    ctx.lineWidth = 11 * k; ctx.lineCap = 'round'; ctx.strokeStyle = C.ink; ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(topP[0], sy);
-    ctx.lineWidth = 6.8 * k; ctx.strokeStyle = '#52AC66'; ctx.stroke();
+  function pocket(p, k, hasHankie) {
+    var sc = Math.max(0.01, k);
+    ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(sc, sc); ctx.rotate(hasHankie ? -0.04 : 0.04);
+    if (hasHankie) {
+      ctx.beginPath(); ctx.moveTo(-14, -10); ctx.lineTo(-9, -30); ctx.lineTo(-1, -21); ctx.lineTo(6, -28); ctx.lineTo(14, -10); ctx.closePath();
+      ctx.fillStyle = '#FFE3A8'; ctx.fill(); ctx.lineWidth = 2.0; ctx.strokeStyle = '#6B4818'; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-7, -15); ctx.lineTo(8, -16); ctx.lineWidth = 1.4; ctx.strokeStyle = '#E88B6E'; ctx.stroke();
+    }
+    rr(-18, -14, 36, 30, 5.5); ctx.fillStyle = '#259155'; ctx.fill(); ctx.lineWidth = 2.1; ctx.strokeStyle = '#145C32'; ctx.stroke();
+    ctx.fillStyle = '#47C47C'; ctx.fillRect(-16, -12, 32, 7);
+    ctx.beginPath(); ctx.moveTo(-17, -5); ctx.lineTo(17, -5); ctx.lineWidth = 1.4; ctx.strokeStyle = '#145C32'; ctx.stroke();
+    rr(-14, -1, 28, 14, 3); ctx.setLineDash([3.5, 2.8]); ctx.lineWidth = 1.3; ctx.strokeStyle = '#FFF8E6'; ctx.stroke(); ctx.setLineDash([]);
     ctx.restore();
   }
-  function flowerLeafVeins(p, k, dir) {
-    var baseP = ptOf(11, dir < 0 ? 0.44 : 0.56, 0.61);
-    var midP  = ptOf(11, dir < 0 ? 0.24 : 0.76, 0.51);
-    var tipP  = ptOf(11, dir < 0 ? 0.08 : 0.92, 0.44);
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(baseP[0], baseP[1]);
-    ctx.quadraticCurveTo(lerp(baseP[0], midP[0], k), lerp(baseP[1], midP[1], k), lerp(baseP[0], tipP[0], k), lerp(baseP[1], tipP[1], k));
-    ctx.lineWidth = 2.2; ctx.lineCap = 'round'; ctx.strokeStyle = C.ink; ctx.stroke();
-    ctx.restore();
-  }
-  function flowerCenterDisc(p, k) {
-    var valleys = [
-      [0.50, 0.22], [0.50, 0.78],
-      [0.26, 0.36], [0.74, 0.36],
-      [0.26, 0.64], [0.74, 0.64]
-    ];
-    ctx.save();
-    ctx.strokeStyle = C.ink; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
-    valleys.forEach(function (uv) {
-      var v = ptOf(10, uv[0], uv[1]);
-      ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(lerp(p[0], v[0], k), lerp(p[1], v[1], k)); ctx.stroke();
-    });
-    ctx.translate(p[0], p[1]); ctx.scale(k, k);
-    ctx.beginPath(); ctx.arc(0, 0, 36, 0, 7);
-    ctx.fillStyle = '#FCBA30'; ctx.fill();
-    ctx.beginPath(); ctx.arc(-3, -4, 31, 0, 7);
-    ctx.fillStyle = '#FFDA48'; ctx.fill();
-    ctx.beginPath(); ctx.arc(0, 0, 36, 0, 7);
-    ctx.lineWidth = 2.6; ctx.strokeStyle = C.ink; ctx.stroke();
-    ctx.restore();
-  }
-  function flowerFaceFeatures(p, k) {
-    ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(k, k);
-    [-13, 13].forEach(function (ox) {
-      ctx.beginPath(); ctx.moveTo(ox - 5, -13); ctx.quadraticCurveTo(ox, -16.5, ox + 5, -13);
-      ctx.lineWidth = 1.9; ctx.lineCap = 'round'; ctx.strokeStyle = C.ink; ctx.stroke();
-      ctx.beginPath(); ctx.arc(ox, -3, 6.2, 0, 7);
-      ctx.fillStyle = '#2D221E'; ctx.fill();
-      ctx.beginPath(); ctx.arc(ox - 1.8, -5.0, 2.3, 0, 7);
-      ctx.fillStyle = '#FFFFFF'; ctx.fill();
-      ctx.beginPath(); ctx.arc(ox + 2.0, -1.0, 1.1, 0, 7);
-      ctx.fill();
-    });
-    ctx.fillStyle = 'rgba(244,122,138,0.85)';
-    ctx.beginPath(); ctx.ellipse(-20, 6, 6.2, 3.8, 0, 0, 7); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(20, 6, 6.2, 3.8, 0, 0, 7); ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(-7.5, 6.5);
-    ctx.quadraticCurveTo(0, 7.5, 7.5, 6.5);
-    ctx.quadraticCurveTo(7.0, 15.5, 0, 15.5);
-    ctx.quadraticCurveTo(-7.0, 15.5, -7.5, 6.5);
-    ctx.fillStyle = '#442022'; ctx.fill();
-    ctx.lineWidth = 1.8; ctx.strokeStyle = C.ink; ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(0, 12.2, 4.8, 2.6, 0, 0, 7);
-    ctx.fillStyle = '#EE707E'; ctx.fill();
-    ctx.restore();
-  }
-  function pocket(p, k) {
-    // túi áo bằng len gân, viền mũi khâu
-    ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(k, k); ctx.rotate(-0.04);
-    rr(-15, -12, 30, 26, 4); ctx.fillStyle = '#6F9C98'; ctx.fill(); ctx.lineWidth = 1.8; ctx.strokeStyle = C.ink; ctx.stroke();
-    ctx.fillStyle = 'rgba(148,188,183,0.9)'; ctx.fillRect(-13, -10, 26, 6);
-    rr(-11, -2, 22, 13, 2); ctx.setLineDash([2.5, 2.5]); ctx.lineWidth = 1.2; ctx.strokeStyle = '#FFFFFF'; ctx.stroke(); ctx.setLineDash([]);
-    ctx.restore();
-  }
-  function patch(p, k) {
-    // miếng vá khuỷu tay bằng nỉ, có mũi khâu viền
-    ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(k, k);
-    ctx.beginPath(); ctx.ellipse(0, 0, 10, 13, 0, 0, 7); ctx.fillStyle = C.sage; ctx.fill(); ctx.lineWidth = 1.8; ctx.strokeStyle = C.ink; ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(0, 0, 7, 10, 0, 0, 7); ctx.setLineDash([2.5, 2.5]); ctx.lineWidth = 1.2; ctx.strokeStyle = '#FFFFFF'; ctx.stroke();
-    ctx.restore();
-  }
-  function star(p, r, c) {
-    ctx.save(); ctx.translate(p[0], p[1]); ctx.beginPath();
-    for (var k = 0; k < 8; k++) { var rad = k % 2 ? r * 0.38 : r; var an = k * Math.PI / 4 - Math.PI / 2; ctx.lineTo(Math.cos(an) * rad, Math.sin(an) * rad); }
-    ctx.closePath(); ctx.fillStyle = c; ctx.fill(); ctx.restore();
-  }
-  function eye(p, k) { ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(k, k); ctx.beginPath(); ctx.arc(0, 0, 4.6, 0, 7); ctx.fillStyle = C.ink; ctx.fill(); ctx.beginPath(); ctx.arc(1.4, -1.6, 1.5, 0, 7); ctx.fillStyle = '#fff'; ctx.fill(); ctx.restore(); }
-
   // Viền gợi ý chỗ đặt mảnh: nét trắng lót dưới nét đứt đậm để nổi trên cả nền lẫn mảnh đã ghép.
   function drawSlotHint(i, alpha) {
     var tf = placeOf(i), pulse = 0.75 + 0.25 * Math.sin(clock * 4);
@@ -3209,13 +4006,110 @@
     ctx.setLineDash([7, 6]); ctx.lineDashOffset = -clock * 12; ctx.lineWidth = 2.2; ctx.strokeStyle = rgba(C.ink, 0.65 * pulse); ctx.stroke();
     ctx.restore();
   }
+  // Màn thưởng: cảnh chính (rung nhẹ lúc va chạm), bàn ép, chớp sáng, vệt lóa quét, rồi nhãn "Hoàn thành!" không rung.
   function drawReward() {
+    var shx = 0, shy = 0, sa = clock - (R.shakeT || -9);
+    if (!reduce && sa >= 0 && sa < 0.2) { var amp = 3 * (1 - sa / 0.2); shx = Math.sin(sa * 90) * amp; shy = Math.cos(sa * 77) * amp; }
+    ctx.save(); ctx.translate(shx, shy);
+    drawRewardScene();
+    drawPressPlate();
+    var fa = clock - (R.flashT || -9);
+    if (fa >= 0 && fa < 0.18) {
+      var fg = ctx.createRadialGradient(195, 395, 10, 195, 395, 175);
+      fg.addColorStop(0, 'rgba(255,255,255,' + 0.6 * (1 - fa / 0.18) + ')'); fg.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = fg; ctx.fillRect(0, 200, W, 400);
+    }
+    drawSheen();
+    ctx.restore();
+    drawDoneLabel();
+  }
+  // Con dấu tròn đúng cỡ vải nền (r 165 tại 195,395), nhìn từ trên xuống: vành gỗ, mặt nỉ, núm cầm ở giữa có điểm sáng.
+  // Hạ xuống: to 1,35 lần và mờ, nhỏ dần về đúng cỡ (nhanh dần như rơi), bóng tròn co lại và đậm dần.
+  // Chạm: khớp mép nền, nén 3% rồi về. Nhấc: to ra 1,4 lần và mờ đi về phía người chơi.
+  function drawPressPlate() {
+    if (R.phase !== 'press') return;
+    var t = R.t, cx = 195, cy = 395, RS = 165, sc, al, sh;
+    if (t < 0.2) { var u0 = t / 0.2; sc = lerp(1.35, 1, u0 * u0); al = 0.3 + 0.7 * u0; sh = u0; }
+    else if (t < 0.3) { sc = 1 - 0.03 * Math.sin(Math.PI * (t - 0.2) / 0.1); al = 1; sh = 1; }
+    else { var u1 = clamp((t - 0.3) / 0.3, 0, 1); sc = lerp(1, 1.4, easeOut(u1)); al = 1 - u1; sh = 1 - u1; }
+    if (reduce) sc = 1;
+    if (al <= 0.01) return;
+    ctx.save();
+    // bóng tròn trên nền: càng gần càng nhỏ, sát và đậm
+    var off = 14 * (1 - sh);
+    ctx.beginPath(); ctx.arc(cx + off * 0.5, cy + off, RS * lerp(1.12, 1.01, sh), 0, 7); ctx.fillStyle = 'rgba(74,59,53,' + (0.24 * sh) + ')'; ctx.fill();
+    ctx.globalAlpha = al;
+    ctx.translate(cx, cy); ctx.scale(sc, sc);
+    // vành gỗ
+    var wg = ctx.createLinearGradient(-RS, -RS, RS, RS);
+    wg.addColorStop(0, '#E3B47F'); wg.addColorStop(0.5, '#C98F58'); wg.addColorStop(1, '#9E6A3C');
+    ctx.beginPath(); ctx.arc(0, 0, RS, 0, 7); ctx.fillStyle = wg; ctx.fill();
+    ctx.lineWidth = 2.4; ctx.strokeStyle = rgba(C.ink, 0.55); ctx.stroke();
+    // mặt nỉ kem, sáng nhẹ phía trên trái
+    var fg = ctx.createRadialGradient(-RS * 0.3, -RS * 0.35, RS * 0.05, 0, 0, RS * 0.9);
+    fg.addColorStop(0, '#FFF9EE'); fg.addColorStop(1, '#EBDCC4');
+    ctx.beginPath(); ctx.arc(0, 0, RS - 14, 0, 7); ctx.fillStyle = fg; ctx.fill();
+    ctx.lineWidth = 1.6; ctx.strokeStyle = 'rgba(120,80,45,0.35)'; ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, RS - 24, 0, 7); ctx.setLineDash([6, 5]); ctx.lineWidth = 1.6; ctx.strokeStyle = rgba(C.thread, 0.7); ctx.stroke(); ctx.setLineDash([]);
+    // sáng mép vành phía trên trái
+    ctx.beginPath(); ctx.arc(0, 0, RS - 4, Math.PI * 1.05, Math.PI * 1.6); ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.strokeStyle = 'rgba(255,255,255,0.45)'; ctx.stroke();
+    // núm cầm: bóng, thân gỗ, điểm sáng
+    ctx.beginPath(); ctx.arc(3, 5, 36, 0, 7); ctx.fillStyle = 'rgba(74,59,53,0.22)'; ctx.fill();
+    var kg = ctx.createRadialGradient(-10, -12, 3, 0, 0, 36);
+    kg.addColorStop(0, '#E7BC8A'); kg.addColorStop(0.6, '#BE8550'); kg.addColorStop(1, '#8F5E33');
+    ctx.beginPath(); ctx.arc(0, 0, 34, 0, 7); ctx.fillStyle = kg; ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = rgba(C.ink, 0.5); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(-11, -13, 10, 6, -0.6, 0, 7); ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.fill();
+    ctx.restore();
+  }
+  // Vết ép tròn nổi gần mép nền, cùng màu nền: một nét tối mờ lệch dưới phải và một nét sáng lệch trên trái, hiện dần
+  // ngay khi con dấu nhấc lên và giữ tới hết màn thưởng.
+  function drawPressRing() {
+    if (!R.ringT) return;
+    var k = reduce ? 1 : clamp((clock - R.ringT) / 0.25, 0, 1);
+    ctx.save(); ctx.lineWidth = 2.4;
+    ctx.beginPath(); ctx.arc(196, 396.5, 160, 0, 7); ctx.strokeStyle = 'rgba(74,59,53,' + 0.14 * k + ')'; ctx.stroke();
+    ctx.beginPath(); ctx.arc(194, 393.5, 160, 0, 7); ctx.strokeStyle = 'rgba(255,255,255,' + 0.6 * k + ')'; ctx.stroke();
+    ctx.restore();
+  }
+  // Vệt lóa chéo quét qua sản phẩm một lần ngay sau cú ép (0,5 s), cắt theo từng mảnh.
+  function drawSheen() {
+    var st = clock - (R.sheenT || -9);
+    if (st < 0 || st >= 0.5 || reduce) return;
+    var u = st / 0.5, x = lerp(40, 350, easeInOut(u));
+    backToFront().forEach(function (li) {
+      var tf = placeOf(li);
+      ctx.save(); outlinePath(LV[li].outline, tf.ox, tf.oy, tf.s); ctx.clip();
+      ctx.translate(x, 395); ctx.rotate(0.45);
+      var g = ctx.createLinearGradient(-34, 0, 34, 0);
+      g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.5, 'rgba(255,255,255,' + (0.6 * Math.sin(Math.PI * u)) + ')'); g.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = g; ctx.fillRect(-34, -320, 68, 640);
+      ctx.restore();
+    });
+  }
+  // Nhãn vải "Hoàn thành!" bật ra phía trên sản phẩm (phóng vượt rồi về 1, hơi nghiêng), giữ tới hết màn thưởng.
+  function drawDoneLabel() {
+    if (!R.labelT) return;
+    var lt = clock - R.labelT, k = reduce ? 1 : easeBack(clamp(lt / 0.35, 0, 1));
+    if (k <= 0.01) return;
+    // Đẩy nhẹ lên khoảng trống phía trên vòng tròn sân khấu để không che mất quả cherry hay cuống dâu
+    var y = clamp(R.top - 66, 118, 168);
+    ctx.save(); ctx.translate(195, y); ctx.rotate(-0.06); ctx.scale(k, k);
+    ctx.save(); ctx.shadowColor = 'rgba(74,59,53,0.25)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 4;
+    rr(-94, -25, 188, 50, 14); ctx.fillStyle = '#FFF6E8'; ctx.fill(); ctx.restore();
+    rr(-94, -25, 188, 50, 14); ctx.lineWidth = 2.4; ctx.strokeStyle = C.ink; ctx.stroke();
+    rr(-87, -18, 174, 36, 10); ctx.setLineDash([5, 4]); ctx.lineWidth = 1.4; ctx.strokeStyle = C.thread; ctx.stroke(); ctx.setLineDash([]);
+    text('Hoàn thành!', 0, 2, 22, 800, C.ink, 'center');
+    ctx.restore();
+  }
+  function drawRewardScene() {
     var enter = clamp(R.t / 0.6, 0, 1), a = R.phase === 'enter' ? easeOut(enter) : 1;
     ctx.save(); ctx.globalAlpha = a;
     // vải nền tròn bằng nỉ
     var deep = R.phase === 'reveal' || R.phase === 'decor' || R.phase === 'done';
     ctx.beginPath(); ctx.arc(195, 395, 165, 0, 7); ctx.fillStyle = C.base; ctx.fill();
     ctx.beginPath(); ctx.arc(195, 395, 155, 0, 7); ctx.setLineDash([6, 5]); ctx.lineWidth = 1.8; ctx.strokeStyle = rgba(C.thread, 0.8); ctx.stroke(); ctx.setLineDash([]);
+    drawPressRing();
     // ô mờ của từng mảnh trên khung; mảnh đã ghép thì bỏ ô của nó
     product().levels.forEach(function (i) {
       if (R.pieces.some(function (pc) { return pc.i === i && pc.placed; })) return;
@@ -3227,7 +4121,7 @@
     rr(20, 628, 350, 152, 24); ctx.fillStyle = rgba(C.paper, 0.9); ctx.fill();
     ctx.restore();
 
-    // mảnh dưới vẽ trước, mảnh trên đè lên (thân nấm rồi mũ; ốc quế rồi viên kem)
+    // mảnh dưới vẽ trước, mảnh trên đè lên (ốc quế rồi viên kem; thân nấm rồi mũ)
     var order = R.phase === 'place' || R.phase === 'enter' ? R.pieces : backToFront().map(function (li) { return R.pieces.filter(function (p) { return p.i === li; })[0]; });
     var placing = R.phase === 'place' || R.phase === 'enter';
     ctx.save(); if (!placing) productTf();
@@ -3241,15 +4135,14 @@
       order.forEach(function (pc) { if (pc.placed) drawPc(pc); });
       order.forEach(function (pc) { if (!pc.placed) drawSlotHint(pc.i, a); });
       order.forEach(function (pc) { if (!pc.placed) drawPc(pc); });
-    } else order.forEach(drawPc);
+    } else order.forEach(function (pc) { drawPc(pc); drawPieceStitches(pc.i); });
     if (R.phase === 'stitch' || R.phase === 'cinch' || R.phase === 'tapReady') {
-      drawSeam();
       if (R.phase === 'stitch' && R.stitches && R.stitches.length > 0) {
         var curIdx = Math.min(R.stitches.length - 1, Math.floor(R.stDone));
         var st = R.stitches[curIdx];
         var dip = Math.sin((R.stDone % 1) * Math.PI) * 4;
         drawNeedle(st.m[0], st.m[1] - dip, st.ang);
-      } else if (R.phase === 'cinch' && R.stitches && R.stitches.length > 0) {
+      } else if (R.phase === 'cinch' && R.stitches && R.stitches.length > 0 && STITCH_KIND !== 'none') {
         var lastSt = R.stitches[R.stitches.length - 1];
         var pullProgress = clamp(R.cinch / 0.28, 0, 1);
         var nx = lastSt.m[0] + Math.cos(lastSt.ang + Math.PI / 2) * (12 + pullProgress * 22);
@@ -3258,26 +4151,47 @@
       }
     }
     ctx.restore();
+    var DEC = DECOR[product().id] || [];
+    function drawDecors(filterFn) {
+      for (var d = 0; d < R.decor.length; d++) {
+        var item = DEC[d];
+        if (!item || !filterFn(item)) continue;
+        var k = easeBack(clamp((clock - R.decor[d]) / 0.3, 0, 1));
+        item.draw(item.at(), k);
+      }
+    }
     if (deep) {
-      ctx.save(); ctx.beginPath(); ctx.arc(R.tap[0], R.tap[1], 30 + 330 * R.reveal, 0, 7); ctx.clip();
-      ctx.beginPath(); ctx.arc(195, 395, 165, 0, 7); ctx.fillStyle = C.baseDeep; ctx.fill();
-      ctx.beginPath(); ctx.arc(195, 395, 155, 0, 7); ctx.setLineDash([6, 5]); ctx.lineWidth = 1.8; ctx.strokeStyle = '#FFFFFF'; ctx.stroke(); ctx.setLineDash([]);
-      backToFront().forEach(function (li) { var tf = placeOf(li); drawPiece(li, tf.ox, tf.oy, tf.s, 1, false, 1, 1); });
-      drawSeam();
+      // màu loang từ tâm con dấu ra đúng mép nền (r 165) với nền bổ trợ dịu theo từng sản phẩm (Hướng A)
+      var RV = 166 * R.reveal, sBg = STAGE_BG[product().id] || C.baseDeep;
+      ctx.save(); ctx.beginPath(); ctx.arc(195, 395, RV, 0, 7); ctx.clip();
+      var sGrad = ctx.createRadialGradient(195, 395 - 165 * 0.18, 165 * 0.08, 195, 395, 165);
+      sGrad.addColorStop(0, mix(sBg, '#FFFFFF', 0.42)); sGrad.addColorStop(1, sBg);
+      ctx.beginPath(); ctx.arc(195, 395, 165, 0, 7); ctx.fillStyle = sGrad; ctx.fill();
+      ctx.beginPath(); ctx.arc(195, 395, 155, 0, 7); ctx.setLineDash([6, 5]); ctx.lineWidth = 1.8; ctx.strokeStyle = 'rgba(255,255,255,0.88)'; ctx.stroke(); ctx.setLineDash([]);
+      drawPressRing();
+      ctx.save(); ctx.beginPath(); ctx.ellipse(195, Math.min(530, R.base[1] - 2), 58, 10, 0, 0, 7); ctx.fillStyle = 'rgba(60,40,35,0.10)'; ctx.fill(); ctx.restore();
+      backToFront().forEach(function (li) {
+        var tf = placeOf(li);
+        drawDecors(function (it) { return it.before === li; });
+        drawPiece(li, tf.ox, tf.oy, tf.s, 1, false, 1, 1, function () {
+          drawDecors(function (it) { return it.clipTo === li; });
+        });
+        drawPieceStitches(li);
+        drawDecors(function (it) { return it.after === li; });
+      });
       ctx.restore();
       if (R.phase === 'reveal') {
         // mép màu loang: vòng trắng dày có viền tối mờ để nổi trên nền sáng, kèm chớp trắng ở đầu
-        var rr2 = 30 + 330 * R.reveal, fa = 1 - R.reveal;
-        var g = ctx.createRadialGradient(R.tap[0], R.tap[1], 0, R.tap[0], R.tap[1], rr2);
+        var rr2 = Math.max(1, RV), fa = 1 - R.reveal;
+        var g = ctx.createRadialGradient(195, 395, 0, 195, 395, rr2);
         g.addColorStop(0, 'rgba(255,255,255,' + 0.55 * fa * fa + ')'); g.addColorStop(1, 'rgba(255,255,255,0)');
-        ctx.beginPath(); ctx.arc(R.tap[0], R.tap[1], rr2, 0, 7); ctx.fillStyle = g; ctx.fill();
+        ctx.beginPath(); ctx.arc(195, 395, rr2, 0, 7); ctx.fillStyle = g; ctx.fill();
         ctx.lineWidth = 12; ctx.strokeStyle = 'rgba(74,59,53,' + 0.16 * fa + ')'; ctx.stroke();
         ctx.lineWidth = 8; ctx.strokeStyle = 'rgba(255,255,255,' + Math.min(1, fa * 1.4) + ')'; ctx.stroke();
-        ctx.beginPath(); ctx.arc(R.tap[0], R.tap[1], rr2 * 0.82, 0, 7); ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,255,255,' + 0.7 * fa + ')'; ctx.stroke();
+        ctx.beginPath(); ctx.arc(195, 395, rr2 * 0.82, 0, 7); ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,255,255,' + 0.7 * fa + ')'; ctx.stroke();
       }
     }
-    var DEC = DECOR[product().id];
-    for (var d = 0; d < R.decor.length; d++) { var k = easeBack(clamp((clock - R.decor[d]) / 0.3, 0, 1)); DEC[d].draw(DEC[d].at(), k); }
+    drawDecors(function (it) { return it.clipTo === undefined && it.after === undefined && it.before === undefined; });
     if (R.phase === 'tapReady') {
       var tt = (clock % 1.2) / 1.2;
       ctx.beginPath(); ctx.arc(195, 400, 26 + 40 * tt, 0, 7); ctx.lineWidth = 3; ctx.strokeStyle = rgba(C.ink, 0.5 * (1 - tt)); ctx.stroke();
