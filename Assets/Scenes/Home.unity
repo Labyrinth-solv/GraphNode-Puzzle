@@ -151,6 +151,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 31ecc29f17ef7da4597370d01c14750e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  devAutoStartLevel: scoop
 --- !u!4 &1129590888
 Transform:
   m_ObjectHideFlags: 0

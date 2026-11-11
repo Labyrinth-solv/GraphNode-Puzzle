@@ -77,6 +77,8 @@ namespace GraphNode.Core.Session
         public byte[] Mask { get; } = new byte[RegionMask.CellCount];
         public float Score { get; private set; }
         public bool Won { get; private set; }
+        /// <summary>Tăng mỗi lần mặt nạ và độ khớp được tính lại; View so số này để biết khi nào cần vẽ lại vùng tô.</summary>
+        public int Version { get; private set; }
         /// <summary>Hoán vị của lần đánh số lại gần nhất: node cũ i thành node mới LastPermutation[i].</summary>
         public ReadOnlySpan<int> LastPermutation => _perm;
 
@@ -142,6 +144,7 @@ namespace GraphNode.Core.Session
             Score = Math.Max(0f, _scorer.Score(Mask, _solutionMask, Bends));
             Pins.Evaluate(Positions);
             _dirty = false;
+            Version++;
         }
 
         // ---------- kéo node ----------

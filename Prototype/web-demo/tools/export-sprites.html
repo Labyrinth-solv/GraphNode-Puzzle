@@ -1,0 +1,99 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Export sprites</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap">
+<body style="background:#ddd;font:14px system-ui">
+<p id="st">exporting…</p>
+<script>
+// Xuất các phần tĩnh của màn chơi web-demo thành PNG (3x, nền trong) cho bản thử M2 trong Unity.
+// Màu, cỡ và cách vẽ lấy từ Prototype/web-demo/web/game.js (drawFabric, drawNode, drawTargetPins, drawInfo).
+// 1 pt của web = 3 px ảnh; Unity nhập với Pixels Per Unit = 3 nên 1 unit = 1 pt.
+const K = 3;
+const C = {
+  bg: '#F6EFE3', paper: '#FBF7EF', card: '#FFFDF8', ink: '#4A3B35', inkSoft: '#6B5B53', mute: '#9C8E86',
+  rose: '#E3A6A1', sageDeep: '#82A57C', mustard: '#E9C46A', halo: '#FFFAF0', fabric: '#F3DED6', weave: '#E8CCC2',
+  thread: '#C29C90'
+};
+const FONT = '"Baloo 2", system-ui, sans-serif';
+function rgba(hex, a) { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`; }
+function mk(w, h) { const c = document.createElement('canvas'); c.width = Math.round(w * K); c.height = Math.round(h * K); const g = c.getContext('2d'); g.scale(K, K); return [c, g]; }
+function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+function text(g, s, x, y, size, weight, color, align) { g.font = weight + ' ' + size + 'px ' + FONT; g.fillStyle = color; g.textAlign = align; g.textBaseline = 'middle'; g.fillText(s, x, y); }
+function weave(g) {
+  const [c, p] = mk(10 / K * K, 10 / K * K); // ô 10 pt, vẽ ở 3x cùng phép scale
+  p.strokeStyle = C.weave; p.lineWidth = 1;
+  p.beginPath(); p.moveTo(0, 10); p.lineTo(10, 0); p.moveTo(-5, 5); p.lineTo(5, -5); p.moveTo(5, 15); p.lineTo(15, 5); p.stroke();
+  const pat = g.createPattern(c, 'repeat');
+  pat.setTransform(new DOMMatrix().scale(1 / K));
+  return pat;
+}
+const out = {};
+// 1. Khung vải: thẻ trắng, vải hồng có vân chéo, viền chỉ nét đứt (drawFabric). Gốc toạ độ: góc trên trái của thẻ (FX-8, FY-12).
+(function () {
+  const FS = 362, [c, g] = mk(FS + 16, FS + 24);
+  rr(g, 0, 0, FS + 16, FS + 24, 20); g.fillStyle = C.card; g.fill();
+  rr(g, 8, 12, FS, FS, 14); g.fillStyle = C.fabric; g.fill(); g.fillStyle = weave(g); g.fill();
+  rr(g, 15, 19, FS - 14, FS - 14, 10); g.setLineDash([6, 5]); g.lineWidth = 1.6; g.strokeStyle = C.thread; g.stroke(); g.setLineDash([]);
+  out.fabric_card = c;
+})();
+// 2. Node kéo được và node khóa (drawNode). Tâm ở giữa ảnh.
+function node(locked) {
+  const S = 48, [c, g] = mk(S, S); g.translate(S / 2, S / 2); g.lineJoin = 'round';
+  g.beginPath(); g.arc(0, 0, 13.5, 0, 7);
+  g.lineWidth = 2.4 + 1.5 * 2; g.strokeStyle = rgba(C.halo, 0.7); g.stroke();
+  g.fillStyle = locked ? '#E9E1D6' : C.rose; g.fill();
+  g.lineWidth = 2.4; g.strokeStyle = locked ? C.mute : C.ink; g.stroke();
+  if (locked) {
+    g.beginPath(); g.moveTo(2, -3); g.lineTo(9, -14); g.lineWidth = 2; g.strokeStyle = C.ink; g.stroke();
+    g.beginPath(); g.arc(10, -16, 4.6, 0, 7); g.fillStyle = C.mustard; g.fill(); g.lineWidth = 1.8; g.stroke();
+  }
+  return c;
+}
+out.node_free = node(false);
+out.node_locked = node(true);
+// 3. Chốt trống (dấu × thêu trên đệm kem) và chốt đã lấp (drawTargetPins). Tâm ở giữa ảnh.
+(function () {
+  let [c, g] = mk(24, 24); g.translate(12, 12);
+  g.beginPath(); g.arc(0, 0, 8.8, 0, 7); g.fillStyle = rgba('#FFF2CF', 0.96); g.fill(); g.lineWidth = 1.6; g.strokeStyle = rgba('#DFB15B', 0.98); g.stroke();
+  g.beginPath(); g.arc(0, 0, 10.2, 0, 7); g.lineWidth = 1.0; g.strokeStyle = rgba('#A87A2C', 0.55); g.stroke();
+  const arm = 4.6; g.lineCap = 'round'; g.lineJoin = 'round';
+  g.beginPath(); g.moveTo(-arm, -arm + 0.6); g.lineTo(arm, arm + 0.6); g.moveTo(-arm, arm + 0.6); g.lineTo(arm, -arm + 0.6); g.lineWidth = 2.4; g.strokeStyle = rgba('#A87A2C', 0.35); g.stroke();
+  g.beginPath(); g.moveTo(-arm, -arm); g.lineTo(arm, arm); g.moveTo(-arm, arm); g.lineTo(arm, -arm); g.lineWidth = 2.2; g.strokeStyle = rgba('#C88E3E', 0.98); g.stroke();
+  g.beginPath(); g.moveTo(-arm * 0.6, -arm * 0.6); g.lineTo(arm * 0.6, arm * 0.6); g.moveTo(-arm * 0.6, arm * 0.6); g.lineTo(arm * 0.6, -arm * 0.6); g.lineWidth = 1.0; g.strokeStyle = rgba('#FFF8E8', 0.85); g.stroke();
+  g.beginPath(); g.arc(0, 0, 1.8, 0, 7); g.fillStyle = rgba('#DFB15B', 0.98); g.fill(); g.lineWidth = 0.8; g.strokeStyle = rgba('#A87A2C', 0.85); g.stroke();
+  out.pin_empty = c;
+  [c, g] = mk(24, 24); g.translate(12, 12);
+  g.beginPath(); g.arc(0, 0, 8.6, 0, 7); g.fillStyle = rgba('#FFF8EC', 0.75); g.fill(); g.lineWidth = 1.6; g.strokeStyle = rgba(C.sageDeep, 0.88); g.stroke();
+  const a = 3.2; g.lineCap = 'round';
+  g.beginPath(); g.moveTo(-a, -a); g.lineTo(a, a); g.moveTo(-a, a); g.lineTo(a, -a); g.lineWidth = 1.4; g.strokeStyle = rgba(C.sageDeep, 0.65); g.stroke();
+  out.pin_filled = c;
+})();
+// 4. Thẻ thông tin phía trên khung vải (drawInfo): thẻ "Hình mẫu" có viền, thẻ "Độ khớp". Gốc: (18, 78), cỡ 354×152.
+// Vẽ sau khi font Baloo 2 nạp xong, để chữ không rơi về font dự phòng.
+function hudInfo() {
+  const [c, g] = mk(354, 152); g.translate(-18, -78);
+  rr(g, 20, 80, 140, 148, 18); g.fillStyle = C.card; g.fill(); g.lineWidth = 2.2; g.strokeStyle = C.ink; g.stroke();
+  text(g, 'Hình mẫu', 90, 101, 13, 700, C.inkSoft, 'center');
+  rr(g, 172, 80, 198, 148, 18); g.fillStyle = C.card; g.fill();
+  text(g, 'Độ khớp', 186, 101, 13, 700, C.inkSoft, 'left');
+  out.hud_info = c;
+}
+// 5. Thanh khớp: nền, khung viền (vẽ đè lên phần đổ), và miếng đổ trắng bo 8 để tô màu và kéo dài (9 phần).
+(function () {
+  let [c, g] = mk(174, 26); rr(g, 2, 2, 170, 22, 11); g.fillStyle = '#FFF4EE'; g.fill(); out.bar_back = c;
+  [c, g] = mk(174, 26); rr(g, 2, 2, 170, 22, 11); g.lineWidth = 2.2; g.strokeStyle = C.ink; g.stroke(); out.bar_frame = c;
+  [c, g] = mk(18, 16); rr(g, 0, 0, 18, 16, 8); g.fillStyle = '#FFFFFF'; g.fill(); out.bar_fill = c;
+  [c, g] = mk(2, 12); g.fillStyle = rgba(C.ink, 0.3); g.fillRect(0, 0, 2, 12); out.bar_marker = c;
+})();
+(async function () {
+  await document.fonts.load('700 13px "Baloo 2"');
+  hudInfo();
+  const names = Object.keys(out);
+  for (const n of names) {
+    const blob = await new Promise(r => out[n].toBlob(r, 'image/png'));
+    await fetch('/save?name=' + n, { method: 'POST', body: blob });
+  }
+  document.getElementById('st').textContent = 'done: ' + names.join(', ');
+  window.EXPORT_DONE = names;
+})();
+</script>

@@ -16,6 +16,7 @@ namespace GraphNode.Tests.PlayMode
         [UnityTest]
         public IEnumerator Boot_GoesHome_ThenGameplay_ThenBackHome() => UniTask.ToCoroutine(async () =>
         {
+            HomeScope.SuppressDevAutoStart = true;
             await SceneManager.LoadSceneAsync(SceneIds.Boot);
             await WaitForScene(SceneIds.Home);
             Assert.AreEqual(AppScope.TargetFrameRate, Application.targetFrameRate);
@@ -55,6 +56,7 @@ namespace GraphNode.Tests.PlayMode
         [TearDown]
         public void DestroyAppScope()
         {
+            HomeScope.SuppressDevAutoStart = false;
             var host = Object.FindObjectOfType<AppScopeHost>();
             if (host != null) Object.Destroy(host.gameObject);
         }
