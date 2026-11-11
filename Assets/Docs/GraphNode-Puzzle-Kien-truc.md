@@ -301,6 +301,22 @@ Yêu cầu: API không cấp phát khi đang chơi (bộ đệm dựng một l�
 - **Cạnh, node, ghim, điểm sáng:** mesh và sprite, cập nhật trên cùng đối tượng.
 - **Sợi chỉ (bản web 2):** một mesh dải (triangle strip) động cho cả vòng, đầu tròn, màu ombre bằng vertex color hoặc UV vào texture gradient 5 màu; vùng tô xem trước và đầu kéo đọc cùng một mảng điểm với sợi chỉ. Rung theo đầu kéo và nằm yên khi khớp viền tính trong View từ đường của Core cộng trạng thái đầu kéo, không đổi dữ liệu Core.
 - **Quầng sáng, tia khớp dây, gợi ý uốn:** dải mesh mềm dùng texture cạnh mờ (alpha blend hoặc additive), không dùng bloom hậu kỳ để giữ 60 fps trên máy yếu. `CurveHintView` gồm vùng khuyết (đa giác giữa dây và viền mẫu), nút cúc (sprite), sóng vòng cung (mesh nét đứt).
+- **Cảm giác lúc chơi (`PlayFeel`, đã làm 2026-11-11):** chỉ biến dạng hình vẽ, không đổi dữ liệu Core. Gồm:
+  - vào màn: node nảy ra lần lượt cách nhau 70 ms, hình mẫu, vùng tô, sợi chỉ, chốt rõ dần trong 0,5 s;
+  - sợi chỉ chùng 2,5 pt ở dây còn lệch viền, căng thẳng khi đạt ngưỡng;
+  - gợn theo ngón tay khi kéo dây rồi lắng lại trong 0,26 s;
+  - rung theo lưỡi kéo và vệt rung sau khi lưỡi kéo đi qua;
+  - nảy đàn hồi khi dây khớp viền hoặc vừa trượt tới đích;
+  - gảy dây khi vừa lọt vào vùng thắng;
+  - dây còn lệch đích vẫy nhẹ về phía đích khi người chơi đứng yên 1,8 s mà đã đủ chốt;
+  - viền sáng óng (quầng màu chỉ, lõi trắng, đốm lấp lánh) khi giữ tay trong vùng thắng, bùng lên lúc vừa lọt vào, chớp sáng khi thả tay thắng;
+  - sóng tròn ở chốt vừa cắm và ở node điểm sáng đi qua;
+  - bụi chỉ khi khớp dây, khi cắm chốt nối dây và mỗi nhát cắt;
+  - dây nối mờ từ ngón tay tới node hoặc dây đang kéo;
+  - vòng nhắc chạm đầu ở màn đầu tiên;
+  - thanh khớp chớp trắng khi vượt hai mốc màu và khi vừa đạt ngưỡng.
+
+  Hai lớp mới trong `PuzzleBoard`: `ReadyGlow` (thứ tự vẽ 7) và `Effects` (10). Số liệu lấy theo bản web, đang ghi cứng trong `PlayFeel`; chuyển sang ScriptableObject khi chỉnh cảm giác trên máy thật.
 - **Không phóng khung vải khi kéo:** ống kính thở 1,04 lần của bản web 2 đã bỏ (2026-11-09, người chơi thử thấy chóng mặt). Khung vải và camera đứng yên.
 - **Chốt:** sprite, có trạng thái trống, đã lấp, sóng gợi ý.
 - **Cảnh cắt và miếng vải:** dùng đường viền lời giải (đã biết từ dữ liệu), tam giác hóa một lần lúc vào màn.
@@ -500,7 +516,7 @@ Tiền công, nâng cấp tiệm, lookbook, vải, câu chuyện khách, sự ki
 | M0 Khung project | Thư mục, asmdef, ba scene, Boot và luồng scene, dịch vụ rỗng, CI dựng được bản trống | Project mở không lỗi, CI xanh. **2026-11-11: xong trừ CI** (chờ chốt GitHub Actions + GameCI và license) |
 | M1 Lõi | Chuyển lõi bản thử sang `GraphNode.Core` theo bản web chính `Prototype/web-demo` (uốn cạnh, phạt độ uốn, chốt và đánh số lại theo chốt, hút về chốt và hút độ uốn, gấp vải, sinh vị trí ban đầu); test EditMode với số liệu đối chiếu (100% cho đáp án, bảng độ nhạy, cắm đủ chốt mà chưa uốn thì dưới ngưỡng, các cách đặt xoay và soi gương thắng được, lỗ của màn gấp, sinh lại cùng seed, bộ lọc chạm) | Test xanh; đo thời gian tính trên Editor và một máy Android phổ biến |
 | M2 Màn chơi tối thiểu | Một level đọc từ JSON, kéo tương đối có nâng node, bộ lọc chạm node/dây, kéo dây, sợi chỉ và vùng tô (thử hai cách vẽ, chọn một), chốt, thanh khớp, thắng | Chơi hết màn 1 trên thiết bị thật, giữ 60 fps khi kéo node |
-| M3 Luật đầy đủ | Điểm sáng (trang trí, nốt nhạc), chốt và gợi ý uốn, chuỗi trình diễn (gồm chớp sáng thắng), bảng kết quả | Các mảnh của bản web chính (web-demo) chơi được, khớp luật lõi của bản thử (không đối chiếu hình ảnh hay giao diện) |
+| M3 Luật đầy đủ | Điểm sáng (trang trí, nốt nhạc), chốt và gợi ý uốn, chuỗi trình diễn (gồm chớp sáng thắng), bảng kết quả | Các mảnh của bản web chính (web-demo) chơi được, khớp luật lõi của bản thử (không đối chiếu hình ảnh hay giao diện). **2026-11-11:** đã có điểm sáng, chốt, gợi ý uốn, chuỗi thắng tới bay vào ô, âm thanh clip, phản hồi khớp, HUD prefab, cảm giác hình ảnh (`PlayFeel`). Còn: (1) âm thanh khi kéo (tiếng ngân căng chỉ, sột soạt vải, nốt mốc khớp, gảy khi đạt) và rung; (2) 13 màn còn lại của web-demo gồm màn gấp vải (kim, thanh gạt, lớp gấp); (3) bảng kết quả |
 | M4 Nội dung và tiệm may | Level Editor, kiểm tra hàng loạt trong CI, khoảng 20 màn, tiến trình và save; màn Home khách ở quầy, bong bóng, thẻ đơn, chuyển cảnh cơ bản, khách nhận đồ | Kiểm tra hàng loạt xanh; lưu và tải lại đúng; chơi trọn một đơn từ Home |
 | M5 Hoàn thiện | Âm thanh, nốt nhạc, rung, telemetry, giảm chuyển động, hiệu năng, QA trên máy thật | Đạt định nghĩa hoàn thành trong đặc tả |
 | Sau đó | Đặt mảnh và hoàn thiện sản phẩm (vải nền, decor bất ngờ); meta mở rộng: khách có câu chuyện, lookbook, vải, nâng cấp tiệm | Theo mục tương ứng trong đặc tả |
