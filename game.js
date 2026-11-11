@@ -3219,7 +3219,7 @@
     chord([0, 4, 7], 0.05, 0.08);
   }
   // Cùng mốc thời gian cho lực ép, hình khuôn và bóng tiếp xúc.
-  var PRESS = { hit: 0.18, lift: 0.40, end: 0.68, settle: 0.15 };
+  var PRESS = { hit: 0.18, lift: 0.40, end: 0.68, settle: 0.65 };
   function productTf() {
     var bx = R.base[0], by = R.base[1];
     ctx.translate(bx, by); ctx.rotate(R.wig); ctx.scale(1 + R.sq * 0.6, 1 - R.sq); ctx.translate(-bx, -by);
@@ -3228,6 +3228,29 @@
     if (R.pucker && Math.abs(R.pucker) > 1e-4) {
       var cx = R.seamCen[0], cy = R.seamCen[1];
       ctx.translate(cx, cy); ctx.scale(1 - R.pucker * 0.055, 1 - R.pucker * 0.04); ctx.translate(-cx, -cy);
+    }
+  }
+  // Mỗi mảnh hồi trễ một nhịp nhỏ, nén dọc và bè ngang quanh chân mảnh thay vì phóng cứng cả hình.
+  function rewardPieceTf(li) {
+    if (reduce || !R.pressHit) return;
+    var rank = Math.max(0, backToFront().indexOf(li));
+    var age = clock - R.liftAt - 0.12 - rank * 0.055;
+    if (age <= 0 || age >= 0.65) return;
+    var u = age / 0.65, wave = Math.sin(u * Math.PI * 2) * Math.pow(1 - u, 2);
+    var tf = placeOf(li), lv = LV[li];
+    var x = tf.ox + lv.cen[0] * tf.s, y = tf.oy + lv.bbox[3] * tf.s;
+    ctx.translate(x, y); ctx.transform(1 + 0.035 * wave, 0, 0.012 * wave, 1 - 0.045 * wave, 0, -2 * wave);
+    ctx.translate(-x, -y);
+  }
+  function pressSteam() {
+    var count = reduce ? 8 : 22;
+    for (var i = 0; i < count; i++) {
+      var a = i / count * Math.PI * 2 + Math.random() * 0.18;
+      S.parts.push({ x: 195 + Math.cos(a) * 165, y: 395 + Math.sin(a) * 165,
+        vx: Math.cos(a) * (reduce ? 6 : 18 + Math.random() * 16),
+        vy: Math.sin(a) * 14 - (reduce ? 10 : 34 + Math.random() * 26),
+        life: reduce ? 0.6 : 0.9 + Math.random() * 0.3, age: 0, kind: 'steam',
+        r: 9 + Math.random() * 8, rot: 0, vr: 0, g: -12 });
     }
   }
   // Tiến độ khâu p (0–1) chia đều cho các đường may, khâu lần lượt từng đường.
@@ -3373,19 +3396,23 @@
       R.sq = 0; R.pz = 1;
       if (pt >= PRESS.hit && !R.pressHit) {
         R.pressHit = true; R.ringT = clock; R.reveal = 1;
+        R.liftAt = clock + PRESS.lift - pt; R.accentCount = 0;
         R.decor = (DECOR[product().id] || []).map(function () { return clock - 0.3; });
+        pressSteam();
         pop(92, 0.14, 0, 0.32); noise(0.12, 0.035, 450, 'lowpass'); vib(22);
+        noise(0.28, 0.022, 3200, 'highpass');
       }
       if (!reduce && pt >= PRESS.hit) {
         var load = easeOut(clamp((pt - PRESS.hit) / 0.12, 0, 1));
         var unload = clamp((pt - PRESS.lift) / (PRESS.end - PRESS.lift), 0, 1);
         R.pz = 1 - 0.018 * load * (1 - easeOut(unload)) + 0.004 * Math.sin(Math.PI * unload);
+        R.sq = 0.016 * load * (1 - easeOut(unload));
       }
       if (pt >= PRESS.lift && !R.pressRelease) {
         R.pressRelease = true;
         noise(0.12, 0.012, 1500, 'lowpass');
       }
-      if (pt >= PRESS.end) { R.pz = 1; R.phase = 'reveal'; R.t = 0; R.sheenT = clock; }
+      if (pt >= PRESS.end) { R.pz = 1; R.sq = 0; R.phase = 'reveal'; R.t = 0; R.sheenT = clock; }
     }
     if (R.phase === 'reveal') {
       // Một nhịp ổn định, không tô lại màu hay bật chi tiết sau khi nhấc.
@@ -3393,6 +3420,15 @@
         R.phase = 'done'; R.t = 0; R.labelT = clock;
         if (!reduce) sparkle(195, 395, 8);
         chord([0, 4, 7, 12], 0.05, 0.08); vib(10);
+      }
+    }
+    // Ba điểm nhấn leo nốt khi lộ hình: chi tiết đã có sẵn, chỉ khẽ nảy và lóe theo nhịp.
+    if (R.pressHit && (R.phase === 'press' || R.phase === 'reveal')) {
+      var details = DECOR[product().id] || [], accents = Math.min(3, details.length);
+      while (R.accentCount < accents && clock >= R.liftAt + 0.28 + R.accentCount * 0.13) {
+        var accent = R.accentCount++, point = details[accent].at();
+        pop(noteF(2 + accent * 2), 0.045, 0, 0.22); vib(6);
+        if (!reduce) sparkle(point[0], point[1], 4);
       }
     }
     if (R.phase === 'decor') {
@@ -4231,8 +4267,12 @@
       for (var d = 0; d < R.decor.length; d++) {
         var item = DEC[d];
         if (!item || !filterFn(item)) continue;
-        var k = easeBack(clamp((clock - R.decor[d]) / 0.3, 0, 1));
-        item.draw(item.at(), k);
+        var k = easeBack(clamp((clock - R.decor[d]) / 0.3, 0, 1)), at = item.at();
+        var age = clock - R.liftAt - 0.28 - (d % 3) * 0.13;
+        var pulse = !reduce && R.pressHit && age >= 0 && age < 0.32 ? Math.sin(Math.PI * age / 0.32) : 0;
+        ctx.save(); ctx.translate(at[0], at[1]); ctx.rotate(0.018 * pulse * (d % 2 ? -1 : 1));
+        ctx.scale(1 + 0.025 * pulse, 1 + 0.025 * pulse); ctx.translate(-at[0], -at[1]);
+        item.draw(at, k); ctx.restore();
       }
     }
     if (deep) {
@@ -4248,12 +4288,14 @@
       ctx.save(); productTf();
       backToFront().forEach(function (li) {
         var tf = placeOf(li);
+        ctx.save(); rewardPieceTf(li);
         drawDecors(function (it) { return it.before === li; });
         drawPiece(li, tf.ox, tf.oy, tf.s, 1, false, 1, 1, function () {
           drawDecors(function (it) { return it.clipTo === li; });
         });
         drawPieceStitches(li);
         drawDecors(function (it) { return it.after === li; });
+        ctx.restore();
       });
       ctx.restore();
       ctx.restore();
