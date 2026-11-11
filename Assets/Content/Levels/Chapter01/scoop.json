@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 2,
+  "id": "scoop",
+  "chapterId": "ch1",
+  "productId": "icecream",
+  "slotIndex": 0,
+  "difficulty": "easy",
+  "winThreshold": 0.94,
+  "startSeed": 0,
+  "keepStart": false,
+  "nodes": [
+    {
+      "id": 0,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.12,
+        0.6
+      ],
+      "startPos": [
+        0.154853,
+        0.714625
+      ]
+    },
+    {
+      "id": 1,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.2,
+        0.3
+      ],
+      "startPos": [
+        0.2,
+        0.3
+      ]
+    },
+    {
+      "id": 2,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.5,
+        0.14
+      ],
+      "startPos": [
+        0.5,
+        0.14
+      ]
+    },
+    {
+      "id": 3,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.8,
+        0.3
+      ],
+      "startPos": [
+        0.885893,
+        0.278321
+      ]
+    },
+    {
+      "id": 4,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.88,
+        0.6
+      ],
+      "startPos": [
+        0.88,
+        0.6
+      ]
+    },
+    {
+      "id": 5,
+      "type": "c",
+      "locked": false,
+      "solutionPos": [
+        0.64,
+        0.73
+      ],
+      "startPos": [
+        0.696907,
+        0.675561
+      ]
+    },
+    {
+      "id": 6,
+      "type": "c",
+      "locked": true,
+      "solutionPos": [
+        0.38,
+        0.65
+      ],
+      "startPos": [
+        0.38,
+        0.65
+      ]
+    }
+  ],
+  "ring": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "innerEdges": [],
+  "bendFree": [
+    2
+  ],
+  "startBend": [
+    -0.032047,
+    -0.031838,
+    0,
+    -0.032127,
+    -0.031004,
+    -0.010385,
+    -0.017516
+  ],
+  "fabricId": "scoop",
+  "tags": [
+    "pins",
+    "bend"
+  ]
+}

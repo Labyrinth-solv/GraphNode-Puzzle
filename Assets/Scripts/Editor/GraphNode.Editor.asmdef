@@ -2,7 +2,10 @@
     "name": "GraphNode.Editor",
     "rootNamespace": "GraphNode.Editor",
     "references": [
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "GraphNode.Core",
+        "GraphNode.Data",
+        "GraphNode.Foundation"
     ],
     "includePlatforms": [
         "Editor"

@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b57a18fe44b48ba4184bfff45bd22117, type: 3}
+  m_Name: GameplayBalanceConfig
+  m_EditorClassIdentifier: 
+  bendPenaltyWeight: 0.18
+  bendPenaltyMinSpan: 0.04
+  bendPenaltyErrorCap: 1.2
+  bendPenaltyAutoFreeThreshold: 0.015
+  pinOnRadius: 0.046
+  pinMagnetRadius: 0.048
+  pinMagnetPull: 0.5
+  pinFoldLineTolerance: 0.025
+  bendLimit: 0.18
+  bendMagnetRadius: 0.035
+  bendMagnetPull: 0.5
+  bendSnapStraight: 0.018
+  bendSnapStraightAtStraightTarget: 0.022
+  edgeWasOff: 0.012
+  needleMin: 0.25
+  needleMax: 0.5
+  needleMagnetRadius: 0.025
+  needleMagnetPull: 0.6
+  fabricMargin: 0.04
+  fabricEdge: 0.98
+  runnerSpeed: 0.68
+  cutTargetSeconds: 1.5
+  cutMinMultiplier: 1.6
+  cutMaxMultiplier: 2.5
