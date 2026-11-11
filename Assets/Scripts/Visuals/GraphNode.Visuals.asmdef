@@ -1,0 +1,18 @@
+{
+    "name": "GraphNode.Visuals",
+    "rootNamespace": "GraphNode.Visuals",
+    "references": [
+        "GraphNode.Data",
+        "GraphNode.Foundation",
+        "UniTask"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

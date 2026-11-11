@@ -1,0 +1,20 @@
+{
+    "name": "GraphNode.Meta",
+    "rootNamespace": "GraphNode.Meta",
+    "references": [
+        "GraphNode.Data",
+        "GraphNode.Foundation",
+        "GraphNode.UI",
+        "GraphNode.Visuals",
+        "UniTask"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

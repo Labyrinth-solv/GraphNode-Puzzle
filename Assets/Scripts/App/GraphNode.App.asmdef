@@ -1,0 +1,24 @@
+{
+    "name": "GraphNode.App",
+    "rootNamespace": "GraphNode.App",
+    "references": [
+        "GraphNode.Core",
+        "GraphNode.Foundation",
+        "GraphNode.Data",
+        "GraphNode.Services",
+        "GraphNode.UI",
+        "GraphNode.Visuals",
+        "GraphNode.Gameplay",
+        "GraphNode.Meta",
+        "UniTask"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

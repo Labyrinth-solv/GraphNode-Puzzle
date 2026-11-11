@@ -1,0 +1,23 @@
+{
+    "name": "GraphNode.Gameplay",
+    "rootNamespace": "GraphNode.Gameplay",
+    "references": [
+        "GraphNode.Core",
+        "GraphNode.Data",
+        "GraphNode.Foundation",
+        "GraphNode.UI",
+        "GraphNode.Visuals",
+        "UniTask",
+        "Unity.InputSystem",
+        "Unity.TextMeshPro"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,26 @@
+{
+    "name": "GraphNode.Tests.PlayMode",
+    "rootNamespace": "GraphNode.Tests.PlayMode",
+    "references": [
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
+        "GraphNode.App",
+        "GraphNode.Gameplay",
+        "GraphNode.Data",
+        "GraphNode.Foundation",
+        "UniTask"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
